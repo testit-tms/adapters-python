@@ -43,10 +43,9 @@ testrun_name = {NAME} - optional parameter for specifying the name of test-run i
 
 ### Tags
 
-Decorators can be used to specify information about autotest:
+Decorators can be used to specify information about autotest.
 
-> Description of decorators (\* - required)
-
+:Description of decorators (\* - required):
 - `testit.workItemID` - linking an autotest to a test case
 - \*`testit.displayName` - name of the autotest in the Test IT system (can be replaced with documentation strings)
 - \*`testit.externalID` - ID of the autotest within the project in the Test IT System
