@@ -389,31 +389,22 @@ class TestITListener(object):
                 data['links'][-1]['url'] = TestITListener.attribute_collector_links(
                                                 link,
                                                 'url',
-                                                item.own_markers,
-                                                item.array_parametrize_mark_id,
-                                                item.index)
+                                                item.callspec.params)
                 if link['title']:
                     data['links'][-1]['title'] = TestITListener.attribute_collector_links(
                                                     link,
                                                     'title',
-                                                    item.own_markers,
-                                                    item.array_parametrize_mark_id,
-                                                    item.index)
+                                                    item.callspec.params)
                 if link['type']:
                     data['links'][-1]['type'] = TestITListener.attribute_collector_links(
                                                     link,
                                                     'type',
-                                                    item.own_markers,
-                                                    item.array_parametrize_mark_id,
-                                                    item.index)
+                                                    item.callspec.params)
                 if link['description']:
-                    data['links'][-1][
-                        'description'] = TestITListener.attribute_collector_links(
+                    data['links'][-1]['description'] = TestITListener.attribute_collector_links(
                                             link,
                                             'description',
-                                            item.own_markers,
-                                            item.array_parametrize_mark_id,
-                                            item.index)
+                                            item.callspec.params)
         else:
             data['links'] = item.function.test_links
 
@@ -590,17 +581,36 @@ class TestITListener(object):
         return attribute, None
 
     @staticmethod
-    def attribute_collector_links(link, key, marks, parametrize_id, index):
-        for ID in parametrize_id:
-            if link[key][(link[key].find('{') + 1):(link[key].rfind('}'))] in \
-                    marks[ID].args[0]:
-                return link[key].split('{')[0] + marks[ID].args[1][index][
-                    marks[ID].args[0].split(', ').index(link[key][(
-                                                                          link[key].find('{') + 1):
-                                                                  (link[key].rfind(
-                                                                      '}'))])] + \
-                       link[key].split('}')[1]
-        return link[key]
+    def attribute_collector_links(
+            link, 
+            key, 
+            run_param):
+        result = link[key]
+        param_keys = re.findall(r"\{(.*?)\}", result)
+        if len(param_keys) > 0:
+            for param_key in param_keys:
+                root_key = param_key
+                id_keys = re.findall(r'\[(.*?)\]', param_key)
+                if len(id_keys) == 0:
+                    base_key = root_key
+                    result = result.replace("{" + root_key + "}", str(run_param[base_key]))
+                elif len(id_keys) == 1:
+                    base_key = root_key.replace("[" + id_keys[0] + "]", "")
+                    id_key = id_keys[0].strip("\'\"")
+                    if id_key.isdigit() and int(id_key) in range(len(run_param[base_key])):
+                        val_key = int(id_key)
+                    elif id_key.isalnum() and not id_key.isdigit() and id_key in run_param[base_key].keys():
+                        val_key = id_key
+                    else:
+                        raise SystemExit(f"Not key: {root_key} in run parameters or other keys problem")
+                    result = result.replace("{" + root_key + "}", str(run_param[base_key][val_key]))
+                else:
+                    raise SystemExit("For type tuple, list, dict) support only one level!!!")
+        elif len(param_keys) == 0:
+            result = link[key]
+        else:
+            raise SystemExit("OPS")
+        return result
 
     @staticmethod
     def form_tree_steps(item, tree_steps, stage):
