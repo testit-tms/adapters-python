@@ -1,6 +1,7 @@
 import configparser
 import inspect
 import os
+import re
 import pickle
 from datetime import datetime
 
@@ -124,9 +125,7 @@ class TestITListener(object):
 
                 item.test_external_id = self.param_attribute_collector(
                     item.function.test_external_id,
-                    item.own_markers,
-                    item.array_parametrize_mark_id,
-                    index) if hasattr(item,
+                    item.callspec.params) if hasattr(item,
                                       'array_parametrize_mark_id'
                                       ) else item.function.test_external_id
 
@@ -423,10 +422,9 @@ class TestITListener(object):
         if not hasattr(item.function, 'test_title'):
             return None
         if hasattr(item, 'array_parametrize_mark_id'):
-            return TestITListener.param_attribute_collector(item.function.test_title,
-                                                            item.own_markers,
-                                                            item.array_parametrize_mark_id,
-                                                            item.index)
+            return TestITListener.param_attribute_collector(
+                item.function.test_title,
+                item.callspec.params)
         return item.function.test_title
 
     @staticmethod
@@ -436,9 +434,7 @@ class TestITListener(object):
         if hasattr(item, 'array_parametrize_mark_id'):
             return TestITListener.param_attribute_collector(
                 item.function.test_description,
-                item.own_markers,
-                item.array_parametrize_mark_id,
-                item.index)
+                item.callspec.params)
         return item.function.test_description
 
     @staticmethod
@@ -539,9 +535,7 @@ class TestITListener(object):
             if hasattr(item, 'array_parametrize_mark_id'):
                 data['autoTestName'] = TestITListener.param_attribute_collector(
                     item.function.test_displayname,
-                    item.own_markers,
-                    item.array_parametrize_mark_id,
-                    item.index)
+                    item.callspec.params)
             else:
                 data['autoTestName'] = item.function.test_displayname
         elif item.function.__doc__:
@@ -559,17 +553,33 @@ class TestITListener(object):
         return data
 
     @staticmethod
-    def param_attribute_collector(attribute, marks, parametrize_id, index):
-        for ID in parametrize_id:
-            if attribute[attribute.find('{') + 1:attribute.rfind('}')] in \
-                    marks[ID].args[0]:
-                return attribute.split('{')[0] + marks[ID].args[1][index][
-                    marks[ID].args[0].split(', ').index(attribute[
-                                                        attribute.find(
-                                                            '{') + 1:attribute.rfind(
-                                                            '}')])] + \
-                       attribute.split('}')[1]
-        return attribute
+    def param_attribute_collector(attribute, run_param):
+        result = attribute
+        param_keys = re.findall(r"\{(.*?)\}", attribute)
+        if len(param_keys) > 0:
+            for param_key in param_keys:
+                root_key = param_key
+                id_keys = re.findall(r'\[(.*?)\]', param_key)
+                if len(id_keys) == 0:
+                    base_key = root_key
+                    result = result.replace("{" + root_key + "}", str(run_param[base_key]))
+                elif len(id_keys) == 1:
+                    base_key = root_key.replace("[" + id_keys[0] + "]", "")
+                    id_key = id_keys[0].strip("\'\"")
+                    if id_key.isdigit() and int(id_key) in range(len(run_param[base_key])):
+                        val_key = int(id_key)
+                    elif id_key.isalnum() and not id_key.isdigit() and id_key in run_param[base_key].keys():
+                        val_key = id_key
+                    else:
+                        raise SystemExit(f"Not key: {root_key} in run parameters or other keys problem")
+                    result = result.replace("{" + root_key + "}", str(run_param[base_key][val_key]))
+                else:
+                    raise SystemExit("For type tuple, list, dict) support only one level!!!")
+        elif len(param_keys) == 0:
+            result = attribute
+        else:
+            raise SystemExit("Не осилил такое :\\")
+        return result
 
     @staticmethod
     def mass_param_attribute_collector(attribute, marks, parametrize_id, index):
