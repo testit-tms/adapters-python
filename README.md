@@ -24,22 +24,39 @@ pip install testit-api-client
 Create `connection_config.ini` file in the root directory of the project:
 ```
 [testit]
-url = https://{DOMAIN} - location of the Test IT instance
-privatetoken = it has the form {T2lKd2pLZGI4WHRhaVZUejNl}
-    1. go to the https://{DOMAIN}/user-profile profile
-    2. copy the API secret key
-projectID = it has the form {5236eb3f-7c05-46f9-a609-dc0278896464}
-    1. create a project
-    2. open DevTools -> network
-    3. go to the project https://{DOMAIN}/projects/20/tests
-    4. GET-request project, Preview tab, copy id field
-configurationID = it has the form {15dbb164-c1aa-4cbf-830c-8c01ae14f4fb}
-    1. create a project
-    2. open DevTools -> network
-    3. go to the project https://{DOMAIN}/projects/20/tests
-    4. GET-request configurations, Preview tab, copy id field
-testrun_name = {NAME} - optional parameter for specifying the name of test-run in Test IT
+url = <url>
+privatetoken = <token>
+projectID = <id>
+configurationID = <id>
+testrunID = <optional id>
+testrun_name = <optional name>
 ```
+
+And fill parameters with your configuration, where:  
+`url` - location of the TMS instance  
+`privatetoken` - API secret key  
+
+1. go to the https://{DOMAIN}/user-profile profile  
+2. copy the API secret key
+
+`projectID` - id of project in TMS instance
+
+1. create a project
+2. open DevTools -> network
+3. go to the project https://{DOMAIN}/projects/20/tests
+4. GET-request project, Preview tab, copy id field  
+
+`configurationID` - id of configuration in TMS instance  
+
+1. create a project  
+2. open DevTools -> network  
+3. go to the project https://{DOMAIN}/projects/20/tests  
+4. GET-request configurations, Preview tab, copy id field  
+
+`testrunID` - id of the created test-run in TMS instance  
+`testrun_name` - parameter for specifying the name of test-run in TMS instance  
+
+> testrunID and testrun_name are optional. If it's not provided than it create automatically.
 
 ### Tags
 
@@ -111,14 +128,14 @@ def test_skip():
 @testit.title('Authorization')
 @testit.description('E2E_autotest')
 @testit.labels('{labels}')
-@testit.link(url='https://roviti2348.atlassian.net/browse/JCP-15593')
+@testit.link(url='https://dumps.example.com/module/JCP-777')
 @testit.link(url='{url}', type='{link_type}', title='{link_title}')
 @pytest.mark.parametrize('name, labels, url, link_type, link_title', [
-    ('param 1', ['E2E', 'test'], 'https://dumps.example.com/module/JCP-15593', testit.LinkType.DEFECT, 'JCP-15593'),
-    ('param 2', (), 'https://github.com/testit-tms/listener-csharp', testit.LinkType.RELATED, 'Listener'),
-    ('param 3', ('E2E', 'test'), 'https://best-tms.testit.software/projects', testit.LinkType.REQUIREMENT, ''),
-    ('param 4', {'E2E', 'test'}, 'https://testit.software/', testit.LinkType.BLOCKED_BY, 'Test IT'),
-    ('param 5', 'test', 'https://github.com/testit-tms', testit.LinkType.REPOSITORY, 'GitHub')
+    ('param 1', ['E2E', 'test'], 'https://dumps.example.com/module/JCP-777', testit.LinkType.DEFECT, 'JCP-777'),
+    ('param 2', (), 'https://dumps.example.com/module/docs', testit.LinkType.RELATED, 'Documentation'),
+    ('param 3', ('E2E', 'test'), 'https://dumps.example.com/module/projects', testit.LinkType.REQUIREMENT, 'Projects'),
+    ('param 4', {'E2E', 'test'}, 'https://dumps.example.com/module/', testit.LinkType.BLOCKED_BY, ''),
+    ('param 5', 'test', 'https://dumps.example.com/module/repository', testit.LinkType.REPOSITORY, 'Repository')
 ])
 def test_1(self, name, labels, url, link_type, link_title):
     testit.addLink(
