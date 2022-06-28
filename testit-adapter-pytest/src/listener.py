@@ -96,6 +96,7 @@ class TestITListener(object):
     def pytest_collection_modifyitems(self, session, config, items):
         index = 0
         new_items = []
+        deselected_items = []
         plugin_info = config.pluginmanager.list_plugin_distinfo()
 
         for plugin, dist in plugin_info:
@@ -142,7 +143,8 @@ class TestITListener(object):
             if not new_items:
                 print('The specified tests were not found!')
                 raise SystemExit
-            session.items = new_items
+            config.hook.pytest_deselected(items=deselected_items)
+            items[:] = new_items
 
     @pytest.hookimpl
     def pytest_runtest_protocol(self, item):
