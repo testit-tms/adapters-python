@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='testit-adapter-pytest',
-    version='1.0.1',
+    version='1.1.2',
     description='Pytest adapter for Test IT',
     url='https://pypi.org/project/testit-adapter-pytest/',
     author='Pavel Butuzov',

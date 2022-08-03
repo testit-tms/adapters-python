@@ -10,8 +10,8 @@ from testit_adapter_pytest import TestITPluginManager
 def inner(function):
     @wraps(function)
     def wrapper(*args, **kwargs):
-        if hasattr(TestITPluginManager.get_plugin_manager().hook, 'add_parameters') and kwargs:
-            TestITPluginManager.get_plugin_manager().hook.add_parameters(parameters=kwargs)
+        if hasattr(TestITPluginManager.get_plugin_manager().hook, 'add_properties') and kwargs:
+            TestITPluginManager.get_plugin_manager().hook.add_properties(properties=kwargs)
         function(*args, **kwargs)
         return function
     return wrapper
@@ -186,7 +186,7 @@ class step:
                                     duration)
 
     def step_append(self, steps, step_stack, step_title, step_description):
-        if step_stack:
+        if steps and step_stack:
             steps[step_stack[0]]['steps'] = self.step_append(steps[step_stack[0]]['steps'], step_stack[1:], step_title, step_description)
         else:
             steps.append({'title': step_title, 'description': step_description, 'steps': []})
@@ -195,7 +195,7 @@ class step:
         return steps
 
     def result_step_append(self, steps, steps_results, step_stack, outcome, duration):
-        if len(step_stack) == 1:
+        if steps and len(step_stack) == 1:
             while len(steps_results) < step_stack[0] + 1:
                 steps_results.append({})
             steps_results[step_stack[0]]['title'] = steps[step_stack[0]]['title']

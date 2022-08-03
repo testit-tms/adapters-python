@@ -20,9 +20,12 @@ from testit_adapter_pytest.utils import (
 
 class TestITListener(object):
     # TODO: need to rework for normal read
-    def __init__(self, testrun, url, private_token, configuration, proxy=None):
-        if testrun:
-            self.testrun_id = uuid_check(testrun)
+    def __init__(self, testrun, url, private_token, project, configuration, proxy=None, testrun_name=None):
+        if testrun or project:
+            if testrun:
+                self.testrun_id = uuid_check(testrun)
+            else:
+                self.project_id = uuid_check(project)
 
             if not url:
                 print('URL was not found!')
@@ -39,6 +42,10 @@ class TestITListener(object):
                 raise SystemExit
 
             self.configuration_id = uuid_check(configuration)
+
+            if testrun_name:
+                self.testrun_name = str(testrun_name)
+                print(f'The name of Test-run has been established: {testrun_name}')
         else:
             path = os.path.abspath('')
             root = path[:path.index(os.sep)]
@@ -54,9 +61,11 @@ class TestITListener(object):
 
             url = url_check(search_in_environ(parser.get('testit',
                                                          'url')))
-
             private_token = search_in_environ(parser.get('testit',
                                                          'privatetoken'))
+            self.configuration_id = uuid_check(
+                search_in_environ(parser.get('testit', 'configurationID')))
+
             try:
                 proxy = search_in_environ(parser.get('debug',
                                                      'testit_proxy'))
@@ -71,11 +80,10 @@ class TestITListener(object):
             else:
                 self.project_id = uuid_check(
                     search_in_environ(parser.get('testit', 'projectID')))
-                self.configuration_id = uuid_check(
-                    search_in_environ(parser.get('testit', 'configurationID')))
 
                 if parser.has_option('testit', 'testrun_name'):
                     self.testrun_name = parser.get('testit', 'testrun_name')
+                    print(f'The name of Test-run has been established: {self.testrun_name}')
         self.requests = Api(url, private_token, proxy=proxy)
 
     @pytest.hookimpl
@@ -95,7 +103,7 @@ class TestITListener(object):
     @pytest.hookimpl
     def pytest_collection_modifyitems(self, session, config, items):
         index = 0
-        new_items = []
+        selected_items = []
         deselected_items = []
         plugin_info = config.pluginmanager.list_plugin_distinfo()
 
@@ -138,13 +146,13 @@ class TestITListener(object):
 
                 if resolved_autotests:
                     if item.test_external_id in resolved_autotests:
-                        new_items.append(item)
+                        selected_items.append(item)
         if resolved_autotests:
-            if not new_items:
+            if not selected_items:
                 print('The specified tests were not found!')
                 raise SystemExit
             config.hook.pytest_deselected(items=deselected_items)
-            items[:] = new_items
+            items[:] = selected_items
 
     @pytest.hookimpl
     def pytest_runtest_protocol(self, item):
@@ -266,7 +274,7 @@ class TestITListener(object):
                             autotest[0]['classname'],
                             autotest[0]['title'],
                             autotest[0]['description'],
-                            autotest[0]['links'],
+                            data_item['links'],
                             autotest[0]['labels']
                         )
                     )
@@ -286,6 +294,7 @@ class TestITListener(object):
                     data_item['traces'],
                     data_item['attachments'],
                     data_item['parameters'],
+                    data_item['properties'],
                     data_item['resultLinks'],
                     data_item['duration'],
                     data_item['failureReasonName'],
@@ -372,8 +381,17 @@ class TestITListener(object):
 
     @staticmethod
     def _get_parameters_from(item):
-        if hasattr(item, 'test_parameters'):
-            return item.test_parameters
+        if hasattr(item, 'array_parametrize_mark_id'):
+            test_parameters = {}
+            for key, parameter in item.callspec.params.items():
+                test_parameters[key] = str(parameter)
+            return test_parameters
+        return None
+
+    @staticmethod
+    def _get_properties_from(item):
+        if hasattr(item, 'test_properties'):
+            return item.test_properties
         return None
 
     @staticmethod
@@ -388,24 +406,20 @@ class TestITListener(object):
         if hasattr(item, 'array_parametrize_mark_id'):
             for link in item.function.test_links:
                 data['links'].append({})
-                data['links'][-1]['url'] = TestITListener.attribute_collector_links(
-                                                link,
-                                                'url',
+                data['links'][-1]['url'] = TestITListener.param_attribute_collector(
+                                                link['url'],
                                                 item.callspec.params)
                 if link['title']:
-                    data['links'][-1]['title'] = TestITListener.attribute_collector_links(
-                                                    link,
-                                                    'title',
+                    data['links'][-1]['title'] = TestITListener.param_attribute_collector(
+                                                    link['title'],
                                                     item.callspec.params)
                 if link['type']:
-                    data['links'][-1]['type'] = TestITListener.attribute_collector_links(
-                                                    link,
-                                                    'type',
+                    data['links'][-1]['type'] = TestITListener.param_attribute_collector(
+                                                    link['type'],
                                                     item.callspec.params)
                 if link['description']:
-                    data['links'][-1]['description'] = TestITListener.attribute_collector_links(
-                                            link,
-                                            'description',
+                    data['links'][-1]['description'] = TestITListener.param_attribute_collector(
+                                            link['description'],
                                             item.callspec.params)
         else:
             data['links'] = item.function.test_links
@@ -495,6 +509,7 @@ class TestITListener(object):
             'namespace': item.function.__module__,
             'attachments': TestITListener._get_attachments_from(item),
             'parameters': TestITListener._get_parameters_from(item),
+            'properties': TestITListener._get_properties_from(item),
             'classname': TestITListener._get_classname_from(item),
             'title': TestITListener._get_title_from(item),
             'description': TestITListener._get_description_from(item),
@@ -567,11 +582,11 @@ class TestITListener(object):
                         raise SystemExit(f"Not key: {root_key} in run parameters or other keys problem")
                     result = result.replace("{" + root_key + "}", str(run_param[base_key][val_key]))
                 else:
-                    raise SystemExit("For type tuple, list, dict) support only one level!!!")
+                    raise SystemExit("For type tuple, list, dict) support only one level!")
         elif len(param_keys) == 0:
             result = attribute
         else:
-            raise SystemExit("Не осилил такое :\\")
+            raise SystemExit("Collecting parameters error!")
         return result
 
     @staticmethod
@@ -629,45 +644,53 @@ class TestITListener(object):
 
     @testit_adapter_pytest.hookimpl
     def add_link(self, link_url, link_title, link_type, link_description):
-        if not hasattr(self.item, 'result_links'):
-            self.item.result_links = []
-        self.item.result_links.append(
-            {
-                'url': link_url,
-                'title': link_title,
-                'type': link_type,
-                'description': link_description
-            })
+        if self.item:
+            if not hasattr(self.item, 'result_links'):
+                self.item.result_links = []
+            self.item.result_links.append(
+                {
+                    'url': link_url,
+                    'title': link_title,
+                    'type': link_type,
+                    'description': link_description
+                })
 
     @testit_adapter_pytest.hookimpl
     def add_message(self, test_message):
-        self.item.test_message = str(test_message)
+        if self.item:
+            self.item.test_message = str(test_message)
 
     @testit_adapter_pytest.hookimpl
     def add_attachments(self, attach_paths):
-        if not hasattr(self.item, 'test_attachments'):
-            self.item.test_attachments = []
-        self.item.test_attachments += self.load_attachments(attach_paths)
+        if self.item:
+            if not hasattr(self.item, 'test_attachments'):
+                self.item.test_attachments = []
+            self.item.test_attachments += self.load_attachments(attach_paths)
 
     @testit_adapter_pytest.hookimpl
     def load_attachments(self, attach_paths):
         attachments = []
         for path in attach_paths:
             if os.path.isfile(path):
-                attachments.append(
-                    {
-                        'id': self.requests.load_attachment(open(path, "rb"))
-                    })
+                attachment_id = self.requests.load_attachment(open(path, "rb"))
+
+                if attachment_id:
+                    attachments.append(
+                        {
+                            'id': attachment_id
+                        })
             else:
                 print(f'File ({path}) not found!')
         return attachments
 
     @testit_adapter_pytest.hookimpl
-    def add_parameters(self, parameters):
-        if not hasattr(self.item, 'test_parameters'):
-            self.item.test_parameters = {}
-            for key, parameter in parameters.items():
-                self.item.test_parameters[key] = str(parameter)
+    def add_properties(self, properties):
+        if self.item and not hasattr(self.item, 'test_properties'):
+            self.item.test_properties = {}
+            for key, property in properties.items():
+                if hasattr(self.item,
+                           'callspec') and key not in self.item.callspec.params:
+                    self.item.test_properties[key] = str(property)
 
     @testit_adapter_pytest.hookimpl
     def get_pytest_check_outcome(self):
