@@ -80,6 +80,22 @@ Description of methods:
 - `testit.attachments` - uploading files in the autotest result
 - `testit.message` - information about autotest in the autotest result
 
+### Usage
+
+Usage with a connection_config.ini file in the root directory of the project:
+
+```
+$ pytest --testit
+```
+
+Usage with command-line parameters:
+
+```
+$ pytest --testit --testit_url=<url> --privatetoken=<token> --projectid=<id> --configurationid=<id> --testrunid=<optional id> --testrun_name=<optional name>
+```
+
+> testrunID and testrun_name are optional. If it's not provided than it create automatically.
+
 ### Examples
 
 #### Decorators
@@ -122,6 +138,11 @@ def test_skip():
 #### Parameterized test
 ```py
 # Parameterized test with a full set of decorators
+from os.path import join, dirname
+
+import pytest
+import testit
+
 @testit.workItemID(627)
 @testit.displayName('Simple autotest 1 - {name}')
 @testit.externalID('Simple_autotest1_{name}')
@@ -137,7 +158,7 @@ def test_skip():
     ('param 4', {'E2E', 'test'}, 'https://dumps.example.com/module/', testit.LinkType.BLOCKED_BY, ''),
     ('param 5', 'test', 'https://dumps.example.com/module/repository', testit.LinkType.REPOSITORY, 'Repository')
 ])
-def test_1(self, name, labels, url, link_type, link_title):
+def test_1(name, labels, url, link_type, link_title):
     testit.addLink(
         title='component_dump.dmp',
         type=testit.LinkType.RELATED,
