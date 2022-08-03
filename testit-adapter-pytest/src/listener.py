@@ -87,24 +87,16 @@ class TestITListener(object):
         self.requests = Api(url, private_token, proxy=proxy)
 
     @pytest.hookimpl
-    def pytest_configure(self, config):
-        if not hasattr(config, "workerinput") and not hasattr(self, "testrun_id"):
-            config.testrun_id = self.requests.create_testrun(
-                JSONFixture.create_testrun(
-                    self.project_id,
-                    f'{self.testrun_name if hasattr(self, "testrun_name") else "LocalRun"} {datetime.today().strftime("%d %b %Y %H:%M:%S")}'))
-            self.requests.testrun_activity(config.testrun_id, 'start')
-
-    @pytest.hookimpl
     def pytest_configure_node(self, node):
         if not hasattr(self, "testrun_id"):
             node.workerinput["testrun_id"] = pickle.dumps(node.config.testrun_id)
 
     @pytest.hookimpl
-    def pytest_collection_modifyitems(self, session, config, items):
+    def pytest_collection_modifyitems(self, config, items):
         index = 0
         selected_items = []
         deselected_items = []
+        resolved_autotests = []
         plugin_info = config.pluginmanager.list_plugin_distinfo()
 
         for plugin, dist in plugin_info:
@@ -113,17 +105,25 @@ class TestITListener(object):
                 self.pytest_check_get_failures = check_methods.get_failures
                 break
 
-        if not hasattr(self, "testrun_id"):
-            self.testrun_id = pickle.loads(config.workerinput["testrun_id"]) if\
-                hasattr(config, 'workerinput') else config.testrun_id
+        if hasattr(self, "testrun_id"):
+            self.project_id, json_points = self.requests.get_testrun(
+                self.testrun_id)
 
-        self.project_id, json_points = self.requests.get_testrun(
-            self.testrun_id)
-
-        resolved_autotests = autotests_parser(json_points, self.configuration_id)
+            resolved_autotests = autotests_parser(json_points, self.configuration_id)
 
         for item in items:
             if hasattr(item.function, 'test_external_id'):
+                if not hasattr(self, "testrun_id"):
+                    if not hasattr(config, "workerinput"):
+                        config.testrun_id = self.requests.create_testrun(
+                            JSONFixture.create_testrun(
+                                self.project_id,
+                                f'{self.testrun_name if hasattr(self, "testrun_name") else "LocalRun"} {datetime.today().strftime("%d %b %Y %H:%M:%S")}'))
+                        self.requests.testrun_activity(config.testrun_id, 'start')
+
+                    self.testrun_id = pickle.loads(config.workerinput["testrun_id"]) if \
+                        hasattr(config, 'workerinput') else config.testrun_id
+
                 if item.own_markers:
                     for mark in item.own_markers:
                         if mark.name == 'parametrize':
@@ -596,38 +596,6 @@ class TestITListener(object):
                 param_id = marks[ID].args[0].split(', ').index(attribute[1:-1])
                 return marks[ID].args[1][index][param_id], param_id
         return attribute, None
-
-    @staticmethod
-    def attribute_collector_links(
-            link, 
-            key, 
-            run_param):
-        result = link[key]
-        param_keys = re.findall(r"\{(.*?)\}", result)
-        if len(param_keys) > 0:
-            for param_key in param_keys:
-                root_key = param_key
-                id_keys = re.findall(r'\[(.*?)\]', param_key)
-                if len(id_keys) == 0:
-                    base_key = root_key
-                    result = result.replace("{" + root_key + "}", str(run_param[base_key]))
-                elif len(id_keys) == 1:
-                    base_key = root_key.replace("[" + id_keys[0] + "]", "")
-                    id_key = id_keys[0].strip("\'\"")
-                    if id_key.isdigit() and int(id_key) in range(len(run_param[base_key])):
-                        val_key = int(id_key)
-                    elif id_key.isalnum() and not id_key.isdigit() and id_key in run_param[base_key].keys():
-                        val_key = id_key
-                    else:
-                        raise SystemExit(f"Not key: {root_key} in run parameters or other keys problem")
-                    result = result.replace("{" + root_key + "}", str(run_param[base_key][val_key]))
-                else:
-                    raise SystemExit("For type tuple, list, dict) support only one level!!!")
-        elif len(param_keys) == 0:
-            result = link[key]
-        else:
-            raise SystemExit("OPS")
-        return result
 
     @staticmethod
     def form_tree_steps(item, tree_steps, stage):
