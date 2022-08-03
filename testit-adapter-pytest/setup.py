@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='testit-adapter-pytest',
-    version='1.0.1',
+    version='1.1.2',
     description='Pytest adapter for Test IT',
     url='https://pypi.org/project/testit-adapter-pytest/',
     author='Pavel Butuzov',
@@ -18,6 +18,6 @@ setup(
     py_modules=['testit', 'testit_adapter_pytest'],
     packages=['testit_adapter_pytest'],
     package_dir={'testit_adapter_pytest': 'src'},
-    install_requires=['pytest', 'pytest-xdist'],
+    install_requires=['pytest', 'pytest-xdist', 'testit-api-client>=1.1,<2'],
     entry_points={'pytest11': ['testit_adapter_pytest = testit_adapter_pytest.plugin']}
 )
