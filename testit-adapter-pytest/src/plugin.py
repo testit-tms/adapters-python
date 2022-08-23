@@ -1,6 +1,6 @@
-import testit_adapter_pytest
+from testit_python_commons.services import TmsPluginManager
 import pytest
-from testit_adapter_pytest.listener import TestITListener
+from listener import TmsListener
 
 
 def pytest_addoption(parser):
@@ -32,6 +32,13 @@ def pytest_addoption(parser):
         help='Set API secret key'
     )
     parser.getgroup('testit').addoption(
+        '--projectid',
+        action="store",
+        dest="set_projectid",
+        metavar="15dbb164-c1aa-4cbf-830c-8c01ae14f4fb",
+        help='Set Project ID'
+    )
+    parser.getgroup('testit').addoption(
         '--configurationid',
         action="store",
         dest="set_configurationid",
@@ -45,15 +52,20 @@ def pytest_addoption(parser):
         metavar='{"http":"http://localhost:8888","https":"http://localhost:8888"}',
         help='Set proxy for sending requests'
     )
+    parser.getgroup('testit').addoption(
+        '--testrun_name',
+        action="store",
+        dest="set_testrun_name",
+        metavar="Custom name of Test-run",
+        help='Set custom name of Test-run'
+    )
 
 
 @pytest.mark.tryfirst
 def pytest_cmdline_main(config):
     if config.option.testit_report:
-        listener = TestITListener(config.option.set_testrun,
-                                  config.option.set_url,
-                                  config.option.set_privatetoken,
-                                  config.option.set_configurationid,
-                                  config.option.set_testit_proxy)
+        listener = TmsListener(
+            TmsPluginManager.get_adapter_manager())
+
         config.pluginmanager.register(listener)
-        testit_adapter_pytest.TestITPluginManager.get_plugin_manager().register(listener)
+        TmsPluginManager.get_plugin_manager().register(listener)
