@@ -15,9 +15,9 @@ class TmsPluginManager:
         return cls.__plugin_manager
 
     @classmethod
-    def get_adapter_manager(cls):
+    def get_adapter_manager(cls, option=None):
         if cls.__adapter_manager is None:
-            cls.__adapter_manager = adapter_manager.AdapterManager()
+            cls.__adapter_manager = adapter_manager.AdapterManager(option)
 
         return cls.__adapter_manager
 

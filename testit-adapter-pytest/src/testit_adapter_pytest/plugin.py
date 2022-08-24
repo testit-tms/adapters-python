@@ -1,6 +1,7 @@
-from testit_python_commons.services import TmsPluginManager
 import pytest
-from listener import TmsListener
+
+from testit_python_commons.services import TmsPluginManager
+from testit_adapter_pytest.listener import TmsListener
 
 
 def pytest_addoption(parser):
@@ -65,7 +66,7 @@ def pytest_addoption(parser):
 def pytest_cmdline_main(config):
     if config.option.testit_report:
         listener = TmsListener(
-            TmsPluginManager.get_adapter_manager())
+            TmsPluginManager.get_adapter_manager(config.option))
 
         config.pluginmanager.register(listener)
         TmsPluginManager.get_plugin_manager().register(listener)

@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 setup(
     name='testit-adapter-pytest',
@@ -18,7 +18,8 @@ setup(
         'Programming Language :: Python :: 3.9',
     ],
     py_modules=['testit_adapter_pytest'],
-    packages=['testit_adapter_pytest'],
-    install_requires=['pytest', 'pytest-xdist'],
+    packages=find_packages(where='src'),
+    package_dir={'': 'src'},
+    install_requires=['pytest', 'pytest-xdist', 'testit-python-commons>=1,<2'],
     entry_points={'pytest11': ['testit_adapter_pytest = testit_adapter_pytest.plugin']}
 )

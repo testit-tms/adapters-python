@@ -1,3 +1,5 @@
+import os
+
 from testit_api_client import Api, JSONFixture
 
 from testit_python_commons.client.client_configuration import ClientConfiguration
@@ -63,3 +65,18 @@ class ApiClientWorker:
         self.__api_client.set_results_for_testrun(
             self.__config.get_testrun_id(),
             model)
+
+    def load_attachments(self, attach_paths: str):
+        attachments = []
+        for path in attach_paths:
+            if os.path.isfile(path):
+                attachment_id = self.__api_client.load_attachment(open(path, "rb"))
+
+                if attachment_id:
+                    attachments.append(
+                        {
+                            'id': attachment_id
+                        })
+            else:
+                print(f'File ({path}) not found!')
+        return attachments

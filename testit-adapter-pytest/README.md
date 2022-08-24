@@ -1,7 +1,5 @@
-# Test IT TMS adapters for Python
+# Test IT TMS adapter for Pytest
 ![Test IT](https://raw.githubusercontent.com/testit-tms/adapters-python/master/images/banner.png)
-
-# Pytest
 
 ## Getting Started
 
@@ -11,13 +9,6 @@ pip install testit-adapter-pytest
 ```
 
 ## Usage
-
-### API client
-
-To use adapter you need to install `testit-api-client`:
-```
-pip install testit-api-client
-```
 
 ### Configuration
 
@@ -30,6 +21,10 @@ projectID = <id>
 configurationID = <id>
 testrunID = <optional id>
 testrun_name = <optional name>
+
+# This section are optional. It enables debug mode.
+[debug]
+testit_proxy = {"http": "http://localhost:8888", "https": "http://localhost:8888"}
 ```
 
 And fill parameters with your configuration, where:  
@@ -55,8 +50,10 @@ And fill parameters with your configuration, where:
 
 `testrunID` - id of the created test-run in TMS instance  
 `testrun_name` - parameter for specifying the name of test-run in TMS instance  
+`testit_proxy` - parameter for configuring proxy for sending requests  
 
-> testrunID and testrun_name are optional. If it's not provided than it create automatically.
+> testrunID and testrun_name are optional. If it's not provided than it create automatically.  
+> testit_proxy are optional. It enables debug mode.
 
 ### Tags
 
@@ -76,25 +73,26 @@ All decorators support the use of parameterization attributes
 
 Description of methods:
 - `testit.addLink` - links in the autotest result
+- `testit.addAttachments` - uploading files in the autotest result
+- `testit.addMessage` - information about autotest in the autotest result
 - `testit.step` - usage in the "with" construct to designation a step in the body of the test
-- `testit.attachments` - uploading files in the autotest result
-- `testit.message` - information about autotest in the autotest result
 
-### Usage
+### Launch
 
-Usage with a connection_config.ini file in the root directory of the project:
+Launch with a connection_config.ini file in the root directory of the project:
 
 ```
 $ pytest --testit
 ```
 
-Usage with command-line parameters:
+Launch with command-line parameters:
 
 ```
-$ pytest --testit --testit_url=<url> --privatetoken=<token> --projectid=<id> --configurationid=<id> --testrunid=<optional id> --testrun_name=<optional name>
+$ pytest --testit --testit_url=<url> --privatetoken=<token> --projectid=<id> --configurationid=<id> --testrunid=<optional id> --testrun_name=<optional name> --testit_proxy='{"http":"http://localhost:8888","https":"http://localhost:8888"}'
 ```
 
-> testrunID and testrun_name are optional. If it's not provided than it create automatically.
+> testrunID and testrun_name are optional. If it's not provided than it create automatically.  
+> testit_proxy are optional. It enables debug mode.
 
 ### Examples
 
@@ -199,12 +197,12 @@ def test_1(name, labels, url, link_type, link_title):
             with testit.step('Create a test case', 'test case was created'):
                 assert True
     with testit.step('Attachments'):
-        testit.attachments(
+        testit.addAttachments(
             join(dirname(__file__), 'docs/text_file.txt'),
             join(dirname(__file__), 'pictures/picture.jpg'),
             join(dirname(__file__), 'docs/document.docx')
         )
-        testit.attachments(
+        testit.addAttachments(
             join(dirname(__file__), 'docs/document.doc'),
             join(dirname(__file__), 'docs/logs.log')
         )

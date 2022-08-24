@@ -139,5 +139,4 @@ class Step:
 
     @classmethod
     def add_attachments(cls, attachments_paths):
-        if hasattr(TmsPluginManager.get_plugin_manager().hook, 'load_attachments'):
-            cls.attachments[-1] += TmsPluginManager.get_plugin_manager().hook.load_attachments(attach_paths=attachments_paths)[0]
+        cls.attachments[-1] += TmsPluginManager.get_adapter_manager().load_attachments(attachments_paths)

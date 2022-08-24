@@ -1,4 +1,3 @@
-import os
 import pickle
 import pytest
 
@@ -126,7 +125,7 @@ class TmsListener(object):
         self.__adapter_manager.write_test(self.executable_test)
 
     @adapter.hookimpl
-    def add_link(self, link_url, link_title, link_type, link_description):
+    def add_link(self, link_url: str, link_title: str, link_type: str, link_description: str):
         if self.executable_test:
             self.executable_test['resultLinks'].append(
                 {
@@ -142,22 +141,6 @@ class TmsListener(object):
             self.executable_test['message'] = str(test_message)
 
     @adapter.hookimpl
-    def add_attachments(self, attach_paths):
+    def add_attachments(self, attach_paths: str):
         if self.executable_test:
-            self.executable_test['attachments'] += self.load_attachments(attach_paths)
-
-    @adapter.hookimpl
-    def load_attachments(self, attach_paths):
-        attachments = []
-        for path in attach_paths:
-            if os.path.isfile(path):
-                attachment_id = self.requests.load_attachment(open(path, "rb"))
-
-                if attachment_id:
-                    attachments.append(
-                        {
-                            'id': attachment_id
-                        })
-            else:
-                print(f'File ({path}) not found!')
-        return attachments
+            self.executable_test['attachments'] += self.__adapter_manager.load_attachments(attach_paths)

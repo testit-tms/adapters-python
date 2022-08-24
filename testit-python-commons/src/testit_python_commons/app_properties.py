@@ -8,10 +8,12 @@ class AppProperties:
     __default_properties_file = 'connection_config'
 
     @staticmethod
-    def load_properties():
+    def load_properties(option=None):
         properties = AppProperties.load_file_properties()
 
-        properties.update(AppProperties.load_cli_properties())
+        if option:
+            properties.update(AppProperties.load_cli_properties(option))
+
         properties.update(AppProperties.load_env_properties())
 
         AppProperties.__check_properties(properties)
@@ -48,31 +50,31 @@ class AppProperties:
         return properties
 
     @staticmethod
-    def load_cli_properties():
-        env_properties = {}
+    def load_cli_properties(option):
+        cli_properties = {}
 
-        if 'TESTIT_URL' in os.environ:
-            env_properties['url'] = os.environ.get('TESTIT_URL')
+        if hasattr(option, 'set_url') and option.set_url:
+            cli_properties['url'] = option.set_url
 
-        if 'TESTIT_PRIVATE_TOKEN' in os.environ:
-            env_properties['privatetoken'] = os.environ.get('TESTIT_PRIVATE_TOKEN')
+        if hasattr(option, 'set_privatetoken') and option.set_privatetoken:
+            cli_properties['privatetoken'] = option.set_privatetoken
 
-        if 'TESTIT_PROJECT_ID' in os.environ:
-            env_properties['projectid'] = os.environ.get('TESTIT_PROJECT_ID')
+        if hasattr(option, 'set_projectid') and option.set_projectid:
+            cli_properties['projectid'] = option.set_projectid
 
-        if 'TESTIT_CONFIGURATION_ID' in os.environ:
-            env_properties['configurationid'] = os.environ.get('TESTIT_CONFIGURATION_ID')
+        if hasattr(option, 'set_configurationid') and option.set_configurationid:
+            cli_properties['configurationid'] = option.set_configurationid
 
-        if 'TESTIT_TEST_RUN_ID' in os.environ:
-            env_properties['testrunid'] = os.environ.get('TESTIT_TEST_RUN_ID')
+        if hasattr(option, 'set_testrun') and option.set_testrun:
+            cli_properties['testrunid'] = option.set_testrun
 
-        if 'TESTIT_TEST_RUN_NAME' in os.environ:
-            env_properties['testrun_name'] = os.environ.get('TESTIT_TEST_RUN_NAME')
+        if hasattr(option, 'set_testrun_name') and option.set_testrun_name:
+            cli_properties['testrun_name'] = option.set_testrun_name
 
-        if 'TESTIT_PROXY' in os.environ.keys():
-            env_properties['testit_proxy'] = os.environ.get('TESTIT_PROXY')
+        if hasattr(option, 'set_testit_proxy') and option.set_testit_proxy:
+            cli_properties['testit_proxy'] = option.set_testit_proxy
 
-        return env_properties
+        return cli_properties
 
     @staticmethod
     def load_env_properties():
