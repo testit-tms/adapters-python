@@ -1,0 +1,2 @@
+pluggy
+testit-api-client>=1,<2

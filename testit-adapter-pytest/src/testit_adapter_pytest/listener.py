@@ -8,7 +8,7 @@ import testit_python_commons.services as adapter
 
 
 class TmsListener(object):
-    executable_test = None
+    __executable_test = None
 
     def __init__(self, adapter_manager: AdapterManager):
         self.__adapter_manager = adapter_manager
@@ -72,62 +72,62 @@ class TmsListener(object):
                 raise Exception(
                     f'{item.originalname} must have @testit.displayName or documentation!')
 
-            self.executable_test = Utils.form_test(item)
+            self.__executable_test = Utils.form_test(item)
 
     @pytest.hookimpl(hookwrapper=True)
     def pytest_fixture_setup(self, fixturedef):
         yield
-        if self.executable_test:
+        if self.__executable_test:
             steps_data, results_steps_data = Step.get_steps_data()
 
             if fixturedef.scope == 'function':
-                self.executable_test['setUp'] += steps_data
-                self.executable_test['setUpResults'] += results_steps_data
+                self.__executable_test['setUp'] += steps_data
+                self.__executable_test['setUpResults'] += results_steps_data
 
     @pytest.hookimpl(hookwrapper=True, trylast=True)
     def pytest_runtest_call(self):
         yield
 
-        if not self.executable_test:
+        if not self.__executable_test:
             return
 
         test_steps, test_results_steps = Step.get_steps_data()
-        self.executable_test['steps'] = test_steps
-        self.executable_test['stepResults'] = test_results_steps
+        self.__executable_test['steps'] = test_steps
+        self.__executable_test['stepResults'] = test_results_steps
 
     @pytest.hookimpl
     def pytest_fixture_post_finalizer(self, fixturedef):
-        if not self.executable_test:
+        if not self.__executable_test:
             return
 
         teardown_steps, teardown_results_steps = Step.get_steps_data()
 
         if fixturedef.scope == 'function':
-            self.executable_test['tearDown'] += teardown_steps
-            self.executable_test['tearDownResults'] += teardown_results_steps
+            self.__executable_test['tearDown'] += teardown_steps
+            self.__executable_test['tearDownResults'] += teardown_results_steps
 
     @pytest.hookimpl
     def pytest_runtest_logreport(self, report):
-        if self.executable_test:
+        if self.__executable_test:
             if report.failed or hasattr(report, 'wasxfail') \
                     and not report.passed or report.outcome == 'rerun':
 
                 if report.longreprtext:
-                    self.executable_test['traces'] = report.longreprtext
+                    self.__executable_test['traces'] = report.longreprtext
 
-            self.executable_test['duration'] += report.duration * 1000
+            self.__executable_test['duration'] += report.duration * 1000
 
     @pytest.hookimpl
     def pytest_runtest_logfinish(self):
-        if not self.executable_test:
+        if not self.__executable_test:
             return
 
-        self.__adapter_manager.write_test(self.executable_test)
+        self.__adapter_manager.write_test(self.__executable_test)
 
     @adapter.hookimpl
     def add_link(self, link_url: str, link_title: str, link_type: str, link_description: str):
-        if self.executable_test:
-            self.executable_test['resultLinks'].append(
+        if self.__executable_test:
+            self.__executable_test['resultLinks'].append(
                 {
                     'url': link_url,
                     'title': link_title,
@@ -137,10 +137,10 @@ class TmsListener(object):
 
     @adapter.hookimpl
     def add_message(self, test_message):
-        if self.executable_test:
-            self.executable_test['message'] = str(test_message)
+        if self.__executable_test:
+            self.__executable_test['message'] = str(test_message)
 
     @adapter.hookimpl
     def add_attachments(self, attach_paths: str):
-        if self.executable_test:
-            self.executable_test['attachments'] += self.__adapter_manager.load_attachments(attach_paths)
+        if self.__executable_test:
+            self.__executable_test['attachments'] += self.__adapter_manager.load_attachments(attach_paths)
