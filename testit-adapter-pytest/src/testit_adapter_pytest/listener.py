@@ -144,3 +144,8 @@ class TmsListener(object):
     def add_attachments(self, attach_paths: str):
         if self.__executable_test:
             self.__executable_test['attachments'] += self.__adapter_manager.load_attachments(attach_paths)
+
+    @adapter.hookimpl
+    def create_attachment(self, body, name: str):
+        if self.__executable_test:
+            self.__executable_test['attachments'] += self.__adapter_manager.create_attachment(body, name)

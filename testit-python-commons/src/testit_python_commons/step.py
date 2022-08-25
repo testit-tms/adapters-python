@@ -140,3 +140,7 @@ class Step:
     @classmethod
     def add_attachments(cls, attachments_paths):
         cls.attachments[-1] += TmsPluginManager.get_adapter_manager().load_attachments(attachments_paths)
+
+    @classmethod
+    def create_attachment(cls, body, name):
+        cls.attachments[-1] += TmsPluginManager.get_adapter_manager().create_attachment(body, name)

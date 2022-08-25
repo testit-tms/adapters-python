@@ -74,6 +74,7 @@ All decorators support the use of parameterization attributes
 Description of methods:
 - `testit.addLink` - links in the autotest result
 - `testit.addAttachments` - uploading files in the autotest result
+- `testit.addAttachments.create` - create and uploading file in the autotest result
 - `testit.addMessage` - information about autotest in the autotest result
 - `testit.step` - usage in the "with" construct to designation a step in the body of the test
 

@@ -31,12 +31,3 @@ def attachments(*attachments_paths: str):
         if hasattr(TmsPluginManager.get_plugin_manager().hook, 'add_attachments'):
             TmsPluginManager.get_plugin_manager().hook\
                 .add_attachments(attach_paths=attachments_paths)
-
-
-def addAttachments(*attachments_paths: str):
-    if Step.step_is_active():
-        Step.add_attachments(attachments_paths)
-    else:
-        if hasattr(TmsPluginManager.get_plugin_manager().hook, 'add_attachments'):
-            TmsPluginManager.get_plugin_manager().hook\
-                .add_attachments(attach_paths=attachments_paths)
