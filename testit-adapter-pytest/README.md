@@ -21,6 +21,7 @@ projectID = <id>
 configurationID = <id>
 testrunID = <optional id>
 testrun_name = <optional name>
+testit_mode = <optional>
 
 # This section are optional. It enables debug mode.
 [debug]
@@ -50,9 +51,13 @@ And fill parameters with your configuration, where:
 
 `testrunID` - id of the created test-run in TMS instance  
 `testrun_name` - parameter for specifying the name of test-run in TMS instance  
+`testit_mode` - Set operation mode with Test-run  
 `testit_proxy` - parameter for configuring proxy for sending requests  
 
 > testrunID and testrun_name are optional. If it's not provided than it create automatically.  
+> testit_mode  are optional:  
+> 0 - with filtering autotests by launch\'s suite in Test IT (Default)  
+> 1 - without filtering autotests by launch\'s suite in Test IT  
 > testit_proxy are optional. It enables debug mode.
 
 ### Tags

@@ -4,6 +4,7 @@ from testit_api_client import Api, JSONFixture
 
 from testit_python_commons.client.client_configuration import ClientConfiguration
 from testit_python_commons.client.converter import Converter
+from testit_python_commons.services.utils import Utils
 
 
 class ApiClientWorker:
@@ -22,7 +23,13 @@ class ApiClientWorker:
                 self.__config.get_testrun_id())
 
             self.__config.set_project_id(project_id)
-            return
+
+            if self.__config.get_mode() == 1:
+                return
+
+            return Utils.autotests_parser(
+                    json_points,
+                    self.__config.get_configuration_id())
 
         model = JSONFixture.create_testrun(
             self.__config.get_project_id(),

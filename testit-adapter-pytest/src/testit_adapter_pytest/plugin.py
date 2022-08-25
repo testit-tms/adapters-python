@@ -12,13 +12,6 @@ def pytest_addoption(parser):
         help='Pytest plugin for Test IT'
     )
     parser.getgroup('testit').addoption(
-        '--testrunid',
-        action="store",
-        dest="set_testrun",
-        metavar="5236eb3f-7c05-46f9-a609-dc0278896464",
-        help='Set Test-run ID'
-    )
-    parser.getgroup('testit').addoption(
         '--testit_url',
         action="store",
         dest="set_url",
@@ -46,19 +39,37 @@ def pytest_addoption(parser):
         metavar="d354bdac-75dc-4e3d-84d4-71186c0dddfc",
         help='Set Configuration ID'
     )
+    parser.getgroup('testit').addoption(
+        '--testrunid',
+        action="store",
+        dest="set_testrun",
+        metavar="5236eb3f-7c05-46f9-a609-dc0278896464",
+        help='Set Test-run ID (optional)'
+    )
     parser.getgroup('debug').addoption(
         '--testit_proxy',
         action="store",
         dest="set_testit_proxy",
         metavar='{"http":"http://localhost:8888","https":"http://localhost:8888"}',
-        help='Set proxy for sending requests'
+        help='Set proxy for sending requests (optional)'
     )
     parser.getgroup('testit').addoption(
         '--testrun_name',
         action="store",
         dest="set_testrun_name",
         metavar="Custom name of Test-run",
-        help='Set custom name of Test-run'
+        help='Set custom name of Test-run (optional)'
+    )
+    parser.getgroup('testit').addoption(
+        '--testit_mode',
+        action="store",
+        dest="set_testit_mode",
+        metavar="1",
+        help="""
+        Set operation mode with Test-run (optional):
+        0 - with filtering autotests by launch\'s suite in Test IT (Default)
+        1 - without filtering autotests by launch\'s suite in Test IT
+        """
     )
 
 

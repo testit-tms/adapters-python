@@ -14,6 +14,7 @@ class ClientConfiguration:
         self.__configuration_id = Utils.uuid_check(app_properties.get('configurationid'))
         self.__testrun_name = app_properties.get('testrun_name')
         self.__testit_proxy = app_properties.get('testit_proxy')
+        self.__testit_mode = app_properties.get('testit_mode')
 
     def get_url(self):
         return self.__url
@@ -41,3 +42,6 @@ class ClientConfiguration:
 
     def get_proxy(self):
         return self.__testit_proxy
+
+    def get_mode(self):
+        return self.__testit_mode

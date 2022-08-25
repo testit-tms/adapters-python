@@ -34,6 +34,8 @@ class TmsListener(object):
 
         for item in items:
             if hasattr(item.function, 'test_external_id'):
+                resolved_autotests = self.__adapter_manager.start_tests()
+
                 if item.own_markers:
                     for mark in item.own_markers:
                         if mark.name == 'parametrize':
@@ -54,13 +56,14 @@ class TmsListener(object):
                                      1 < len(items) and item.originalname == \
                                      items[item_id + 1].originalname else 0
 
-                if resolved_autotests:
-                    if item.test_external_id in resolved_autotests:
-                        selected_items.append(item)
+                if resolved_autotests \
+                        and item.test_external_id in resolved_autotests:
+                    selected_items.append(item)
         if resolved_autotests:
             if not selected_items:
                 print('The specified tests were not found!')
                 raise SystemExit
+
             config.hook.pytest_deselected(items=deselected_items)
             items[:] = selected_items
 

@@ -74,6 +74,9 @@ class AppProperties:
         if hasattr(option, 'set_testit_proxy') and option.set_testit_proxy:
             cli_properties['testit_proxy'] = option.set_testit_proxy
 
+        if hasattr(option, 'set_testit_mode') and option.set_testit_mode:
+            cli_properties['testit_mode'] = option.set_testit_mode
+
         return cli_properties
 
     @staticmethod
@@ -100,6 +103,9 @@ class AppProperties:
 
         if 'TESTIT_PROXY' in os.environ.keys():
             env_properties['testit_proxy'] = os.environ.get('TESTIT_PROXY')
+
+        if 'TESTIT_MODE' in os.environ.keys():
+            env_properties['testit_mode'] = os.environ.get('TESTIT_MODE')
 
         return env_properties
 
