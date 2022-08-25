@@ -1,6 +1,7 @@
-import testit_adapter_pytest
 import pytest
-from testit_adapter_pytest.listener import TestITListener
+
+from testit_python_commons.services import TmsPluginManager
+from testit_adapter_pytest.listener import TmsListener
 
 
 def pytest_addoption(parser):
@@ -64,12 +65,8 @@ def pytest_addoption(parser):
 @pytest.mark.tryfirst
 def pytest_cmdline_main(config):
     if config.option.testit_report:
-        listener = TestITListener(config.option.set_testrun,
-                                  config.option.set_url,
-                                  config.option.set_privatetoken,
-                                  config.option.set_projectid,
-                                  config.option.set_configurationid,
-                                  config.option.set_testit_proxy,
-                                  config.option.set_testrun_name)
+        listener = TmsListener(
+            TmsPluginManager.get_adapter_manager(config.option))
+
         config.pluginmanager.register(listener)
-        testit_adapter_pytest.TestITPluginManager.get_plugin_manager().register(listener)
+        TmsPluginManager.get_plugin_manager().register(listener)
