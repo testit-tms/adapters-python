@@ -141,7 +141,7 @@ class TmsListener(object):
             self.__executable_test['message'] = str(test_message)
 
     @adapter.hookimpl
-    def add_attachments(self, attach_paths: str):
+    def add_attachments(self, attach_paths: tuple):
         if self.__executable_test:
             self.__executable_test['attachments'] += self.__adapter_manager.load_attachments(attach_paths)
 

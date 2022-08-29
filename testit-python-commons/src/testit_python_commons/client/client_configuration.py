@@ -2,6 +2,8 @@ from testit_python_commons.services.utils import Utils
 
 
 class ClientConfiguration:
+    __testrun_id = None
+    __project_id = None
 
     def __init__(self, app_properties: dict):
         if app_properties.get('testrunid'):
