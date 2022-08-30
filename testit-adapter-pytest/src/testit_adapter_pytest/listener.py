@@ -23,7 +23,6 @@ class TmsListener(object):
         index = 0
         selected_items = []
         deselected_items = []
-        resolved_autotests = []
         plugin_info = config.pluginmanager.list_plugin_distinfo()
 
         for plugin, dist in plugin_info:
@@ -31,6 +30,8 @@ class TmsListener(object):
                 from pytest_check import check_methods
                 self.__pytest_check_get_failures = check_methods.get_failures
                 break
+
+        resolved_autotests = self.__adapter_manager.start_tests()
 
         for item in items:
             if hasattr(item.function, 'test_external_id'):
@@ -54,13 +55,14 @@ class TmsListener(object):
                                      1 < len(items) and item.originalname == \
                                      items[item_id + 1].originalname else 0
 
-                if resolved_autotests:
-                    if item.test_external_id in resolved_autotests:
-                        selected_items.append(item)
+                if resolved_autotests \
+                        and item.test_external_id in resolved_autotests:
+                    selected_items.append(item)
         if resolved_autotests:
             if not selected_items:
                 print('The specified tests were not found!')
                 raise SystemExit
+
             config.hook.pytest_deselected(items=deselected_items)
             items[:] = selected_items
 
