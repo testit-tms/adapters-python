@@ -76,7 +76,7 @@ class ApiClientWorker:
             self.__config.get_test_run_id(),
             model)
 
-    def load_attachments(self, attach_paths: str):
+    def load_attachments(self, attach_paths: tuple):
         attachments = []
         for path in attach_paths:
             if os.path.isfile(path):

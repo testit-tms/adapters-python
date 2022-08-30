@@ -64,7 +64,7 @@ class Converter:
         return [JSONFixture.set_results_for_testrun(
             test_result['externalID'],
             configuration_id,
-            test_result['testResult'],
+            'Failed' if test_result['traces'] else 'Passed',
             test_result['stepResults'],
             test_result['setUpResults'],
             test_result['tearDownResults'],
