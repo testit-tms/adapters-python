@@ -29,7 +29,7 @@ class Converter:
         if test_result['testResult'] == 'Passed':
             return JSONFixture.update_autotest(
                 test_result['externalID'],
-                test_result,
+                project_id,
                 test_result['autoTestName'],
                 autotest['id'],
                 test_result['steps'],

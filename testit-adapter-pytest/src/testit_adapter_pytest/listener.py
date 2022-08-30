@@ -23,7 +23,6 @@ class TmsListener(object):
         index = 0
         selected_items = []
         deselected_items = []
-        resolved_autotests = []
         plugin_info = config.pluginmanager.list_plugin_distinfo()
 
         for plugin, dist in plugin_info:
@@ -32,10 +31,10 @@ class TmsListener(object):
                 self.__pytest_check_get_failures = check_methods.get_failures
                 break
 
+        resolved_autotests = self.__adapter_manager.start_tests()
+
         for item in items:
             if hasattr(item.function, 'test_external_id'):
-                resolved_autotests = self.__adapter_manager.start_tests()
-
                 if item.own_markers:
                     for mark in item.own_markers:
                         if mark.name == 'parametrize':

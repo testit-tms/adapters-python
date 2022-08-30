@@ -1,7 +1,4 @@
-import enum
-
-
-class LinkType(enum.Enum):
+class LinkType:
     RELATED = 'Related'
     BLOCKED_BY = 'BlockedBy'
     DEFECT = 'Defect'

@@ -2,6 +2,7 @@ import configparser
 import os
 
 from testit_python_commons.services.utils import Utils
+from testit_python_commons.models.adapter_mode import AdapterMode
 
 
 class AppProperties:
@@ -56,26 +57,26 @@ class AppProperties:
         if hasattr(option, 'set_url') and option.set_url:
             cli_properties['url'] = option.set_url
 
-        if hasattr(option, 'set_privatetoken') and option.set_privatetoken:
-            cli_properties['privatetoken'] = option.set_privatetoken
+        if hasattr(option, 'set_private_token') and option.set_private_token:
+            cli_properties['privatetoken'] = option.set_private_token
 
-        if hasattr(option, 'set_projectid') and option.set_projectid:
-            cli_properties['projectid'] = option.set_projectid
+        if hasattr(option, 'set_project_id') and option.set_project_id:
+            cli_properties['projectid'] = option.set_project_id
 
-        if hasattr(option, 'set_configurationid') and option.set_configurationid:
-            cli_properties['configurationid'] = option.set_configurationid
+        if hasattr(option, 'set_configuration_id') and option.set_configuration_id:
+            cli_properties['configurationid'] = option.set_configuration_id
 
-        if hasattr(option, 'set_testrun') and option.set_testrun:
-            cli_properties['testrunid'] = option.set_testrun
+        if hasattr(option, 'set_test_run_id') and option.set_test_run_id:
+            cli_properties['testrunid'] = option.set_test_run_id
 
-        if hasattr(option, 'set_testrun_name') and option.set_testrun_name:
-            cli_properties['testrun_name'] = option.set_testrun_name
+        if hasattr(option, 'set_test_run_name') and option.set_test_run_name:
+            cli_properties['testrun_name'] = option.set_test_run_name
 
         if hasattr(option, 'set_testit_proxy') and option.set_testit_proxy:
             cli_properties['testit_proxy'] = option.set_testit_proxy
 
-        if hasattr(option, 'set_testit_mode') and option.set_testit_mode:
-            cli_properties['testit_mode'] = option.set_testit_mode
+        if hasattr(option, 'set_adapter_mode') and option.set_adapter_mode:
+            cli_properties['adaptermode'] = option.set_testit_mode
 
         return cli_properties
 
@@ -104,16 +105,28 @@ class AppProperties:
         if 'TESTIT_PROXY' in os.environ.keys():
             env_properties['testit_proxy'] = os.environ.get('TESTIT_PROXY')
 
-        if 'TESTIT_MODE' in os.environ.keys():
-            env_properties['testit_mode'] = os.environ.get('TESTIT_MODE')
+        if 'ADAPTER_MODE' in os.environ.keys():
+            env_properties['adaptermode'] = os.environ.get('ADAPTER_MODE')
 
         return env_properties
 
     @staticmethod
     def __check_properties(properties: dict):
-        if properties.get('projectid') is None and\
-                properties.get('testrunid') is None:
-            print('Project ID and test run ID were not found!')
+        adapter_mode = properties.get('adaptermode')
+
+        if adapter_mode == AdapterMode.NEW_TEST_RUN:
+            if properties.get('projectid') is None:
+                print('Adapter mode "2" is enabled. The project ID is needed, but it was not found!')
+                raise SystemExit
+        elif adapter_mode in (
+                AdapterMode.RUN_ALL_TESTS,
+                AdapterMode.USE_FILTER,
+                None):
+            if properties.get('testrunid') is None:
+                print(f'Adapter mode "{adapter_mode if adapter_mode else "0"}" is enabled. The test run ID is needed, but it was not found!')
+                raise SystemExit
+        else:
+            print(f'Unknown adapter mode "{adapter_mode}"!')
             raise SystemExit
 
         if properties.get('url') is None:

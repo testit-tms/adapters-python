@@ -15,13 +15,13 @@ pip install testit-adapter-pytest
 Create `connection_config.ini` file in the root directory of the project:
 ```
 [testit]
-url = <url>
-privatetoken = <token>
-projectID = <id>
-configurationID = <id>
-testrunID = <optional id>
+URL = <url>
+privateToken = <token>
+projectId = <id>
+configurationId = <id>
+testRunId = <optional id>
 testrun_name = <optional name>
-testit_mode = <optional>
+adapterMode = <optional>
 
 # This section are optional. It enables debug mode.
 [debug]
@@ -29,35 +29,36 @@ testit_proxy = {"http": "http://localhost:8888", "https": "http://localhost:8888
 ```
 
 And fill parameters with your configuration, where:  
-`url` - location of the TMS instance  
-`privatetoken` - API secret key  
+`URL` - location of the TMS instance  
+`privateToken` - API secret key  
 
 1. go to the https://{DOMAIN}/user-profile profile  
 2. copy the API secret key
 
-`projectID` - id of project in TMS instance
+`projectId` - id of project in TMS instance
 
 1. create a project
 2. open DevTools -> network
 3. go to the project https://{DOMAIN}/projects/20/tests
 4. GET-request project, Preview tab, copy id field  
 
-`configurationID` - id of configuration in TMS instance  
+`configurationId` - id of configuration in TMS instance  
 
 1. create a project  
 2. open DevTools -> network  
 3. go to the project https://{DOMAIN}/projects/20/tests  
 4. GET-request configurations, Preview tab, copy id field  
 
-`testrunID` - id of the created test-run in TMS instance  
-`testrun_name` - parameter for specifying the name of test-run in TMS instance  
-`testit_mode` - Set operation mode with Test-run  
+`testRunId` - id of the created test run in TMS instance  
+`testrun_name` - parameter for specifying the name of test run in TMS instance  
+`adapterMode` - Set operation mode with test run  
 `testit_proxy` - parameter for configuring proxy for sending requests  
 
-> testrunID and testrun_name are optional. If it's not provided than it create automatically.  
-> testit_mode  are optional:  
-> 0 - with filtering autotests by launch\'s suite in Test IT (Default)  
-> 1 - without filtering autotests by launch\'s suite in Test IT  
+> testRunId and testrun_name are optional. If it's not provided than it create automatically.  
+> adapterMode  are optional:
+> 0 - with filtering autotests by launch\'s suite in TMS (Default)
+> 1 - without filtering autotests by launch\'s suite in TMS
+> 2 - create new test run in TMS
 > testit_proxy are optional. It enables debug mode.
 
 ### Tags
