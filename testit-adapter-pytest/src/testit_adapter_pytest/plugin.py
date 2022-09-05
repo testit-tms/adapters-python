@@ -72,6 +72,13 @@ def pytest_addoption(parser):
         2 - create new test run in TMS
         """
     )
+    parser.getgroup('testit').addoption(
+        '--tmsConfigFile',
+        action="store",
+        dest="set_config_file",
+        metavar="tmsConfigFile",
+        help='Set custom name of configuration file'
+    )
 
 
 @pytest.mark.tryfirst

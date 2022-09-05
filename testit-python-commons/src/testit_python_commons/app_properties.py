@@ -6,11 +6,12 @@ from testit_python_commons.models.adapter_mode import AdapterMode
 
 
 class AppProperties:
-    __default_properties_file = 'connection_config'
+    __properties_file = 'connection_config'
 
     @staticmethod
     def load_properties(option=None):
-        properties = AppProperties.load_file_properties()
+        properties = AppProperties.load_file_properties(
+            option.set_config_file if hasattr(option, 'set_config_file') else None)
 
         if option:
             properties.update(AppProperties.load_cli_properties(option))
@@ -22,18 +23,23 @@ class AppProperties:
         return properties
 
     @classmethod
-    def load_file_properties(cls, path: str = None):
+    def load_file_properties(cls, file_name: str = None):
         properties = {}
 
-        if path is None:
-            path = os.path.abspath('')
-            root = path[:path.index(os.sep)]
+        path = os.path.abspath('')
+        root = path[:path.index(os.sep)]
 
-            while not os.path.isfile(
-                    path + os.sep + f'{cls.__default_properties_file}.ini') and path != root:
-                path = path[:path.rindex(os.sep)]
+        if file_name:
+            cls.__properties_file = file_name
 
-            path = path + os.sep + f'{cls.__default_properties_file}.ini'
+        if os.environ.get('TMS_CONFIG_FILE'):
+            cls.__properties_file = os.environ.get('TMS_CONFIG_FILE')
+
+        while not os.path.isfile(
+                path + os.sep + f'{cls.__properties_file}.ini') and path != root:
+            path = path[:path.rindex(os.sep)]
+
+        path = path + os.sep + f'{cls.__properties_file}.ini'
 
         if os.path.isfile(path):
             parser = configparser.RawConfigParser()
