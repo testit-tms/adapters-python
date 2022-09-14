@@ -1,5 +1,6 @@
 from testit_python_commons.decorators import (
     externalID,
+    externalId,
     displayName,
     workItemID,
     title,
@@ -20,6 +21,7 @@ from testit_python_commons.models import LinkType
 
 __all__ = [
     'externalID',
+    'externalId',
     'displayName',
     'workItemID',
     'title',
