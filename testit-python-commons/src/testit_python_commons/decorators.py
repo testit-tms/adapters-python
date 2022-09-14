@@ -71,10 +71,36 @@ def labels(*test_labels: str):
     return outer
 
 
+@Utils.deprecated('Use "links" instead.')
 def link(url: str, title: str = None, type: LinkType = None, description: str = None):
     def outer(function):
         if not hasattr(function, 'test_links'):
             function.test_links = []
         function.test_links.append({'url': url, 'title': title, 'type': type, 'description': description})
         return inner(function)
+    return outer
+
+
+def links(url: str = None, title: str = None, type: LinkType = None, description: str = None, links: tuple = None):
+    def outer(function):
+        if not hasattr(function, 'test_links'):
+            function.test_links = []
+
+        if url:
+            function.test_links.append({'url': data, 'title': title, 'type': type, 'description': description})
+        elif links:
+            for link in links:
+                if isinstance(link, dict) and 'url' in link:
+                    function.test_links.append(
+                        {'url': link['url'],
+                         'title': link['title'] if 'title' in link else None,
+                         'type': link['type'] if 'type' in link else None,
+                         'description': link['description'] if 'description' in link else None}
+                    )
+                else:
+                    print(f'Link ({link}) can\'t be processed!')
+        else:
+            print(f'Links for {function.__name__} can\'t be processed!\nPlease, set "url" or "links"!')
+        return inner(function)
+
     return outer

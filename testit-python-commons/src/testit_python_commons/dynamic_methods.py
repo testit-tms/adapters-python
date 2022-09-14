@@ -1,5 +1,6 @@
 from testit_python_commons.services import TmsPluginManager
 from testit_python_commons.step import Step
+from testit_python_commons.services.utils import Utils
 
 
 def addLink(url: str, title: str = None, type: str = None, description: str = None):
@@ -12,6 +13,7 @@ def addLink(url: str, title: str = None, type: str = None, description: str = No
                 link_description=description)
 
 
+@Utils.deprecated('Use "addMessage" instead.')
 def message(test_message: str):
     if hasattr(TmsPluginManager.get_plugin_manager().hook, 'add_message'):
         TmsPluginManager.get_plugin_manager().hook\
@@ -24,6 +26,7 @@ def addMessage(test_message: str):
             .add_message(test_message=test_message)
 
 
+@Utils.deprecated('Use "addAttachments" instead.')
 def attachments(*attachments_paths):
     if Step.step_is_active():
         Step.add_attachments(attachments_paths)

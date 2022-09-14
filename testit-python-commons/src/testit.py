@@ -6,7 +6,8 @@ from testit_python_commons.decorators import (
     title,
     description,
     labels,
-    link
+    link,
+    links
 )
 from testit_python_commons.dynamic_methods import (
     addLink,
@@ -27,6 +28,7 @@ __all__ = [
     'description',
     'labels',
     'link',
+    'links',
     'addLink',
     'attachments',
     'addAttachments',
