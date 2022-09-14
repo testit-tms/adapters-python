@@ -1,6 +1,7 @@
 import inspect
 import os
 import re
+import warnings
 
 
 class Utils:
@@ -249,3 +250,17 @@ class Utils:
                 param_id = marks[ID].args[0].split(', ').index(attribute[1:-1])
                 return marks[ID].args[1][index][param_id], param_id
         return attribute, None
+
+    @staticmethod
+    def deprecated(message):
+        def deprecated_decorator(func):
+            def deprecated_func(*args, **kwargs):
+                warnings.warn('"{}" is no longer acceptable to compute time between versions.\n{}'.format(func.__name__, message),
+                              category=DeprecationWarning,
+                              stacklevel=2)
+                warnings.simplefilter('default', DeprecationWarning)
+                return func(*args, **kwargs)
+
+            return deprecated_func
+
+        return deprecated_decorator
