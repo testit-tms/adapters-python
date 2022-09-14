@@ -66,7 +66,7 @@ And fill parameters with your configuration, where:
 Decorators can be used to specify information about autotest.
 
 Description of decorators (\* - required):
-- `testit.workItemID` - linking an autotest to a test case
+- `testit.workItemIds` - linking an autotest to a test case
 - \*`testit.displayName` - name of the autotest in the Test IT system (can be replaced with documentation strings)
 - \*`testit.externalId` - ID of the autotest within the project in the Test IT System
 - `testit.title` - title in the autotest card
@@ -153,7 +153,7 @@ from os.path import join, dirname
 import pytest
 import testit
 
-@testit.workItemID(627)
+@testit.workItemIds(627)
 @testit.displayName('Simple autotest 1 - {name}')
 @testit.externalId('Simple_autotest1_{name}')
 @testit.title('Authorization')

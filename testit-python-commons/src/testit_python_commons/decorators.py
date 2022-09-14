@@ -19,7 +19,17 @@ def inner(function):
     return wrapper
 
 
+@Utils.deprecated('Use "workItemIds" instead.')
 def workItemID(*test_workitems_id: int or str):
+    def outer(function):
+        function.test_workitems_id = []
+        for test_workitem_id in test_workitems_id:
+            function.test_workitems_id.append(str(test_workitem_id))
+        return inner(function)
+    return outer
+
+
+def workItemIds(*test_workitems_id: int or str):
     def outer(function):
         function.test_workitems_id = []
         for test_workitem_id in test_workitems_id:
