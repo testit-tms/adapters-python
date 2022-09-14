@@ -134,6 +134,12 @@ def oneTwoStep():
 
 @testit.externalID('Simple_test_skip')
 @testit.displayName('Simple test skip')
+@testit.links(url='https://dumps.example.com/module/JCP-777')
+@testit.links(
+    url='https://dumps.example.com/module/JCP-777',
+    type=testit.LinkType.RELATED,
+    title='JCP-777',
+    description='Description of JCP-777')
 @pytest.mark.skipif(True, reason='Because i can')
 def test_skip():
     assert True
@@ -153,16 +159,18 @@ import testit
 @testit.title('Authorization')
 @testit.description('E2E_autotest')
 @testit.labels('{labels}')
-@testit.link(url='https://dumps.example.com/module/JCP-777')
-@testit.link(url='{url}', type='{link_type}', title='{link_title}')
-@pytest.mark.parametrize('name, labels, url, link_type, link_title', [
-    ('param 1', ['E2E', 'test'], 'https://dumps.example.com/module/JCP-777', testit.LinkType.DEFECT, 'JCP-777'),
-    ('param 2', (), 'https://dumps.example.com/module/docs', testit.LinkType.RELATED, 'Documentation'),
-    ('param 3', ('E2E', 'test'), 'https://dumps.example.com/module/projects', testit.LinkType.REQUIREMENT, 'Projects'),
-    ('param 4', {'E2E', 'test'}, 'https://dumps.example.com/module/', testit.LinkType.BLOCKED_BY, ''),
-    ('param 5', 'test', 'https://dumps.example.com/module/repository', testit.LinkType.REPOSITORY, 'Repository')
+@testit.links(links=[
+    {'url': '{url}', 'type': '{link_type}', 'title': '{link_title}', 'description': '{link_desc}'},
+    {'url': '{url}', 'type': '{link_type}', 'title': '{link_title}', 'description': '{link_desc}'}
 ])
-def test_1(name, labels, url, link_type, link_title):
+@pytest.mark.parametrize('name, labels, url, link_type, link_title, link_desc', [
+    ('param 1', ['E2E', 'test'], 'https://dumps.example.com/module/JCP-777', testit.LinkType.DEFECT, 'JCP-777', 'Desc of JCP-777'),
+    ('param 2', (), 'https://dumps.example.com/module/docs', testit.LinkType.RELATED, 'Documentation', 'Desc of JCP-777'),
+    ('param 3', ('E2E', 'test'), 'https://dumps.example.com/module/projects', testit.LinkType.REQUIREMENT, 'Projects', 'Desc of Projects'),
+    ('param 4', {'E2E', 'test'}, 'https://dumps.example.com/module/', testit.LinkType.BLOCKED_BY, '', ''),
+    ('param 5', 'test', 'https://dumps.example.com/module/repository', testit.LinkType.REPOSITORY, 'Repository', 'Desc of Repository')
+])
+def test_1(name, labels, url, link_type, link_title, link_desc):
     testit.addLink(
         title='component_dump.dmp',
         type=testit.LinkType.RELATED,
