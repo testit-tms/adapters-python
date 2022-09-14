@@ -1,6 +1,7 @@
 from functools import wraps
 
 from testit_python_commons.models import LinkType
+from testit_python_commons.services.utils import Utils
 
 
 def inner(function):
@@ -34,7 +35,15 @@ def displayName(test_displayname: str):
     return outer
 
 
+@Utils.deprecated('Use "externalId" instead.')
 def externalID(test_external_id: str):
+    def outer(function):
+        function.test_external_id = test_external_id
+        return inner(function)
+    return outer
+
+
+def externalId(test_external_id: str):
     def outer(function):
         function.test_external_id = test_external_id
         return inner(function)

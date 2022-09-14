@@ -68,7 +68,7 @@ Decorators can be used to specify information about autotest.
 Description of decorators (\* - required):
 - `testit.workItemID` - linking an autotest to a test case
 - \*`testit.displayName` - name of the autotest in the Test IT system (can be replaced with documentation strings)
-- \*`testit.externalID` - ID of the autotest within the project in the Test IT System
+- \*`testit.externalId` - ID of the autotest within the project in the Test IT System
 - `testit.title` - title in the autotest card
 - `testit.description` - description in the autotest card
 - `testit.labels` - tags in the work item
@@ -108,7 +108,7 @@ import pytest
 import testit
 
 # Test with a minimal set of decorators
-@testit.externalID('Simple_autotest2')
+@testit.externalId('Simple_autotest2')
 def test_2():
     """Simple autotest 2"""
     assert oneStep()
@@ -132,7 +132,7 @@ def oneOneStep():
 def oneTwoStep():
     return True
 
-@testit.externalID('Simple_test_skip')
+@testit.externalId('Simple_test_skip')
 @testit.displayName('Simple test skip')
 @pytest.mark.skipif(True, reason='Because i can')
 def test_skip():
@@ -149,7 +149,7 @@ import testit
 
 @testit.workItemID(627)
 @testit.displayName('Simple autotest 1 - {name}')
-@testit.externalID('Simple_autotest1_{name}')
+@testit.externalId('Simple_autotest1_{name}')
 @testit.title('Authorization')
 @testit.description('E2E_autotest')
 @testit.labels('{labels}')
