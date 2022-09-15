@@ -8,60 +8,60 @@ def pytest_addoption(parser):
     parser.getgroup('testit').addoption(
         '--testit',
         action='store_true',
-        dest="testit_report",
+        dest="tms_report",
         help='Pytest plugin for Test IT'
     )
     parser.getgroup('testit').addoption(
-        '--testit_url',
+        '--tmsUrl',
         action="store",
         dest="set_url",
         metavar="https://demo.testit.software",
         help='Set location of the TMS instance'
     )
     parser.getgroup('testit').addoption(
-        '--privatetoken',
+        '--tmsPrivateToken',
         action="store",
         dest="set_private_token",
         metavar="T2lKd2pLZGI4WHRhaVZUejNl",
         help='Set API secret key'
     )
     parser.getgroup('testit').addoption(
-        '--projectid',
+        '--tmsProjectId',
         action="store",
         dest="set_project_id",
         metavar="15dbb164-c1aa-4cbf-830c-8c01ae14f4fb",
         help='Set project ID'
     )
     parser.getgroup('testit').addoption(
-        '--configurationid',
+        '--tmsConfigurationId',
         action="store",
         dest="set_configuration_id",
         metavar="d354bdac-75dc-4e3d-84d4-71186c0dddfc",
         help='Set configuration ID'
     )
     parser.getgroup('testit').addoption(
-        '--testrunid',
+        '--tmsTestRunId',
         action="store",
         dest="set_test_run_id",
         metavar="5236eb3f-7c05-46f9-a609-dc0278896464",
         help='Set test run ID (optional)'
     )
     parser.getgroup('debug').addoption(
-        '--testit_proxy',
+        '--tmsProxy',
         action="store",
-        dest="set_testit_proxy",
+        dest="set_tms_proxy",
         metavar='{"http":"http://localhost:8888","https":"http://localhost:8888"}',
         help='Set proxy for sending requests (optional)'
     )
     parser.getgroup('testit').addoption(
-        '--testrun_name',
+        '--tmsTestRunName',
         action="store",
         dest="set_test_run_name",
         metavar="Custom name of test run",
         help='Set custom name of test run (optional)'
     )
     parser.getgroup('testit').addoption(
-        '--adapter_mode',
+        '--tmsAdapterMode',
         action="store",
         dest="set_adapter_mode",
         metavar="1",
@@ -83,7 +83,7 @@ def pytest_addoption(parser):
 
 @pytest.mark.tryfirst
 def pytest_cmdline_main(config):
-    if config.option.testit_report:
+    if config.option.tms_report:
         listener = TmsListener(
             TmsPluginManager.get_adapter_manager(config.option))
 

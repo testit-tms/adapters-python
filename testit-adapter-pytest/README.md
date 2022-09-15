@@ -20,12 +20,12 @@ privateToken = <token>
 projectId = <id>
 configurationId = <id>
 testRunId = <optional id>
-testrun_name = <optional name>
+testRunName = <optional name>
 adapterMode = <optional>
 
 # This section are optional. It enables debug mode.
 [debug]
-testit_proxy = {"http": "http://localhost:8888", "https": "http://localhost:8888"}
+tmsProxy = {"http": "http://localhost:8888", "https": "http://localhost:8888"}
 ```
 
 And fill parameters with your configuration, where:  
@@ -50,16 +50,16 @@ And fill parameters with your configuration, where:
 4. GET-request configurations, Preview tab, copy id field  
 
 `testRunId` - id of the created test run in TMS instance  
-`testrun_name` - parameter for specifying the name of test run in TMS instance  
+`testRunName` - parameter for specifying the name of test run in TMS instance  
 `adapterMode` - Set operation mode with test run  
-`testit_proxy` - parameter for configuring proxy for sending requests  
+`tmsProxy` - parameter for configuring proxy for sending requests  
 
-> testRunId and testrun_name are optional. If it's not provided than it create automatically.  
+> testRunId and testRunName are optional. If it's not provided than it create automatically.  
 > adapterMode  are optional:
 > 0 - with filtering autotests by launch\'s suite in TMS (Default)
 > 1 - without filtering autotests by launch\'s suite in TMS
 > 2 - create new test run in TMS
-> testit_proxy are optional. It enables debug mode.
+> tmsProxy are optional. It enables debug mode.
 
 ### Tags
 

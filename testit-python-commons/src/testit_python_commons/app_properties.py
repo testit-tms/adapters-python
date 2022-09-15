@@ -7,6 +7,7 @@ from testit_python_commons.models.adapter_mode import AdapterMode
 
 class AppProperties:
     __properties_file = 'connection_config'
+    __env_prefix = 'TMS'
 
     @staticmethod
     def load_properties(option=None):
@@ -50,9 +51,9 @@ class AppProperties:
                 for key, value in parser.items('testit'):
                     properties[key] = Utils.search_in_environ(value)
 
-            if parser.has_section('debug') and parser.has_option('debug', 'testit_proxy'):
-                properties['testit_proxy'] = Utils.search_in_environ(
-                    parser.get('debug', 'testit_proxy'))
+            if parser.has_section('debug') and parser.has_option('debug', 'tmsproxy'):
+                properties['tmsproxy'] = Utils.search_in_environ(
+                    parser.get('debug', 'tmsproxy'))
 
         return properties
 
@@ -76,13 +77,13 @@ class AppProperties:
             cli_properties['testrunid'] = option.set_test_run_id
 
         if hasattr(option, 'set_test_run_name') and option.set_test_run_name:
-            cli_properties['testrun_name'] = option.set_test_run_name
+            cli_properties['testrunname'] = option.set_test_run_name
 
-        if hasattr(option, 'set_testit_proxy') and option.set_testit_proxy:
-            cli_properties['testit_proxy'] = option.set_testit_proxy
+        if hasattr(option, 'set_tms_proxy') and option.set_tms_proxy:
+            cli_properties['tmsproxy'] = option.set_tms_proxy
 
         if hasattr(option, 'set_adapter_mode') and option.set_adapter_mode:
-            cli_properties['adaptermode'] = option.set_testit_mode
+            cli_properties['adaptermode'] = option.set_adapter_mode
 
         return cli_properties
 
@@ -90,29 +91,29 @@ class AppProperties:
     def load_env_properties():
         env_properties = {}
 
-        if 'TESTIT_URL' in os.environ.keys():
-            env_properties['url'] = os.environ.get('TESTIT_URL')
+        if f'{__env_prefix}_URL' in os.environ.keys():
+            env_properties['url'] = os.environ.get(f'{__env_prefix}_URL')
 
-        if 'TESTIT_PRIVATE_TOKEN' in os.environ.keys():
-            env_properties['privatetoken'] = os.environ.get('TESTIT_PRIVATE_TOKEN')
+        if f'{__env_prefix}_PRIVATE_TOKEN' in os.environ.keys():
+            env_properties['privatetoken'] = os.environ.get(f'{__env_prefix}_PRIVATE_TOKEN')
 
-        if 'TESTIT_PROJECT_ID' in os.environ.keys():
-            env_properties['projectid'] = os.environ.get('TESTIT_PROJECT_ID')
+        if f'{__env_prefix}_PROJECT_ID' in os.environ.keys():
+            env_properties['projectid'] = os.environ.get(f'{__env_prefix}_PROJECT_ID')
 
-        if 'TESTIT_CONFIGURATION_ID' in os.environ.keys():
-            env_properties['configurationid'] = os.environ.get('TESTIT_CONFIGURATION_ID')
+        if f'{__env_prefix}_CONFIGURATION_ID' in os.environ.keys():
+            env_properties['configurationid'] = os.environ.get(f'{__env_prefix}_CONFIGURATION_ID')
 
-        if 'TESTIT_TEST_RUN_ID' in os.environ.keys():
-            env_properties['testrunid'] = os.environ.get('TESTIT_TEST_RUN_ID')
+        if f'{__env_prefix}_TEST_RUN_ID' in os.environ.keys():
+            env_properties['testrunid'] = os.environ.get(f'{__env_prefix}_TEST_RUN_ID')
 
-        if 'TESTIT_TEST_RUN_NAME' in os.environ.keys():
-            env_properties['testrun_name'] = os.environ.get('TESTIT_TEST_RUN_NAME')
+        if f'{__env_prefix}_TEST_RUN_NAME' in os.environ.keys():
+            env_properties['testrunname'] = os.environ.get(f'{__env_prefix}_TEST_RUN_NAME')
 
-        if 'TESTIT_PROXY' in os.environ.keys():
-            env_properties['testit_proxy'] = os.environ.get('TESTIT_PROXY')
+        if f'{__env_prefix}_PROXY' in os.environ.keys():
+            env_properties['tmsproxy'] = os.environ.get(f'{__env_prefix}_PROXY')
 
-        if 'ADAPTER_MODE' in os.environ.keys():
-            env_properties['adaptermode'] = os.environ.get('ADAPTER_MODE')
+        if f'{__env_prefix}_ADAPTER_MODE' in os.environ.keys():
+            env_properties['adaptermode'] = os.environ.get(f'{__env_prefix}_ADAPTER_MODE')
 
         return env_properties
 
