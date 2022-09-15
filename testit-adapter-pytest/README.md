@@ -78,7 +78,7 @@ Description of decorators (\* - required):
 All decorators support the use of parameterization attributes
 
 Description of methods:
-- `testit.addLink` - links in the autotest result
+- `testit.addLinks` - links in the autotest result
 - `testit.addAttachments` - uploading files in the autotest result
 - `testit.addMessage` - information about autotest in the autotest result
 - `testit.step` - usage in the "with" construct to designation a step in the body of the test
@@ -171,36 +171,21 @@ import testit
     ('param 5', 'test', 'https://dumps.example.com/module/repository', testit.LinkType.REPOSITORY, 'Repository', 'Desc of Repository')
 ])
 def test_1(name, labels, url, link_type, link_title, link_desc):
-    testit.addLink(
+    testit.addLinks(
         title='component_dump.dmp',
         type=testit.LinkType.RELATED,
-        url='https://dumps.example.com/module/some_module_dump'
+        url='https://dumps.example.com/module/some_module_dump',
+        description='Description'
     )
-    testit.addLink(
-        title='component_dump.dmp',
-        type=testit.LinkType.BLOCKED_BY,
-        url='https://dumps.example.com/module/some_module_dump'
-    )
-    testit.addLink(
-        title='component_dump.dmp',
-        type=testit.LinkType.DEFECT,
-        url='https://dumps.example.com/module/some_module_dump'
-    )
-    testit.addLink(
-        title='component_dump.dmp',
-        type=testit.LinkType.ISSUE,
-        url='https://dumps.example.com/module/some_module_dump'
-    )
-    testit.addLink(
-        title='component_dump.dmp',
-        type=testit.LinkType.REQUIREMENT,
-        url='https://dumps.example.com/module/some_module_dump'
-    )
-    testit.addLink(
-        title='component_dump.dmp',
-        type=testit.LinkType.REPOSITORY,
-        url='https://dumps.example.com/module/some_module_dump'
-    )
+    testit.addLinks(url='https://dumps.example.com/module/some_module_dump')
+    testit.addLinks(links=[
+        {'url': 'https://dumps.example.com/module/some_module_dump', 'type': testit.LinkType.BLOCKED_BY, 'title': 'component_dump.dmp', 'description': 'Description'},
+        {'url': 'https://dumps.example.com/module/some_module_dump', 'type': testit.LinkType.DEFECT},
+        {'url': 'https://dumps.example.com/module/some_module_dump', 'type': testit.LinkType.ISSUE, 'title': 'component_dump.dmp'},
+        {'url': 'https://dumps.example.com/module/some_module_dump', 'type': testit.LinkType.REQUIREMENT, 'title': 'component_dump.dmp', 'description': 'Description'},
+        {'url': 'https://dumps.example.com/module/some_module_dump', 'type': testit.LinkType.REPOSITORY, 'description': 'Description'},
+        {'url': 'https://dumps.example.com/module/some_module_dump'}
+    ])
     with testit.step('Log in the system', 'system authentication'):
         with testit.step('Enter the login', 'login was entered'):
             with testit.step('Enter the password', 'password was entered'):

@@ -3,6 +3,7 @@ from testit_python_commons.step import Step
 from testit_python_commons.services.utils import Utils
 
 
+@Utils.deprecated('Use "addLinks" instead.')
 def addLink(url: str, title: str = None, type: str = None, description: str = None):
     if hasattr(TmsPluginManager.get_plugin_manager().hook, 'add_link'):
         TmsPluginManager.get_plugin_manager().hook\
@@ -11,6 +12,29 @@ def addLink(url: str, title: str = None, type: str = None, description: str = No
                 link_title=title,
                 link_type=type,
                 link_description=description)
+
+
+def addLinks(url: str = None, title: str = None, type: str = None, description: str = None, links: tuple = None):
+    if hasattr(TmsPluginManager.get_plugin_manager().hook, 'add_link'):
+        if url:
+            TmsPluginManager.get_plugin_manager().hook\
+                .add_link(
+                    link_url=url,
+                    link_title=title,
+                    link_type=type,
+                    link_description=description)
+        elif links:
+            if isinstance(link, dict) and 'url' in link:
+                TmsPluginManager.get_plugin_manager().hook \
+                    .add_link(
+                    link_url=link['url'],
+                    link_title=link['title'] if 'title' in link else None,
+                    link_type=link['type'] if 'type' in link else None,
+                    link_description=link['description'] if 'description' in link else None)
+            else:
+                print(f'Link ({link}) can\'t be processed!')
+        else:
+            print(f'Links can\'t be processed!\nPlease, set "url" or "links"!')
 
 
 @Utils.deprecated('Use "addMessage" instead.')
