@@ -33,8 +33,8 @@ class AppProperties:
         if file_name:
             cls.__properties_file = file_name
 
-        if os.environ.get('TMS_CONFIG_FILE'):
-            cls.__properties_file = os.environ.get('TMS_CONFIG_FILE')
+        if os.environ.get(f'{__env_prefix}_CONFIG_FILE'):
+            cls.__properties_file = os.environ.get(f'{__env_prefix}_CONFIG_FILE')
 
         while not os.path.isfile(
                 path + os.sep + f'{cls.__properties_file}.ini') and path != root:
