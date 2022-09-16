@@ -1,5 +1,6 @@
 import configparser
 import os
+import warnings
 
 from testit_python_commons.services.utils import Utils
 from testit_python_commons.models.adapter_mode import AdapterMode
@@ -54,6 +55,12 @@ class AppProperties:
             if parser.has_section('debug') and parser.has_option('debug', 'tmsproxy'):
                 properties['tmsproxy'] = Utils.search_in_environ(
                     parser.get('debug', 'tmsproxy'))
+
+            if 'privatetoken' in properties:
+                warnings.warn('The configuration file specifies a private token. It is not safe. Use TMS_PRIVATE_TOKEN environment variable',
+                              category=Warning,
+                              stacklevel=2)
+                warnings.simplefilter('default', Warning)
 
         return properties
 
