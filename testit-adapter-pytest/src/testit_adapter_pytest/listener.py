@@ -68,13 +68,19 @@ class TmsListener(object):
 
     @pytest.hookimpl
     def pytest_runtest_protocol(self, item):
-        if hasattr(item.function, 'test_external_id'):
-            if not hasattr(item.function,
-                           'test_displayname') and not item.function.__doc__:
-                raise Exception(
-                    f'{item.originalname} must have @testit.displayName or documentation!')
+        if not hasattr(item.function, 'test_external_id'):
+            item.function.test_external_id = Utils.getHash(item.function.__name__)
 
-            self.__executable_test = Utils.form_test(item)
+        if not hasattr(item.function, 'test_displayname'):
+            item.function.test_displayname = item.function.__doc__ if \
+                item.function.__doc__ else item.function.__name__
+        else:
+            if hasattr(item, 'array_parametrize_mark_id'):
+                item.function.test_displayname = Utils.param_attribute_collector(
+                    item.function.test_displayname,
+                    item.callspec.params)
+
+        self.__executable_test = Utils.form_test(item)
 
     @pytest.hookimpl(hookwrapper=True)
     def pytest_fixture_setup(self, fixturedef):

@@ -2,6 +2,7 @@ import inspect
 import os
 import re
 import warnings
+import hashlib
 
 
 class Utils:
@@ -46,6 +47,7 @@ class Utils:
     def form_test(item):
         data = {
             'externalID': item.test_external_id,
+            'autoTestName': item.function.test_displayname,
             'steps': [],
             'stepResults': [],
             'setUp': [],
@@ -86,25 +88,6 @@ class Utils:
                     data['failureReasonName'] = None
                     if mark.kwargs:
                         data['message'] = mark.kwargs['reason']
-
-        if hasattr(item.function, 'test_displayname'):
-            if hasattr(item, 'array_parametrize_mark_id'):
-                data['autoTestName'] = Utils.param_attribute_collector(
-                    item.function.test_displayname,
-                    item.callspec.params)
-            else:
-                data['autoTestName'] = item.function.test_displayname
-        elif item.function.__doc__:
-            data['autoTestName'] = item.function.__doc__
-        else:
-            data['autoTestName'] = 'Test without name'
-            data['testResult'] = 'Failed'
-            data['failureReasonName'] = 'TestDefect'
-            data['traces'] = '>\n{}\nE {} must have @testit.displayName or documentation!\n{}:{}: Exception'.format(
-                inspect.getsource(item.function),
-                item.originalname,
-                item.location[0],
-                item.location[1])
 
         return data
 
@@ -264,3 +247,8 @@ class Utils:
             return deprecated_func
 
         return deprecated_decorator
+
+    @staticmethod
+    def getHash(value: str):
+        md = hashlib.sha256(bytes(value, encoding = 'utf-8'))
+        return md.hexdigest()
