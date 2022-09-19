@@ -86,7 +86,12 @@ class Utils:
                 if mark.name == 'skip' or mark.name == 'skipif' and mark.args[0]:
                     data['testResult'] = 'Skipped'
                     data['failureReasonName'] = None
-                    if mark.kwargs:
+                    data['message'] = mark.args[0]
+                    if mark.kwargs and 'reason' in mark.kwargs:
+                        data['message'] = mark.kwargs['reason']
+                if mark.name == 'xfail' and mark.args[0]:
+                    data['message'] = mark.args[0]
+                    if mark.kwargs and 'reason' in mark.kwargs:
                         data['message'] = mark.kwargs['reason']
 
         return data
