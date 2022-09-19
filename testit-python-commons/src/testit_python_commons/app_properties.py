@@ -15,10 +15,10 @@ class AppProperties:
         properties = AppProperties.load_file_properties(
             option.set_config_file if hasattr(option, 'set_config_file') else None)
 
+        properties.update(AppProperties.load_env_properties())
+
         if option:
             properties.update(AppProperties.load_cli_properties(option))
-
-        properties.update(AppProperties.load_env_properties())
 
         AppProperties.__check_properties(properties)
 
