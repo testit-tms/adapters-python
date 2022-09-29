@@ -1,78 +1,174 @@
-from testit_api_client import JSONFixture
+from testit_api_client.models import (
+    AutoTestPostModel,
+    AutoTestPutModel,
+    LinkPostModel,
+    LinkPutModel,
+    LinkType,
+    AutoTestResultsForTestRunModel,
+    AttachmentPutModelAutoTestStepResultsModel)
 
 
 class Converter:
 
-    @staticmethod
+    @classmethod
     def test_result_to_autotest_post_model(
+            cls,
             test_result: dict,
             project_id: str):
-        return JSONFixture.create_autotest(
+        return AutoTestPostModel(
             test_result['externalID'],
             project_id,
             test_result['autoTestName'],
-            test_result['steps'],
-            test_result['setUp'],
-            test_result['tearDown'],
-            test_result['namespace'],
-            test_result['classname'],
-            test_result['title'],
-            test_result['description'],
-            test_result['links'],
-            test_result['labels'])
+            steps=test_result['steps'],
+            setup=test_result['setUp'],
+            teardown=test_result['tearDown'],
+            namespace=test_result['namespace'],
+            classname=test_result['classname'],
+            title=test_result['title'],
+            description=test_result['description'],
+            links=cls.links_to_links_post_model(test_result['links']),
+            labels=test_result['labels']
+        )
 
-    @staticmethod
+    @classmethod
     def test_result_to_autotest_put_model(
-            autotest: dict,
+            cls,
             test_result: dict,
             project_id: str):
-        if test_result['testResult'] == 'Passed':
-            return JSONFixture.update_autotest(
+        if test_result['outcome'] == 'Passed':
+            return AutoTestPutModel(
                 test_result['externalID'],
                 project_id,
                 test_result['autoTestName'],
-                autotest['id'],
-                test_result['steps'],
-                test_result['setUp'],
-                test_result['tearDown'],
-                test_result['namespace'],
-                test_result['classname'],
-                test_result['title'],
-                test_result['description'],
-                test_result['links'],
-                test_result['labels'])
+                steps=test_result['steps'],
+                setup=test_result['setUp'],
+                teardown=test_result['tearDown'],
+                namespace=test_result['namespace'],
+                classname=test_result['classname'],
+                title=test_result['title'],
+                description=test_result['description'],
+                links=cls.links_to_links_put_model(test_result['links']),
+                labels=test_result['labels']
+            )
         else:
-            return JSONFixture.update_autotest(
+            return AutoTestPutModel(
                 test_result['externalID'],
                 project_id,
-                autotest['name'],
-                autotest['id'],
-                autotest['steps'],
-                autotest['setup'],
-                autotest['teardown'],
-                autotest['namespace'],
-                autotest['classname'],
-                autotest['title'],
-                autotest['description'],
-                test_result['links'],
-                autotest['labels'])
+                test_result['autoTestName'],
+                steps=test_result['steps'],
+                setup=test_result['setUp'],
+                teardown=test_result['tearDown'],
+                namespace=test_result['namespace'],
+                classname=test_result['classname'],
+                title=test_result['title'],
+                description=test_result['description'],
+                links=cls.links_to_links_put_model(test_result['links']),
+                labels=test_result['labels']
+            )
 
-    @staticmethod
+    @classmethod
     def test_result_to_testrun_result_post_model(
+            cls,
             test_result: dict,
             configuration_id: str):
-        return [JSONFixture.set_results_for_testrun(
-            test_result['externalID'],
+        return AutoTestResultsForTestRunModel(
             configuration_id,
+            test_result['externalID'],
+            test_result['outcome'] if test_result['outcome'] else
             'Failed' if test_result['traces'] else 'Passed',
-            test_result['stepResults'],
-            test_result['setUpResults'],
-            test_result['tearDownResults'],
-            test_result['traces'],
-            test_result['attachments'],
-            test_result['parameters'],
-            test_result['properties'],
-            test_result['resultLinks'],
-            test_result['duration'],
-            test_result['failureReasonName'],
-            test_result['message'])]
+            step_results=test_result['stepResults'],
+            setup_results=test_result['setUpResults'],
+            teardown_results=test_result['tearDownResults'],
+            traces=test_result['traces'],
+            attachments=test_result['attachments'],
+            parameters=test_result['parameters'],
+            properties=test_result['properties'],
+            links=cls.links_to_links_post_model(test_result['resultLinks']),
+            duration=test_result['duration'],
+            message=test_result['message']
+        )
+
+    @staticmethod
+    def link_to_link_post_model(
+            url: str,
+            title: str,
+            url_type: str,
+            description: str):
+        if url_type:
+            return LinkPostModel(
+                url,
+                title=title,
+                type=LinkType(value=url_type),
+                description=description
+            )
+        else:
+            return LinkPostModel(
+                url,
+                title=title,
+                description=description
+            )
+
+    @staticmethod
+    def link_to_link_put_model(
+            url: str,
+            title: str,
+            url_type: str,
+            description: str):
+        if url_type:
+            return LinkPutModel(
+                url,
+                title=title,
+                type=LinkType(value=url_type),
+                description=description
+            )
+        else:
+            return LinkPutModel(
+                url,
+                title=title,
+                description=description
+            )
+
+    @classmethod
+    def links_to_links_post_model(cls, links: list):
+        post_model_links = []
+
+        for link in links:
+            post_model_links.append(cls.link_to_link_post_model(
+                link['url'],
+                link['title'],
+                link['type'],
+                link['description']
+            ))
+
+        return post_model_links
+
+    @classmethod
+    def links_to_links_put_model(cls, links: list):
+        put_model_links = []
+
+        for link in links:
+            put_model_links.append(cls.link_to_link_put_model(
+                link['url'],
+                link['title'],
+                link['type'],
+                link['description']
+            ))
+
+        return put_model_links
+
+    @staticmethod
+    def step_result_to_attachment_put_model_autotest_step_results_model(
+            title: str,
+            description: str,
+            outcome: str,
+            duration: str,
+            parameters,
+            attachments):
+        return AttachmentPutModelAutoTestStepResultsModel(
+            title=title,
+            description=description,
+            duration=duration,
+            outcome=outcome,
+            parameters=parameters,
+            attachments=attachments
+        )

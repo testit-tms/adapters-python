@@ -2,6 +2,7 @@ import inspect
 from datetime import datetime
 from functools import wraps
 
+from testit_python_commons.client.converter import Converter
 from testit_python_commons.services import TmsPluginManager
 
 
@@ -116,10 +117,10 @@ class Step:
             del self.attachments[-1]
         else:
             while len(steps_results) < step_stack[0] + 1:
-                steps_results.append({'stepResults': []})
-            steps_results[step_stack[0]]['stepResults'] = self.result_step_append(
+                steps_results.append({'step_results': []})
+            steps_results[step_stack[0]]['step_results'] = self.result_step_append(
                                                                 steps[step_stack[0]]['steps'],
-                                                                steps_results[step_stack[0]]['stepResults'],
+                                                                steps_results[step_stack[0]]['step_results'],
                                                                 step_stack[1:],
                                                                 outcome,
                                                                 duration)

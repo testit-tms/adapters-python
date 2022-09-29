@@ -133,15 +133,9 @@ class TmsListener(object):
         self.__adapter_manager.write_test(self.__executable_test)
 
     @adapter.hookimpl
-    def add_link(self, link_url: str, link_title: str, link_type: str, link_description: str):
+    def add_link(self, link):
         if self.__executable_test:
-            self.__executable_test['resultLinks'].append(
-                {
-                    'url': link_url,
-                    'title': link_title,
-                    'type': link_type,
-                    'description': link_description
-                })
+            self.__executable_test['resultLinks'].append(link)
 
     @adapter.hookimpl
     def add_message(self, test_message):
@@ -149,7 +143,7 @@ class TmsListener(object):
             self.__executable_test['message'] = str(test_message)
 
     @adapter.hookimpl
-    def add_attachments(self, attach_paths: tuple):
+    def add_attachments(self, attach_paths: list or tuple):
         if self.__executable_test:
             self.__executable_test['attachments'] += self.__adapter_manager.load_attachments(attach_paths)
 

@@ -1,4 +1,3 @@
-import inspect
 import os
 import re
 import warnings
@@ -56,7 +55,7 @@ class Utils:
             'tearDownResults': [],
             'resultLinks': [],
             'duration': 0,
-            'testResult': None,
+            'outcome': None,
             'failureReasonName': None,
             'traces': None,
             'namespace': item.function.__module__,
@@ -84,7 +83,7 @@ class Utils:
         if item.own_markers:
             for mark in item.own_markers:
                 if mark.name == 'skip' or mark.name == 'skipif' and mark.args[0]:
-                    data['testResult'] = 'Skipped'
+                    data['outcome'] = 'Skipped'
                     data['failureReasonName'] = None
                     data['message'] = mark.args[0]
                     if mark.kwargs and 'reason' in mark.kwargs:
@@ -126,18 +125,15 @@ class Utils:
                 data['links'][-1]['url'] = Utils.param_attribute_collector(
                     link['url'],
                     item.callspec.params)
-                if link['title']:
-                    data['links'][-1]['title'] = Utils.param_attribute_collector(
-                        link['title'],
-                        item.callspec.params)
-                if link['type']:
-                    data['links'][-1]['type'] = Utils.param_attribute_collector(
-                        link['type'],
-                        item.callspec.params)
-                if link['description']:
-                    data['links'][-1]['description'] = Utils.param_attribute_collector(
-                        link['description'],
-                        item.callspec.params)
+                data['links'][-1]['title'] = Utils.param_attribute_collector(
+                    link['title'],
+                    item.callspec.params) if link['title'] else None
+                data['links'][-1]['type'] = Utils.param_attribute_collector(
+                    link['type'],
+                    item.callspec.params) if link['type'] else None
+                data['links'][-1]['description'] = Utils.param_attribute_collector(
+                    link['description'],
+                    item.callspec.params) if link['description'] else None
         else:
             data['links'] = item.function.test_links
 
@@ -255,5 +251,5 @@ class Utils:
 
     @staticmethod
     def getHash(value: str):
-        md = hashlib.sha256(bytes(value, encoding = 'utf-8'))
+        md = hashlib.sha256(bytes(value, encoding='utf-8'))
         return md.hexdigest()
