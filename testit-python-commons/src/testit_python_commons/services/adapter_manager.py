@@ -19,19 +19,20 @@ class AdapterManager:
     def write_test(self, test: dict):
         self.__api_client.write_test(test)
 
-    def load_attachments(self, attach_paths: tuple):
+    def load_attachments(self, attach_paths: list or tuple):
         return self.__api_client.load_attachments(attach_paths)
 
     def create_attachment(self, body: str, name: str):
         if name is None:
             name = str(uuid.uuid4()) + '-attachment.txt'
 
-        if not os.path.isdir('files'):
-            os.mkdir('files')
-
-        path = os.path.abspath('') + f'{os.sep}files{os.sep}{name}'
+        path = os.path.join(os.path.abspath(''), name)
 
         with open(path, 'wb') as attached_file:
             attached_file.write(body.encode('utf-8'))
 
-        return self.__api_client.load_attachments([path])
+        attachment_id = self.__api_client.load_attachments((path,))
+
+        os.remove(path)
+
+        return attachment_id
