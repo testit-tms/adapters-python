@@ -14,7 +14,6 @@ from testit_api_client.apis import AttachmentsApi
 from testit_python_commons.client.client_configuration import ClientConfiguration
 from testit_python_commons.client.converter import Converter
 from testit_python_commons.services.utils import Utils
-from testit_python_commons.models.adapter_mode import AdapterMode
 
 
 class ApiClientWorker:
@@ -28,37 +27,31 @@ class ApiClientWorker:
 
         self.__config = config
 
-    def start_launch(self):
+    def create_test_run(self):
         test_run_api = TestRunsApi(api_client=self.__api_client)
 
-        if self.__config.get_mode() == AdapterMode.NEW_TEST_RUN:
-            model = TestRunV2PostShortModel(
-                project_id=self.__config.get_project_id(),
-                name=self.__config.get_test_run_name()
-            )
+        model = TestRunV2PostShortModel(
+            project_id=self.__config.get_project_id(),
+            name=self.__config.get_test_run_name()
+        )
 
-            response = test_run_api.create_empty(test_run_v2_post_short_model=model)
+        response = test_run_api.create_empty(test_run_v2_post_short_model=model)
 
-            test_run_id = response['id']
+        return response['id']
 
-            test_run_api.start_test_run(test_run_id)
+    def set_test_run_id(self, test_run_id: str):
+        self.__config.set_test_run_id(test_run_id)
 
-            self.__config.set_test_run_id(test_run_id)
-
-            return
+    def get_autotests_by_test_run_id(self):
+        test_run_api = TestRunsApi(api_client=self.__api_client)
 
         response = test_run_api.get_test_run_by_id(self.__config.get_test_run_id())
-
-        self.__config.set_project_id(response['projectId'])
-
-        if self.__config.get_mode() == AdapterMode.RUN_ALL_TESTS:
-            return
 
         test_results = response['testResults']
 
         return Utils.autotests_parser(
-                test_results,
-                self.__config.get_configuration_id())
+            test_results,
+            self.__config.get_configuration_id())
 
     def write_test(self, test_result: dict):
         test_run_api = TestRunsApi(api_client=self.__api_client)

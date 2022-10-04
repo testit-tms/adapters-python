@@ -14,9 +14,18 @@ class TmsListener(object):
         self.__adapter_manager = adapter_manager
 
     @pytest.hookimpl
+    def pytest_configure(self, config):
+        if not hasattr(config, "workerinput") and not hasattr(self, "test_run_id"):
+            config.test_run_id = self.__adapter_manager.get_test_run_id()
+        else:
+            config.test_run_id = pickle.loads(config.workerinput["test_run_id"])
+
+        self.__adapter_manager.set_test_run_id(config.test_run_id)
+
+    @pytest.hookimpl
     def pytest_configure_node(self, node):
-        if not hasattr(self, "testrun_id"):
-            node.workerinput["testrun_id"] = pickle.dumps(node.config.testrun_id)
+        if not hasattr(self, "test_run_id"):
+            node.workerinput["test_run_id"] = pickle.dumps(node.config.test_run_id)
 
     @pytest.hookimpl
     def pytest_collection_modifyitems(self, config, items):
@@ -31,7 +40,7 @@ class TmsListener(object):
                 self.__pytest_check_get_failures = check_methods.get_failures
                 break
 
-        resolved_autotests = self.__adapter_manager.start_tests()
+        resolved_autotests = self.__adapter_manager.get_autotests_for_launch()
 
         for item in items:
             if hasattr(item.function, 'test_external_id'):

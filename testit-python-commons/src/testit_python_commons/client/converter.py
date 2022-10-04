@@ -84,7 +84,7 @@ class Converter:
             parameters=test_result['parameters'],
             properties=test_result['properties'],
             links=cls.links_to_links_post_model(test_result['resultLinks']),
-            duration=test_result['duration'],
+            duration=round(test_result['duration']),
             message=test_result['message']
         )
 
