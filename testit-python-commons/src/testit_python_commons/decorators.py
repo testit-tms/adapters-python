@@ -1,6 +1,5 @@
 from functools import wraps
 
-from testit_python_commons.models import LinkType
 from testit_python_commons.services.utils import Utils
 
 
@@ -91,14 +90,14 @@ def link(url: str, title: str = None, type: str = None, description: str = None)
     return outer
 
 
-def links(url: str = None, title: str = None, type: str = None, description: str = None, links: tuple = None):
+def links(url: str = None, title: str = None, type: str = None, description: str = None, links: list or tuple = None):
     def outer(function):
         if not hasattr(function, 'test_links'):
             function.test_links = []
 
         if url:
             function.test_links.append({'url': url, 'title': title, 'type': type, 'description': description})
-        elif links:
+        elif links and (isinstance(links, list) or isinstance(links, tuple)):
             for link in links:
                 if isinstance(link, dict) and 'url' in link:
                     function.test_links.append(

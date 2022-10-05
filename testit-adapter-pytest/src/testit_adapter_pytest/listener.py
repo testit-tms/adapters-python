@@ -14,9 +14,18 @@ class TmsListener(object):
         self.__adapter_manager = adapter_manager
 
     @pytest.hookimpl
+    def pytest_configure(self, config):
+        if not hasattr(config, "workerinput") and not hasattr(self, "test_run_id"):
+            config.test_run_id = self.__adapter_manager.get_test_run_id()
+        else:
+            config.test_run_id = pickle.loads(config.workerinput["test_run_id"])
+
+        self.__adapter_manager.set_test_run_id(config.test_run_id)
+
+    @pytest.hookimpl
     def pytest_configure_node(self, node):
-        if not hasattr(self, "testrun_id"):
-            node.workerinput["testrun_id"] = pickle.dumps(node.config.testrun_id)
+        if not hasattr(self, "test_run_id"):
+            node.workerinput["test_run_id"] = pickle.dumps(node.config.test_run_id)
 
     @pytest.hookimpl
     def pytest_collection_modifyitems(self, config, items):
@@ -31,7 +40,7 @@ class TmsListener(object):
                 self.__pytest_check_get_failures = check_methods.get_failures
                 break
 
-        resolved_autotests = self.__adapter_manager.start_tests()
+        resolved_autotests = self.__adapter_manager.get_autotests_for_launch()
 
         for item in items:
             if hasattr(item.function, 'test_external_id'):
@@ -133,15 +142,9 @@ class TmsListener(object):
         self.__adapter_manager.write_test(self.__executable_test)
 
     @adapter.hookimpl
-    def add_link(self, link_url: str, link_title: str, link_type: str, link_description: str):
+    def add_link(self, link):
         if self.__executable_test:
-            self.__executable_test['resultLinks'].append(
-                {
-                    'url': link_url,
-                    'title': link_title,
-                    'type': link_type,
-                    'description': link_description
-                })
+            self.__executable_test['resultLinks'].append(link)
 
     @adapter.hookimpl
     def add_message(self, test_message):
@@ -149,7 +152,7 @@ class TmsListener(object):
             self.__executable_test['message'] = str(test_message)
 
     @adapter.hookimpl
-    def add_attachments(self, attach_paths: tuple):
+    def add_attachments(self, attach_paths: list or tuple):
         if self.__executable_test:
             self.__executable_test['attachments'] += self.__adapter_manager.load_attachments(attach_paths)
 

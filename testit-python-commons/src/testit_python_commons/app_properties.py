@@ -34,8 +34,8 @@ class AppProperties:
         if file_name:
             cls.__properties_file = file_name
 
-        if os.environ.get(f'{__env_prefix}_CONFIG_FILE'):
-            cls.__properties_file = os.environ.get(f'{__env_prefix}_CONFIG_FILE')
+        if os.environ.get(f'{cls.__env_prefix}_CONFIG_FILE'):
+            cls.__properties_file = os.environ.get(f'{cls.__env_prefix}_CONFIG_FILE')
 
         while not os.path.isfile(
                 path + os.sep + f'{cls.__properties_file}.ini') and path != root:
@@ -94,33 +94,33 @@ class AppProperties:
 
         return cli_properties
 
-    @staticmethod
-    def load_env_properties():
+    @classmethod
+    def load_env_properties(cls):
         env_properties = {}
 
-        if f'{__env_prefix}_URL' in os.environ.keys():
-            env_properties['url'] = os.environ.get(f'{__env_prefix}_URL')
+        if f'{cls.__env_prefix}_URL' in os.environ.keys():
+            env_properties['url'] = os.environ.get(f'{cls.__env_prefix}_URL')
 
-        if f'{__env_prefix}_PRIVATE_TOKEN' in os.environ.keys():
-            env_properties['privatetoken'] = os.environ.get(f'{__env_prefix}_PRIVATE_TOKEN')
+        if f'{cls.__env_prefix}_PRIVATE_TOKEN' in os.environ.keys():
+            env_properties['privatetoken'] = os.environ.get(f'{cls.__env_prefix}_PRIVATE_TOKEN')
 
-        if f'{__env_prefix}_PROJECT_ID' in os.environ.keys():
-            env_properties['projectid'] = os.environ.get(f'{__env_prefix}_PROJECT_ID')
+        if f'{cls.__env_prefix}_PROJECT_ID' in os.environ.keys():
+            env_properties['projectid'] = os.environ.get(f'{cls.__env_prefix}_PROJECT_ID')
 
-        if f'{__env_prefix}_CONFIGURATION_ID' in os.environ.keys():
-            env_properties['configurationid'] = os.environ.get(f'{__env_prefix}_CONFIGURATION_ID')
+        if f'{cls.__env_prefix}_CONFIGURATION_ID' in os.environ.keys():
+            env_properties['configurationid'] = os.environ.get(f'{cls.__env_prefix}_CONFIGURATION_ID')
 
-        if f'{__env_prefix}_TEST_RUN_ID' in os.environ.keys():
-            env_properties['testrunid'] = os.environ.get(f'{__env_prefix}_TEST_RUN_ID')
+        if f'{cls.__env_prefix}_TEST_RUN_ID' in os.environ.keys():
+            env_properties['testrunid'] = os.environ.get(f'{cls.__env_prefix}_TEST_RUN_ID')
 
-        if f'{__env_prefix}_TEST_RUN_NAME' in os.environ.keys():
-            env_properties['testrunname'] = os.environ.get(f'{__env_prefix}_TEST_RUN_NAME')
+        if f'{cls.__env_prefix}_TEST_RUN_NAME' in os.environ.keys():
+            env_properties['testrunname'] = os.environ.get(f'{cls.__env_prefix}_TEST_RUN_NAME')
 
-        if f'{__env_prefix}_PROXY' in os.environ.keys():
-            env_properties['tmsproxy'] = os.environ.get(f'{__env_prefix}_PROXY')
+        if f'{cls.__env_prefix}_PROXY' in os.environ.keys():
+            env_properties['tmsproxy'] = os.environ.get(f'{cls.__env_prefix}_PROXY')
 
-        if f'{__env_prefix}_ADAPTER_MODE' in os.environ.keys():
-            env_properties['adaptermode'] = os.environ.get(f'{__env_prefix}_ADAPTER_MODE')
+        if f'{cls.__env_prefix}_ADAPTER_MODE' in os.environ.keys():
+            env_properties['adaptermode'] = os.environ.get(f'{cls.__env_prefix}_ADAPTER_MODE')
 
         return env_properties
 

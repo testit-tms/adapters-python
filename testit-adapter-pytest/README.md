@@ -12,56 +12,116 @@ pip install testit-adapter-pytest
 
 ### Configuration
 
-Create `connection_config.ini` file in the root directory of the project:
+#### File
+
+1. Create **connection_config.ini** file in the root directory of the project:
+    ```
+    [testit]
+    URL = <url>
+    privateToken = <token>
+    projectId = <id>
+    configurationId = <id>
+    testRunId = <optional id>
+    testRunName = <optional name>
+    adapterMode = <optional>
+    
+    # This section are optional. It enables debug mode.
+    [debug]
+    tmsProxy = {"http": "http://localhost:8888", "https": "http://localhost:8888"}
+    ```
+
+2. Fill parameters with your configuration, where:  
+    * `URL` - location of the TMS instance  
+      
+    * `privateToken` - API secret key
+        1. go to the https://{DOMAIN}/user-profile profile
+        2. copy the API secret key
+    
+    * `projectId` - ID of project in TMS instance.
+    
+        1. create a project
+        2. open DevTools -> network
+        3. go to the project https://{DOMAIN}/projects/20/tests
+        4. GET-request project, Preview tab, copy id field  
+    
+    * `configurationId` - ID of configuration in TMS instance.
+    
+        1. create a project  
+        2. open DevTools -> network  
+        3. go to the project https://{DOMAIN}/projects/20/tests  
+        4. GET-request configurations, Preview tab, copy id field  
+    
+    * `testRunId` - id of the created test run in TMS instance. `testRunId` is optional. If it is not provided, it is created automatically.  
+      
+    * `testRunName` - parameter for specifying the name of test run in TMS instance. `testRunName` is optional. If it is not provided, it is created automatically.   
+    
+    * `adapterMode` - adapter mode. Default value - 0. The adapter supports following modes:  
+        
+        * 0 - in this mode, the adapter filters tests by test run ID and configuration ID, and sends the results to the test run.
+        * 1 - in this mode, the adapter sends all results to the test run without filtering.
+        * 2 - in this mode, the adapter creates a new test run and sends results to the new test run.
+    
+    * `tmsProxy` - it enables debug mode. `tmsProxy` is optional.
+
+#### ENV
+
+You can use environment variables (environment variables take precedence over file variables):
+
+* `TMS_URL` - location of the TMS instance.
+  
+* `TMS_PRIVATE_TOKEN` - API secret key.
+  
+* `TMS_PROJECT_ID` - ID of a project in TMS instance.
+  
+* `TMS_CONFIGURATION_ID` - ID of a configuration in TMS instance.
+
+* `TMS_ADAPTER_MODE` - adapter mode. Default value - 0.
+  
+* `TMS_TEST_RUN_ID` - ID of the created test-run in TMS instance. `TMS_TEST_RUN_ID` is optional. If it is not provided, it is created automatically.
+  
+* `TMS_TEST_RUN_NAME` - name of the new test-run.`TMS_TEST_RUN_NAME` is optional. If it is not provided, it is created automatically.
+  
+* `TMS_CONFIG_FILE` - name of the configuration file. `TMS_CONFIG_FILE` is optional. If it is not provided, it is used default file name.
+
+* `TMS_PROXY` - it enables debug mode. `TMS_PROXY` is optional.
+
+#### Command line
+
+You also can CLI variables (CLI variables take precedence over environment variables):
+
+* `tmsUrl` - location of the TMS instance.
+  
+* `tmsPrivateToken` - API secret key.
+  
+* `tmsProjectId` - ID of a project in TMS instance.
+  
+* `tmsConfigurationId` - ID of a configuration in TMS instance.
+
+* `tmsAdapterMode` - adapter mode. Default value - 0.
+
+* `tmsTestRunId` - ID of the created test-run in TMS instance. `tmsTestRunId` is optional. If it is not provided, it is created automatically.
+  
+* `tmsTestRunName` - name of the new test-run.`tmsTestRunName` is optional. If it is not provided, it is created automatically.
+  
+* `tmsConfigFile` - name of the configuration file. `tmsConfigFile` is optional. If it is not provided, it is used default file name.
+
+* `tmsProxy` - it enables debug mode. `tmsProxy` is optional.
+
+#### Examples
+
+Launch with a connection_config.ini file in the root directory of the project:
+
 ```
-[testit]
-URL = <url>
-privateToken = <token>
-projectId = <id>
-configurationId = <id>
-testRunId = <optional id>
-testRunName = <optional name>
-adapterMode = <optional>
-
-# This section are optional. It enables debug mode.
-[debug]
-tmsProxy = {"http": "http://localhost:8888", "https": "http://localhost:8888"}
+$ pytest --testit
 ```
 
-And fill parameters with your configuration, where:  
-`URL` - location of the TMS instance  
-`privateToken` - API secret key  
+Launch with command-line parameters:
 
-1. go to the https://{DOMAIN}/user-profile profile  
-2. copy the API secret key
+```
+$ pytest --testit --testit_url=<url> --privatetoken=<token> --projectid=<id> --configurationid=<id> --testrunid=<optional id> --testrun_name=<optional name> --testit_proxy='{"http":"http://localhost:8888","https":"http://localhost:8888"}'
+```
 
-`projectId` - id of project in TMS instance
-
-1. create a project
-2. open DevTools -> network
-3. go to the project https://{DOMAIN}/projects/20/tests
-4. GET-request project, Preview tab, copy id field  
-
-`configurationId` - id of configuration in TMS instance  
-
-1. create a project  
-2. open DevTools -> network  
-3. go to the project https://{DOMAIN}/projects/20/tests  
-4. GET-request configurations, Preview tab, copy id field  
-
-`testRunId` - id of the created test run in TMS instance  
-`testRunName` - parameter for specifying the name of test run in TMS instance  
-`adapterMode` - Set operation mode with test run  
-`tmsProxy` - parameter for configuring proxy for sending requests  
-
-> testRunId and testRunName are optional. If it's not provided than it create automatically.  
-> adapterMode  are optional:
-> 0 - with filtering autotests by launch\'s suite in TMS (Default)
-> 1 - without filtering autotests by launch\'s suite in TMS
-> 2 - create new test run in TMS
-> tmsProxy are optional. It enables debug mode.
-
-### Tags
+### Decorators
 
 Decorators can be used to specify information about autotest.
 
@@ -83,26 +143,9 @@ Description of methods:
 - `testit.addMessage` - information about autotest in the autotest result
 - `testit.step` - usage in the "with" construct to designation a step in the body of the test
 
-### Launch
-
-Launch with a connection_config.ini file in the root directory of the project:
-
-```
-$ pytest --testit
-```
-
-Launch with command-line parameters:
-
-```
-$ pytest --testit --testit_url=<url> --privatetoken=<token> --projectid=<id> --configurationid=<id> --testrunid=<optional id> --testrun_name=<optional name> --testit_proxy='{"http":"http://localhost:8888","https":"http://localhost:8888"}'
-```
-
-> testrunID and testrun_name are optional. If it's not provided than it create automatically.  
-> testit_proxy are optional. It enables debug mode.
-
 ### Examples
 
-#### Decorators
+#### Simple test
 ```py
 import pytest
 import testit
