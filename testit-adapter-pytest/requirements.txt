@@ -1,0 +1,9 @@
+pytest
+pytest-xdist
+
+flake8
+flake8-builtins
+pep8-naming
+flake8-variables-names
+flake8-import-order
+mypy

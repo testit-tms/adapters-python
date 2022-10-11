@@ -1,103 +1,12 @@
 import inspect
-import os
-import re
 from datetime import datetime
 from functools import wraps
 
-from testit_adapter_pytest import TestITPluginManager
+from testit_python_commons.client.converter import Converter
+from testit_python_commons.services import TmsPluginManager
 
 
-def inner(function):
-    @wraps(function)
-    def wrapper(*args, **kwargs):
-        if hasattr(TestITPluginManager.get_plugin_manager().hook, 'add_properties') and kwargs:
-            TestITPluginManager.get_plugin_manager().hook.add_properties(properties=kwargs)
-        function(*args, **kwargs)
-        return function
-    return wrapper
-
-
-def workItemID(*test_workitems_id: int or str):
-    def outer(function):
-        function.test_workitems_id = []
-        for test_workitem_id in test_workitems_id:
-            function.test_workitems_id.append(str(test_workitem_id))
-        return inner(function)
-    return outer
-
-
-def displayName(test_displayname: str):
-    def outer(function):
-        function.test_displayname = test_displayname
-        return inner(function)
-    return outer
-
-
-def externalID(test_external_id: str):
-    def outer(function):
-        function.test_external_id = test_external_id
-        return inner(function)
-    return outer
-
-
-def title(test_title: str):
-    def outer(function):
-        function.test_title = test_title
-        return inner(function)
-    return outer
-
-
-def description(test_description: str):
-    def outer(function):
-        function.test_description = test_description
-        return inner(function)
-    return outer
-
-
-def labels(*test_labels: str):
-    def outer(function):
-        function.test_labels = test_labels
-        return inner(function)
-    return outer
-
-
-def link(url: str, title: str = None, type: str = None, description: str = None):
-    def outer(function):
-        if not hasattr(function, 'test_links'):
-            function.test_links = []
-        function.test_links.append({'url': url, 'title': title, 'type': type, 'description': description})
-        return inner(function)
-    return outer
-
-
-class LinkType:
-    RELATED = 'Related'
-    BLOCKED_BY = 'BlockedBy'
-    DEFECT = 'Defect'
-    ISSUE = 'Issue'
-    REQUIREMENT = 'Requirement'
-    REPOSITORY = 'Repository'
-
-
-def addLink(url: str, title: str = None, type: str = None, description: str = None):
-    if hasattr(TestITPluginManager.get_plugin_manager().hook, 'add_link'):
-        TestITPluginManager.get_plugin_manager().hook.add_link(link_url=url, link_title=title, link_type=type, link_description=description)
-
-
-def message(test_message: str):
-    if hasattr(TestITPluginManager.get_plugin_manager().hook, 'add_message'):
-        TestITPluginManager.get_plugin_manager().hook.add_message(test_message=test_message)
-
-
-def attachments(*attachments_paths: str):
-    if step.step_is_active():
-        step.add_attachments(attachments_paths)
-    else:
-        if hasattr(TestITPluginManager.get_plugin_manager().hook, 'add_attachments'):
-            TestITPluginManager.get_plugin_manager().hook.add_attachments(attach_paths=attachments_paths)
-
-
-class step:
+class Step:
     step_stack = []
     steps_data = []
     steps_data_results = []
@@ -137,7 +46,7 @@ class step:
                 for key, parameter in kwargs.items():
                     parameters[key] = str(parameter)
 
-            with step(name, function.__name__, parameters=parameters):
+            with Step(name, function.__name__, parameters=parameters):
                 return function(*args, **kwargs)
         else:
             function = args[0]
@@ -159,9 +68,9 @@ class step:
                         for key, parameter in kw.items():
                             parameters[key] = str(parameter)
 
-                    with step(
+                    with Step(
                             self.args[0], self.args[1], parameters=parameters) if len(self.args) == 2\
-                            else step(self.args[0], parameters=parameters
+                            else Step(self.args[0], parameters=parameters
                         ):
                         return function(*a, **kw)
             return step_wrapper
@@ -175,8 +84,8 @@ class step:
                             self.args[1] if len(self.args) == 2 else None)
 
     def __exit__(self, exc_type, exc_value, tb):
-        outcome = 'Failed' if exc_type else TestITPluginManager.get_plugin_manager().hook.get_pytest_check_outcome()[0] if\
-            hasattr(TestITPluginManager.get_plugin_manager().hook, 'get_pytest_check_outcome') else 'Passed'
+        outcome = 'Failed' if exc_type else TmsPluginManager.get_plugin_manager().hook.get_pytest_check_outcome()[0] if\
+            hasattr(TmsPluginManager.get_plugin_manager().hook, 'get_pytest_check_outcome') else 'Passed'
         duration = round(datetime.utcnow().timestamp() * 1000) - self.start_time
         self.steps_data_results = self.result_step_append(
                                     self.steps_data,
@@ -208,10 +117,10 @@ class step:
             del self.attachments[-1]
         else:
             while len(steps_results) < step_stack[0] + 1:
-                steps_results.append({'stepResults': []})
-            steps_results[step_stack[0]]['stepResults'] = self.result_step_append(
+                steps_results.append({'step_results': []})
+            steps_results[step_stack[0]]['step_results'] = self.result_step_append(
                                                                 steps[step_stack[0]]['steps'],
-                                                                steps_results[step_stack[0]]['stepResults'],
+                                                                steps_results[step_stack[0]]['step_results'],
                                                                 step_stack[1:],
                                                                 outcome,
                                                                 duration)
@@ -231,35 +140,8 @@ class step:
 
     @classmethod
     def add_attachments(cls, attachments_paths):
-        if hasattr(TestITPluginManager.get_plugin_manager().hook, 'load_attachments'):
-            cls.attachments[-1] += TestITPluginManager.get_plugin_manager().hook.load_attachments(attach_paths=attachments_paths)[0]
+        cls.attachments[-1] += TmsPluginManager.get_adapter_manager().load_attachments(attachments_paths)
 
-
-def search_in_environ(variable):
-    if re.fullmatch(r'{[a-zA-Z_]\w*}', variable) and variable[1:-1] in os.environ:
-        return os.environ[variable[1:-1]]
-    return variable
-
-
-def autotests_parser(data_autotests, configuration):
-    resolved_autotests = []
-    for data_autotest in data_autotests:
-        if configuration == data_autotest['configurationId']:
-            resolved_autotests.append(data_autotest['autoTest']['externalId'])
-    return resolved_autotests
-
-
-def uuid_check(uuid):
-    if not re.fullmatch(r'[a-zA-Z0-9]{8}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{12}', uuid):
-        print(f'The wrong {uuid}!')
-        raise SystemExit
-    return uuid
-
-
-def url_check(url):
-    if not re.fullmatch(r'^(?:(?:(?:https?|ftp):)?//)?(?:(?:[1-9]\d?|1\d\d|2[01]\d|22[0-3])(?:\.(?:1?\d{1,2}|2[0-4]\d|25[0-5])){2}(?:\.(?:[1-9]\d?|1\d\d|2[0-4]\d|25[0-4]))|(?:(?:[a-zA-Z0-9\u00a1-\uffff][a-zA-Z0-9\u00a1-\uffff_-]{0,62})?[a-zA-Z0-9\u00a1-\uffff]\.)+(?:[a-zA-Z\u00a1-\uffff]{2,}\.?))(?::\d{2,5})?(?:[/?#]\S*)?$', url):
-        print('The wrong URL!')
-        raise SystemExit
-    if url[-1] == '/':
-        return url[:-1]
-    return url
+    @classmethod
+    def create_attachment(cls, body, name):
+        cls.attachments[-1] += TmsPluginManager.get_adapter_manager().create_attachment(body, name)
