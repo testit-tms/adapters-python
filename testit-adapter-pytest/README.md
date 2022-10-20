@@ -118,7 +118,7 @@ $ pytest --testit
 Launch with command-line parameters:
 
 ```
-$ pytest --testit --testit_url=<url> --privatetoken=<token> --projectid=<id> --configurationid=<id> --testrunid=<optional id> --testrun_name=<optional name> --testit_proxy='{"http":"http://localhost:8888","https":"http://localhost:8888"}'
+$ pytest --testit --tmsUrl=<url> --tmsPrivateToken=<token> --tmsProjectId=<id> --tmsConfigurationId=<id> --tmsTestRunId=<optional id> --tmsTestRunName=<optional name> --tmsProxy='{"http":"http://localhost:8888","https":"http://localhost:8888"}'
 ```
 
 ### Decorators

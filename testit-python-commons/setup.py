@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 setup(
     name='testit-python-commons',
     version='1.0.0',
-    description='Pytest adapter for Test IT',
+    description='Python commons for Test IT',
     url='https://github.com/testit-tms/adapters-python/',
     author='Pavel Butuzov',
     author_email='pavel.butuzov@testit.software',
