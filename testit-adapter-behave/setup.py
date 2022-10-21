@@ -1,9 +1,11 @@
 from setuptools import setup, find_packages
 
 setup(
-    name='testit-python-commons',
+    name='testit-adapter-behave',
     version='1.0.0',
-    description='Python commons for Test IT',
+    description='Behave adapter for Test IT',
+    long_description=open('README.md', "r").read(),
+    long_description_content_type="text/markdown",
     url='https://github.com/testit-tms/adapters-python/',
     author='Pavel Butuzov',
     author_email='pavel.butuzov@testit.software',
@@ -14,10 +16,9 @@ setup(
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
-        'Programming Language :: Python :: 3.10'
     ],
-    py_modules=['testit', 'testit_python_commons'],
+    py_modules=['testit_adapter_behave'],
     packages=find_packages(where='src'),
     package_dir={'': 'src'},
-    install_requires=['pluggy', 'testit-api-client>=2,<3']
+    install_requires=['behave', 'testit-python-commons>=1,<2'],
 )
