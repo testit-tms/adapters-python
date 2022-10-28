@@ -18,8 +18,8 @@ class Utils:
         resolved_autotests = []
 
         for data_autotest in data_autotests:
-            if configuration == data_autotest['configurationId']:
-                resolved_autotests.append(data_autotest['autoTest']['externalId'])
+            if configuration == data_autotest['_data_store']['configuration_id']:
+                resolved_autotests.append(data_autotest._data_store['auto_test']._data_store['external_id'])
 
         return resolved_autotests
 

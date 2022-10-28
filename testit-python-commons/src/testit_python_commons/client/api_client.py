@@ -47,7 +47,7 @@ class ApiClientWorker:
 
         response = test_run_api.get_test_run_by_id(self.__config.get_test_run_id())
 
-        test_results = response['testResults']
+        test_results = response['_data_store']['test_results']
 
         return Utils.autotests_parser(
             test_results,
