@@ -118,7 +118,7 @@ $ behave -f testit_adapter_behave.formatter:AdapterFormatter
 Launch with command-line parameters:
 
 ```
-$ behave -f testit_adapter_behave.formatter:AdapterFormatter --tmsUrl=<url> --tmsPrivateToken=<token> --tmsProjectId=<id> --tmsConfigurationId=<id> --tmsTestRunId=<optional id> --tmsAdapterMode=<optional> --tmsTestRunName=<optional name> --tmsProxy='{"http":"http://localhost:8888","https":"http://localhost:8888"}'
+$ behave -f testit_adapter_behave.formatter:AdapterFormatter -D tmsUrl=<url> -D tmsPrivateToken=<token> -D tmsProjectId=<id> -D tmsConfigurationId=<id> -D tmsTestRunId=<optional id> -D tmsAdapterMode=<optional> -D tmsTestRunName=<optional name> -D tmsProxy='{"http":"http://localhost:8888","https":"http://localhost:8888"}'
 ```
 
 ### Tags
@@ -151,7 +151,6 @@ from behave import then
 
 
 @given("I authorize on the portal")
-@testit.step("I authorize on the portal")
 def authorization():
     with testit.step("I set login"):
         pass
@@ -160,7 +159,6 @@ def authorization():
 
 
 @then("I create a project")
-@testit.step("I create a project")
 def create_project():
     pass
 
@@ -199,6 +197,7 @@ Feature: Sample
     @Description=Test_with_all_annotations
     @Labels=Tag1,Tag2
     @Links={"url":"https://dumps.example.com/module/repository","title":"Repository","description":"Example_of_repository","type":"Repository"}
+    @Links=https://dumps.example.com/module/repository
     Scenario: Create new project, section and test case
         Then I create a project
         Then I open the project
@@ -218,13 +217,11 @@ class Calculator:
     
     @classmethod
     @when("Summing {left}+{right}")
-    @testit.step("Summing {left}+{right}")
     def sum(cls, left, right):
         cls.result = left + right
         
     @classmethod
     @then("Result is {result}")
-    @testit.step("Result is {result}")
     def result(cls, result):
         assert result == cls.result
 ```
