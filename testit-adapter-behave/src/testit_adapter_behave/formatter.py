@@ -6,12 +6,15 @@ from .listener import AdapterListener
 from .utils import parse_userdata, filter_out_scenarios
 
 
+
 class AdapterFormatter(Formatter):
     __adapter_launch_is_started = False
+
     __tests_for_launch = None
 
     def __init__(self, stream_opener, config):
         super(AdapterFormatter, self).__init__(stream_opener, config)
+
 
         option = parse_userdata(config.userdata)
 
@@ -22,6 +25,7 @@ class AdapterFormatter(Formatter):
 
     def start_adapter_launch(self):
         self.__listener.start_launch()
+
 
         self.__tests_for_launch = self.__listener.get_tests_for_launch()
         self.__adapter_launch_is_started = True
@@ -35,8 +39,10 @@ class AdapterFormatter(Formatter):
             self.__tests_for_launch,
             feature.scenarios)
 
+
     def scenario(self, scenario):
         self.__listener.get_scenario(scenario)
+
 
     def match(self, match):
         self.__listener.get_step_parameters(match)

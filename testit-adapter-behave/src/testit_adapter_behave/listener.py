@@ -1,4 +1,5 @@
 from testit_python_commons.services import AdapterManager
+
 from testit_python_commons.step import Step
 import testit_python_commons.services as adapter
 
@@ -17,6 +18,7 @@ class AdapterListener(object):
     __background_steps_count = 0
     __steps_count = 0
 
+
     def __init__(self, adapter_manager: AdapterManager):
         self.__adapter_manager = adapter_manager
 
@@ -24,6 +26,7 @@ class AdapterListener(object):
         test_run_id = self.__adapter_manager.get_test_run_id()
 
         self.__adapter_manager.set_test_run_id(test_run_id)
+
 
     def get_tests_for_launch(self):
         return self.__adapter_manager.get_autotests_for_launch()
@@ -35,6 +38,7 @@ class AdapterListener(object):
 
     def set_scenario(self):
         self.__adapter_manager.write_test(self.__executable_test)
+
 
     def get_step_parameters(self, match):
         scope = self.get_scope()

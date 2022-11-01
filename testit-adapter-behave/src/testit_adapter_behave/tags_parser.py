@@ -12,6 +12,7 @@ def parse_tags(tags):
 
     for tag in tags:
         if TagType.EXTERNAL_ID in tag:
+
             parsed_tags[TagType.EXTERNAL_ID] = tag[len(TagType.EXTERNAL_ID):]
 
         elif TagType.DISPLAY_NAME in tag:
@@ -20,6 +21,7 @@ def parse_tags(tags):
         elif TagType.LINKS in tag:
             parsed_tags[TagType.LINKS].extend(
                 parse_links(
+
                     tag[len(TagType.LINKS):]))
 
         elif TagType.TITLE in tag:
@@ -28,6 +30,7 @@ def parse_tags(tags):
         elif TagType.WORK_ITEM_IDS in tag:
             parsed_tags[TagType.WORK_ITEM_IDS].extend(
                 parse_massive(
+
                     tag[len(TagType.WORK_ITEM_IDS):]))
 
         elif TagType.DESCRIPTION in tag:
@@ -43,6 +46,7 @@ def parse_tags(tags):
 
 def parse_massive(tag: str):
     return tag.split(',')
+
 
 
 def parse_labels(tag):
