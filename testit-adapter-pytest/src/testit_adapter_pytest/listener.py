@@ -4,7 +4,14 @@ import pytest
 from testit_python_commons.step import Step
 from testit_python_commons.services import AdapterManager
 from testit_python_commons.services import Utils
+from testit_python_commons.models.outcome_type import OutcomeType
 import testit_python_commons.services as adapter
+
+STATUS = {
+    'passed': OutcomeType.PASSED,
+    'failed': OutcomeType.FAILED,
+    'skipped': OutcomeType.SKIPPED
+}
 
 
 class TmsListener(object):
@@ -43,6 +50,9 @@ class TmsListener(object):
         resolved_autotests = self.__adapter_manager.get_autotests_for_launch()
 
         for item in items:
+            if not hasattr(item.function, 'test_external_id'):
+                item.function.test_external_id = Utils.getHash(item.function.__name__)
+
             if hasattr(item.function, 'test_external_id'):
                 if item.own_markers:
                     for mark in item.own_markers:
@@ -55,8 +65,8 @@ class TmsListener(object):
                 item.test_external_id = Utils.param_attribute_collector(
                     item.function.test_external_id,
                     item.callspec.params) if hasattr(item,
-                                      'array_parametrize_mark_id'
-                                      ) else item.function.test_external_id
+                                                     'array_parametrize_mark_id'
+                                                     ) else item.function.test_external_id
 
                 item.index = index
                 item_id = items.index(item)
@@ -126,8 +136,17 @@ class TmsListener(object):
     @pytest.hookimpl
     def pytest_runtest_logreport(self, report):
         if self.__executable_test:
+            if report.when == 'setup':
+                self.__executable_test['outcome'] = STATUS.get(report.outcome, None)
+                if report.longreprtext:
+                    self.__executable_test['message'] = report.longreprtext
+
+            if report.when == 'call':
+                self.__executable_test['outcome'] = STATUS.get(report.outcome, None)
+
             if report.failed or hasattr(report, 'wasxfail') \
                     and not report.passed or report.outcome == 'rerun':
+                self.__executable_test['outcome'] = STATUS.get('failed', None)
 
                 if report.longreprtext:
                     self.__executable_test['traces'] = report.longreprtext
