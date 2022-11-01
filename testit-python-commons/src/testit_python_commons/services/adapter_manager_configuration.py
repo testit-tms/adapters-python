@@ -1,4 +1,5 @@
 from testit_python_commons.services.utils import Utils
+from testit_python_commons.models.adapter_mode import AdapterMode
 
 
 class AdapterManagerConfiguration:
@@ -8,7 +9,7 @@ class AdapterManagerConfiguration:
         if app_properties.get('testrunid'):
             self.__test_run_id = Utils.uuid_check(app_properties.get('testrunid'))
 
-        self.__adapter_mode = app_properties.get('adaptermode')
+        self.__adapter_mode = app_properties.get('adaptermode', AdapterMode.USE_FILTER)
 
     def get_test_run_id(self):
         return self.__test_run_id

@@ -1,6 +1,7 @@
 import configparser
 import os
 import warnings
+import logging
 
 from testit_python_commons.services.utils import Utils
 from testit_python_commons.models.adapter_mode import AdapterMode
@@ -130,27 +131,27 @@ class AppProperties:
 
         if adapter_mode == AdapterMode.NEW_TEST_RUN:
             if properties.get('projectid') is None:
-                print('Adapter mode "2" is enabled. The project ID is needed, but it was not found!')
+                logging.error('Adapter mode "2" is enabled. The project ID is needed, but it was not found!')
                 raise SystemExit
         elif adapter_mode in (
                 AdapterMode.RUN_ALL_TESTS,
                 AdapterMode.USE_FILTER,
                 None):
             if properties.get('testrunid') is None:
-                print(f'Adapter mode "{adapter_mode if adapter_mode else "0"}" is enabled. The test run ID is needed, but it was not found!')
+                logging.error(f'Adapter mode "{adapter_mode if adapter_mode else "0"}" is enabled. The test run ID is needed, but it was not found!')
                 raise SystemExit
         else:
-            print(f'Unknown adapter mode "{adapter_mode}"!')
+            logging.error(f'Unknown adapter mode "{adapter_mode}"!')
             raise SystemExit
 
         if properties.get('url') is None:
-            print('URL was not found!')
+            logging.error('URL was not found!')
             raise SystemExit
 
         if properties.get('privatetoken') is None:
-            print('Private token was not found!')
+            logging.error('Private token was not found!')
             raise SystemExit
 
         if properties.get('configurationid') is None:
-            print('Configuration ID was not found!')
+            logging.error('Configuration ID was not found!')
             raise SystemExit

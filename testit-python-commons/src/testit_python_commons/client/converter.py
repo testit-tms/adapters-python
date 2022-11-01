@@ -85,7 +85,9 @@ class Converter:
             properties=test_result['properties'],
             links=cls.links_to_links_post_model(test_result['resultLinks']),
             duration=round(test_result['duration']),
-            message=test_result['message']
+            message=test_result['message'],
+            started_on=test_result.get('started_on', None),
+            completed_on=test_result.get('completed_on', None)
         )
 
     @staticmethod
@@ -163,12 +165,16 @@ class Converter:
             outcome: str,
             duration: str,
             parameters,
-            attachments):
+            attachments,
+            started_on=None,
+            completed_on=None):
         return AttachmentPutModelAutoTestStepResultsModel(
             title=title,
             description=description,
             duration=duration,
             outcome=outcome,
             parameters=parameters,
-            attachments=attachments
+            attachments=attachments,
+            started_on=started_on,
+            completed_on=completed_on
         )

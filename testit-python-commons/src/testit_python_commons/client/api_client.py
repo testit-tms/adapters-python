@@ -1,4 +1,5 @@
 import os
+import logging
 
 from testit_api_client import ApiClient
 from testit_api_client import Configuration
@@ -79,7 +80,7 @@ class ApiClientWorker:
                         autotest_response['id'],
                         work_item_id_model=WorkItemIdModel(id=work_item_id))
                 except Exception as exc:
-                    print(f"Link with workItem {work_item_id} status: {exc.status}\n{exc.body}")
+                    logging.error(f"Link with workItem {work_item_id} status: {exc.status}\n{exc.body}")
 
         model = Converter.test_result_to_testrun_result_post_model(
             test_result,
@@ -100,7 +101,7 @@ class ApiClientWorker:
 
                     attachments.append(AttachmentPutModel(attachment_response['id']))
                 except Exception as exc:
-                    print(f'Load {path} status: {exc.status}\n{exc.body}')
+                    logging.error(f'Load {path} status: {exc.status}\n{exc.body}')
             else:
-                print(f'File ({path}) not found!')
+                logging.error(f'File ({path}) not found!')
         return attachments
