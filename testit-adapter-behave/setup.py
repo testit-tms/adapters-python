@@ -20,5 +20,8 @@ setup(
     py_modules=['testit_adapter_behave'],
     packages=find_packages(where='src'),
     package_dir={'': 'src'},
-    install_requires=['behave', 'testit-python-commons>=2,<3'],
+    install_requires=[
+        'behave',
+        'testit-python-commons>=1,<2',
+        'attrs'],
 )
