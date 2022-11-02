@@ -51,7 +51,7 @@ class TmsListener(object):
 
         for item in items:
             if not hasattr(item.function, 'test_external_id'):
-                item.function.test_external_id = Utils.getHash(item.function.__name__)
+                item.function.test_external_id = Utils.getHash(item.nodeid + item.function.__name__)
 
             if hasattr(item.function, 'test_external_id'):
                 if item.own_markers:
@@ -88,7 +88,7 @@ class TmsListener(object):
     @pytest.hookimpl
     def pytest_runtest_protocol(self, item):
         if not hasattr(item.function, 'test_external_id'):
-            item.function.test_external_id = Utils.getHash(item.function.__name__)
+            item.function.test_external_id = Utils.getHash(item.nodeid + item.function.__name__)
 
         if not hasattr(item.function, 'test_displayname'):
             item.function.test_displayname = item.function.__doc__ if \
