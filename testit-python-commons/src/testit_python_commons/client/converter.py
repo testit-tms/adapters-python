@@ -74,8 +74,7 @@ class Converter:
         return AutoTestResultsForTestRunModel(
             configuration_id,
             test_result['externalID'],
-            test_result['outcome'] if test_result['outcome'] else
-            'Failed' if test_result['traces'] else 'Passed',
+            test_result['outcome'],
             step_results=test_result['stepResults'],
             setup_results=test_result['setUpResults'],
             teardown_results=test_result['tearDownResults'],

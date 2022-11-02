@@ -1,11 +1,11 @@
 from enum import Enum
 import traceback
 
-from testit_python_commons.models.outcome_type import OutcomeType
 from testit_python_commons.services.utils import Utils
+from testit_python_commons.models.outcome_type import OutcomeType
 
 from .tags_parser import parse_tags
-from .tags import TagType
+from .models.tags import TagType
 
 STATUS = {
     'passed': OutcomeType.PASSED,
@@ -19,28 +19,60 @@ STATUS = {
 def parse_scenario(scenario):
     tags = parse_tags(scenario.tags + scenario.feature.tags)
 
-    return {
+    # TODO: Add model to python-commons; implement via attrs
+    executable_test = {
         'externalID': tags[TagType.EXTERNAL_ID] if
-        tags[TagType.EXTERNAL_ID] else get_scenario_external_id(scenario),
+        TagType.EXTERNAL_ID in tags and tags[TagType.EXTERNAL_ID] else get_scenario_external_id(scenario),
         'autoTestName': tags[TagType.DISPLAY_NAME] if
-        tags[TagType.DISPLAY_NAME] else get_scenario_name(scenario),
-        'steps': get_step_table(scenario.steps),
+        TagType.DISPLAY_NAME in tags and tags[TagType.DISPLAY_NAME] else get_scenario_name(scenario),
+        'outcome': None,
+        'steps': [],
         'stepResults': [],
-        'setUp': get_step_table(scenario.background_steps),
+        'setUp': [],
         'setUpResults': [],
+        'tearDown': [],
+        'tearDownResults': [],
         'resultLinks': [],
         'duration': 0,
-        'outcome': get_scenario_status(scenario),
-        'traces': get_scenario_status_details(scenario),
+        'traces': None,
+        'message': None,
         'namespace': get_scenario_namespace(scenario),
+        'classname': None,
         'attachments': [],
         'parameters': get_scenario_parameters(scenario),
-        'title': tags[TagType.TITLE],
-        'description': tags[TagType.DESCRIPTION],
-        'links': tags[TagType.LINKS],
-        'labels': tags[TagType.LABELS],
-        'workItemIds': tags[TagType.WORK_ITEM_IDS],
+        # TODO: Make optional in Converter python-commons
+        'properties': {},
+        'title': None,
+        'description': None,
+        'links': [],
+        'labels': [],
+        'workItemsID': [],
+        # TODO: Add to python-commons
+        # 'started_on': '',
+        # 'completed_on': None
     }
+
+    if TagType.EXTERNAL_ID in tags:
+        executable_test['title'] = tags[TagType.TITLE]
+
+    if TagType.DESCRIPTION in tags:
+        executable_test['description'] = tags[TagType.DESCRIPTION]
+
+    if TagType.LINKS in tags:
+        executable_test['links'] = tags[TagType.LINKS]
+
+    if TagType.LABELS in tags:
+        executable_test['labels'] = tags[TagType.LABELS]
+
+    if TagType.WORK_ITEM_IDS in tags:
+        # TODO: Fix in python-commons to "workItemIds"
+        executable_test['workItemsID'] = tags[TagType.WORK_ITEM_IDS]
+
+    return executable_test
+
+
+def parse_status(status):
+    return STATUS[status.name]
 
 
 def get_scenario_name(scenario):
@@ -48,13 +80,7 @@ def get_scenario_name(scenario):
 
 
 def get_scenario_external_id(scenario):
-    parts = [scenario.feature.name, scenario.name]
-
-    if scenario._row:
-        row = scenario._row
-        parts.extend(['{name}={value}'.format(name=name, value=value) for name, value in zip(row.headings, row.cells)])
-
-    return Utils.getHash(*parts)
+    return Utils.getHash(scenario.feature.filename + scenario.name)
 
 
 def get_scenario_namespace(scenario):
