@@ -33,7 +33,9 @@ class Utils:
 
     @staticmethod
     def url_check(url: str):
-        if not re.fullmatch(r'^(?:(?:(?:https?|ftp):)?//)?(?:(?:[1-9]\d?|1\d\d|2[01]\d|22[0-3])(?:\.(?:1?\d{1,2}|2[0-4]\d|25[0-5])){2}(?:\.(?:[1-9]\d?|1\d\d|2[0-4]\d|25[0-4]))|(?:(?:[a-zA-Z0-9\u00a1-\uffff][a-zA-Z0-9\u00a1-\uffff_-]{0,62})?[a-zA-Z0-9\u00a1-\uffff]\.)+(?:[a-zA-Z\u00a1-\uffff]{2,}\.?))(?::\d{2,5})?(?:[/?#]\S*)?$', url):
+        if not re.fullmatch(
+                r'^(?:(?:(?:https?|ftp):)?//)?(?:(?:[1-9]\d?|1\d\d|2[01]\d|22[0-3])(?:\.(?:1?\d{1,2}|2[0-4]\d|25[0-5])){2}(?:\.(?:[1-9]\d?|1\d\d|2[0-4]\d|25[0-4]))|(?:(?:[a-zA-Z0-9\u00a1-\uffff][a-zA-Z0-9\u00a1-\uffff_-]{0,62})?[a-zA-Z0-9\u00a1-\uffff]\.)+(?:[a-zA-Z\u00a1-\uffff]{2,}\.?))(?::\d{2,5})?(?:[/?#]\S*)?$',
+                url):
             print('The wrong URL!')
             raise SystemExit
 
@@ -45,7 +47,7 @@ class Utils:
     @staticmethod
     def form_test(item):
         data = {
-            'externalID': item.test_external_id,
+            'externalID': item.function.test_external_id,
             'autoTestName': item.function.test_displayname,
             'steps': [],
             'stepResults': [],
@@ -82,14 +84,16 @@ class Utils:
 
         if item.own_markers:
             for mark in item.own_markers:
-                if mark.name == 'skip' or mark.name == 'skipif' and mark.args[0]:
+                if mark.name == 'skip' or mark.name == 'skipif':
                     data['outcome'] = 'Skipped'
                     data['failureReasonName'] = None
-                    data['message'] = mark.args[0]
+                    if mark.args:
+                        data['message'] = mark.args[0]
                     if mark.kwargs and 'reason' in mark.kwargs:
                         data['message'] = mark.kwargs['reason']
-                if mark.name == 'xfail' and mark.args[0]:
-                    data['message'] = mark.args[0]
+                if mark.name == 'xfail':
+                    if mark.args:
+                        data['message'] = mark.args[0]
                     if mark.kwargs and 'reason' in mark.kwargs:
                         data['message'] = mark.kwargs['reason']
 
@@ -239,9 +243,10 @@ class Utils:
     def deprecated(message):
         def deprecated_decorator(func):
             def deprecated_func(*args, **kwargs):
-                warnings.warn('"{}" is no longer acceptable to compute time between versions.\n{}'.format(func.__name__, message),
-                              category=DeprecationWarning,
-                              stacklevel=2)
+                warnings.warn(
+                    '"{}" is no longer acceptable to compute time between versions.\n{}'.format(func.__name__, message),
+                    category=DeprecationWarning,
+                    stacklevel=2)
                 warnings.simplefilter('default', DeprecationWarning)
                 return func(*args, **kwargs)
 

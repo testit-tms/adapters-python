@@ -1,12 +1,11 @@
 from testit_python_commons.services import AdapterManager
-
 from testit_python_commons.step import Step
 import testit_python_commons.services as adapter
+from testit_python_commons.models.outcome_type import OutcomeType
 
 from .scenario_parser import (
     parse_scenario,
-    parse_status,
-    OutcomeType)
+    parse_status)
 from .utils import (
     convert_step_to_step,
     convert_step_to_step_result)
@@ -18,7 +17,6 @@ class AdapterListener(object):
     __background_steps_count = 0
     __steps_count = 0
 
-
     def __init__(self, adapter_manager: AdapterManager):
         self.__adapter_manager = adapter_manager
 
@@ -26,7 +24,6 @@ class AdapterListener(object):
         test_run_id = self.__adapter_manager.get_test_run_id()
 
         self.__adapter_manager.set_test_run_id(test_run_id)
-
 
     def get_tests_for_launch(self):
         return self.__adapter_manager.get_autotests_for_launch()
@@ -38,7 +35,6 @@ class AdapterListener(object):
 
     def set_scenario(self):
         self.__adapter_manager.write_test(self.__executable_test)
-
 
     def get_step_parameters(self, match):
         scope = self.get_scope()
@@ -75,7 +71,7 @@ class AdapterListener(object):
 
         if outcome != OutcomeType.PASSED:
             self.__executable_test['traces'] = result.error_message
-
+            self.__executable_test['outcome'] = outcome
             self.set_scenario()
             return
 
@@ -86,6 +82,7 @@ class AdapterListener(object):
         self.__steps_count -= 1
 
         if self.__steps_count == 0:
+            self.__executable_test['outcome'] = outcome
             self.set_scenario()
 
     def get_scope(self):

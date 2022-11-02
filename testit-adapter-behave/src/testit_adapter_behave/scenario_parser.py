@@ -1,19 +1,11 @@
 from enum import Enum
 import traceback
 
-
 from testit_python_commons.services.utils import Utils
+from testit_python_commons.models.outcome_type import OutcomeType
 
 from .tags_parser import parse_tags
 from .models.tags import TagType
-
-
-# TODO: Add to python-commons
-class OutcomeType:
-    PASSED = 'Passed'
-    FAILED = 'Failed'
-    SKIPPED = 'Skipped'
-    BLOCKED = 'Blocked'
 
 STATUS = {
     'passed': OutcomeType.PASSED,
@@ -26,7 +18,6 @@ STATUS = {
 
 def parse_scenario(scenario):
     tags = parse_tags(scenario.tags + scenario.feature.tags)
-
 
     # TODO: Add model to python-commons; implement via attrs
     executable_test = {
@@ -82,6 +73,7 @@ def parse_scenario(scenario):
 
 def parse_status(status):
     return STATUS[status.name]
+
 
 def get_scenario_name(scenario):
     return scenario.name if scenario.name else scenario.keyword

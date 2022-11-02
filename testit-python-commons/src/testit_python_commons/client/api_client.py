@@ -1,4 +1,5 @@
 import os
+from datetime import datetime
 
 from testit_api_client import ApiClient
 from testit_api_client import Configuration
@@ -6,7 +7,7 @@ from testit_api_client.models import (
     TestRunV2PostShortModel,
     WorkItemIdModel,
     AttachmentPutModel
-    )
+)
 from testit_api_client.apis import TestRunsApi
 from testit_api_client.apis import AutoTestsApi
 from testit_api_client.apis import AttachmentsApi
@@ -30,9 +31,10 @@ class ApiClientWorker:
     def create_test_run(self):
         test_run_api = TestRunsApi(api_client=self.__api_client)
 
+        test_run_name = f'TestRun_{datetime.today().strftime("%Y-%m-%dT%H:%M:%S")}' if not self.__config.get_test_run_name() else self.__config.get_test_run_name()
         model = TestRunV2PostShortModel(
             project_id=self.__config.get_project_id(),
-            name=self.__config.get_test_run_name()
+            name=test_run_name
         )
 
         response = test_run_api.create_empty(test_run_v2_post_short_model=model)

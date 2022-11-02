@@ -77,6 +77,6 @@ def convert_step_to_step_result(step, nested_step_results):
     }
 
     if nested_step_results:
-        model['stepResults'] = nested_step_results
+        model['step_results'] = nested_step_results
 
     return model

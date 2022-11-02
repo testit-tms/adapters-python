@@ -12,6 +12,7 @@ from testit_python_commons.decorators import (
 )
 from testit_python_commons.dynamic_methods import (
     addLink,
+    addLinks,
     attachments,
     addAttachments,
     message,
@@ -32,6 +33,7 @@ __all__ = [
     'link',
     'links',
     'addLink',
+    'addLinks',
     'attachments',
     'addAttachments',
     'message',
