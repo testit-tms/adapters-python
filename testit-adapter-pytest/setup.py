@@ -2,13 +2,13 @@ from setuptools import setup, find_packages
 
 setup(
     name='testit-adapter-pytest',
-    version='2.0.1',
+    version='2.0.2',
     description='Pytest adapter for Test IT',
     long_description=open('README.md', "r").read(),
     long_description_content_type="text/markdown",
     url='https://github.com/testit-tms/adapters-python/',
-    author='Pavel Butuzov',
-    author_email='pavel.butuzov@testit.software',
+    author='Integration team',
+    author_email='integrations@testit.software',
     license='Apache-2.0',
     classifiers=[
         'Programming Language :: Python :: 3',
