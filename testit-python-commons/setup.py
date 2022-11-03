@@ -5,8 +5,8 @@ setup(
     version='2.0.1',
     description='Python commons for Test IT',
     url='https://github.com/testit-tms/adapters-python/',
-    author='Pavel Butuzov',
-    author_email='pavel.butuzov@testit.software',
+    author='Integration team',
+    author_email='integrations@testit.software',
     license='Apache-2.0',
     classifiers=[
         'Programming Language :: Python :: 3',

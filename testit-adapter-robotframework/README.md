@@ -158,7 +158,7 @@ All other settings are the same as for standard execution.
 ```robotframework
 *** Settings ***
 Documentation      Main Suite with examples
-Library            TMSLibrary
+Library            testit_adapter_robotframework.TMSLibrary
 
 *** Variables ***
 &{SIMPLE_LINK}             url=http://google.com

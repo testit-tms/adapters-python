@@ -1,14 +1,14 @@
 from setuptools import setup, find_packages
 
 setup(
-    name='testit_adapter_robotframework',
-    version='1.0.0',
+    name='testit-adapter-robotframework',
+    version='2.0.1',
     description='Robot Framework adapter for Test IT',
     long_description=open('README.md', "r").read(),
     long_description_content_type="text/markdown",
     url='https://github.com/testit-tms/adapters-python/',
-    author='Dmitriy Kylosov',
-    author_email='mail@dkylosov.ru',
+    author='Integration team',
+    author_email='integrations@testit.software',
     license='Apache-2.0',
     classifiers=[
         'Programming Language :: Python :: 3',
@@ -17,9 +17,8 @@ setup(
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
     ],
-    py_modules=['testit_adapter_robotframework', 'TMSLibrary'],
+    py_modules=['testit_adapter_robotframework'],
     packages=find_packages(where='src'),
-    package_dir={'testit_adapter_robotframework': 'src/testit_adapter_robotframework',
-                 'TMSLibrary': 'src/TMSLibrary'},
-    install_requires=['attrs', 'robotframework']
+    package_dir={'': 'src'},
+    install_requires=['attrs', 'robotframework', 'testit-python-commons>=2,<3']
 )

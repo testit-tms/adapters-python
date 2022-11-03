@@ -1,9 +1,8 @@
 from testit_python_commons.services import AdapterManager
 from robot.libraries.BuiltIn import BuiltIn
 
-
-from testit_adapter_robotframework.models import Option, Link
-from testit_adapter_robotframework.listeners import AutotestAdapter, TestRunAdapter
+from .models import Option, Link
+from .listeners import AutotestAdapter, TestRunAdapter
 
 
 def enabled(func):
@@ -12,6 +11,7 @@ def enabled(func):
             return func(self, *args, **kwargs)
         else:
             raise ImportError("TestIt module should be enabled. Use '-v testit' CLI option")
+
     return wrapped
 
 

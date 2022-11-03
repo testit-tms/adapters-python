@@ -2,6 +2,7 @@ import os
 import re
 import warnings
 import hashlib
+import logging
 
 
 class Utils:
@@ -26,7 +27,7 @@ class Utils:
     @staticmethod
     def uuid_check(uuid: str):
         if not re.fullmatch(r'[a-zA-Z0-9]{8}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{12}', uuid):
-            print(f'The wrong {uuid}!')
+            logging.error(f'The wrong {uuid}!')
             raise SystemExit
 
         return uuid
@@ -36,7 +37,7 @@ class Utils:
         if not re.fullmatch(
                 r'^(?:(?:(?:https?|ftp):)?//)?(?:(?:[1-9]\d?|1\d\d|2[01]\d|22[0-3])(?:\.(?:1?\d{1,2}|2[0-4]\d|25[0-5])){2}(?:\.(?:[1-9]\d?|1\d\d|2[0-4]\d|25[0-4]))|(?:(?:[a-zA-Z0-9\u00a1-\uffff][a-zA-Z0-9\u00a1-\uffff_-]{0,62})?[a-zA-Z0-9\u00a1-\uffff]\.)+(?:[a-zA-Z\u00a1-\uffff]{2,}\.?))(?::\d{2,5})?(?:[/?#]\S*)?$',
                 url):
-            print('The wrong URL!')
+            logging.error('The wrong URL!')
             raise SystemExit
 
         if url[-1] == '/':
