@@ -48,8 +48,8 @@ class Utils:
     @staticmethod
     def form_test(item):
         data = {
-            'externalID': item.function.test_external_id,
-            'autoTestName': item.function.test_displayname,
+            'externalID': item.test_external_id,
+            'autoTestName': item.test_displayname,
             'steps': [],
             'stepResults': [],
             'setUp': [],
