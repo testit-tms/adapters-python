@@ -16,6 +16,8 @@ STATUS = {
 
 class TmsListener(object):
     __executable_test = None
+    __pytest_check_get_failures = False
+    __failures = None
 
     def __init__(self, adapter_manager: AdapterManager):
         self.__adapter_manager = adapter_manager
@@ -34,6 +36,16 @@ class TmsListener(object):
         if not hasattr(self, "test_run_id"):
             node.workerinput["test_run_id"] = pickle.dumps(node.config.test_run_id)
 
+    @adapter.hookimpl
+    def get_pytest_check_outcome(self):
+        if self.__pytest_check_get_failures:
+            from pytest_check import check_methods
+            failures = check_methods.get_failures()
+            if failures and self.__failures != failures:
+                self.__failures = failures[:]
+                return 'Failed'
+        return 'Passed'
+
     @pytest.hookimpl
     def pytest_collection_modifyitems(self, config, items):
         index = 0
@@ -42,9 +54,8 @@ class TmsListener(object):
         plugin_info = config.pluginmanager.list_plugin_distinfo()
 
         for plugin, dist in plugin_info:
-            if 'pytest_check' == dist.project_name:
-                from pytest_check import check_methods
-                self.__pytest_check_get_failures = check_methods.get_failures
+            if 'pytest-check' == dist.project_name:
+                self.__pytest_check_get_failures = True
                 break
 
         resolved_autotests = self.__adapter_manager.get_autotests_for_launch()
@@ -98,6 +109,8 @@ class TmsListener(object):
                 item.test_displayname = Utils.param_attribute_collector(
                     item.function.test_displayname,
                     item.callspec.params)
+            else:
+                item.test_displayname = item.function.test_displayname
 
         self.__executable_test = Utils.form_test(item)
 
