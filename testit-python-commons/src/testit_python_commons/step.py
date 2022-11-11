@@ -69,34 +69,36 @@ class Step:
                             parameters[key] = str(parameter)
 
                     with Step(
-                            self.args[0], self.args[1], parameters=parameters) if len(self.args) == 2\
+                            self.args[0], self.args[1], parameters=parameters) if len(self.args) == 2 \
                             else Step(self.args[0], parameters=parameters
-                        ):
+                                      ):
                         return function(*a, **kw)
+
             return step_wrapper
 
     def __enter__(self):
         self.start_time = round(datetime.utcnow().timestamp() * 1000)
         self.steps_data = self.step_append(
-                            self.steps_data,
-                            self.step_stack,
-                            self.args[0],
-                            self.args[1] if len(self.args) == 2 else None)
+            self.steps_data,
+            self.step_stack,
+            self.args[0],
+            self.args[1] if len(self.args) == 2 else None)
 
     def __exit__(self, exc_type, exc_value, tb):
-        outcome = 'Failed' if exc_type else TmsPluginManager.get_plugin_manager().hook.get_pytest_check_outcome()[0] if\
+        outcome = 'Failed' if exc_type else TmsPluginManager.get_plugin_manager().hook.get_pytest_check_outcome()[0] if \
             hasattr(TmsPluginManager.get_plugin_manager().hook, 'get_pytest_check_outcome') else 'Passed'
         duration = round(datetime.utcnow().timestamp() * 1000) - self.start_time
         self.steps_data_results = self.result_step_append(
-                                    self.steps_data,
-                                    self.steps_data_results,
-                                    self.step_stack,
-                                    outcome,
-                                    duration)
+            self.steps_data,
+            self.steps_data_results,
+            self.step_stack,
+            outcome,
+            duration)
 
     def step_append(self, steps, step_stack, step_title, step_description):
         if steps and step_stack:
-            steps[step_stack[0]]['steps'] = self.step_append(steps[step_stack[0]]['steps'], step_stack[1:], step_title, step_description)
+            steps[step_stack[0]]['steps'] = self.step_append(steps[step_stack[0]]['steps'], step_stack[1:], step_title,
+                                                             step_description)
         else:
             steps.append({'title': step_title, 'description': step_description, 'steps': []})
             self.step_stack.append(len(steps) - 1)
@@ -119,11 +121,11 @@ class Step:
             while len(steps_results) < step_stack[0] + 1:
                 steps_results.append({'step_results': []})
             steps_results[step_stack[0]]['step_results'] = self.result_step_append(
-                                                                steps[step_stack[0]]['steps'],
-                                                                steps_results[step_stack[0]]['step_results'],
-                                                                step_stack[1:],
-                                                                outcome,
-                                                                duration)
+                steps[step_stack[0]]['steps'],
+                steps_results[step_stack[0]]['step_results'],
+                step_stack[1:],
+                outcome,
+                duration)
         return steps_results
 
     @classmethod

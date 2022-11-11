@@ -48,8 +48,8 @@ class Utils:
     @staticmethod
     def form_test(item):
         data = {
-            'externalID': item.function.test_external_id,
-            'autoTestName': item.function.test_displayname,
+            'externalID': item.test_external_id,
+            'autoTestName': item.test_displayname,
             'steps': [],
             'stepResults': [],
             'setUp': [],
@@ -165,22 +165,23 @@ class Utils:
     @staticmethod
     def __set_labels(item, data):
         if hasattr(item, 'array_parametrize_mark_id'):
-            result, param_id = Utils.mass_param_attribute_collector(
-                item.function.test_labels[0],
-                item.own_markers,
-                item.array_parametrize_mark_id,
-                item.index)
-            if param_id is not None and item.function.test_labels[0][1:-1] in \
-                    item.name[(item.name.find('[') + 1):(item.name.rfind(']'))].split(
-                        '-')[param_id]:
-                for label in result:
+            for one_label in item.function.test_labels:
+                result, param_id = Utils.mass_param_attribute_collector(
+                    one_label,
+                    item.own_markers,
+                    item.array_parametrize_mark_id,
+                    item.index)
+                if param_id is not None and one_label[1:-1] in \
+                        item.name[(item.name.find('[') + 1):(item.name.rfind(']'))].split(
+                            '-')[param_id]:
+                    for label in result:
+                        data['labels'].append({
+                            'name': label
+                        })
+                else:
                     data['labels'].append({
-                        'name': label
+                        'name': result
                     })
-            else:
-                data['labels'].append({
-                    'name': result
-                })
         else:
             for label in item.function.test_labels:
                 data['labels'].append({
@@ -235,7 +236,11 @@ class Utils:
     @staticmethod
     def mass_param_attribute_collector(attribute, marks, parametrize_id, index):
         for ID in parametrize_id:
-            if attribute[1:-1] != '' and attribute[1:-1] in marks[ID].args[0]:
+            param_names = []
+            for param_name in marks[ID].args[0].split(','):
+                param_names.append(param_name.strip())
+            a = attribute[1:-1]
+            if attribute[1:-1] != '' and attribute[1:-1] in param_names:
                 param_id = marks[ID].args[0].split(', ').index(attribute[1:-1])
                 return marks[ID].args[1][index][param_id], param_id
         return attribute, None
