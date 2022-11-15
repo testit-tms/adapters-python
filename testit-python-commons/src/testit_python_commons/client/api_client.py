@@ -60,26 +60,30 @@ class ApiClientWorker:
         test_run_api = TestRunsApi(api_client=self.__api_client)
         autotest_api = AutoTestsApi(api_client=self.__api_client)
 
-        model = Converter.test_result_to_autotest_post_model(
-            test_result,
-            self.__config.get_project_id())
-        try:
+        autotest = autotest_api.get_all_auto_tests(project_id=self.__config.get_project_id(),
+                                                   external_id=test_result['externalID'])
+        autotest_global_id = None
+        if autotest:
+            model = Converter.test_result_to_autotest_put_model(
+                test_result,
+                self.__config.get_project_id())
+
+            autotest_api.update_auto_test(auto_test_put_model=model)
+            autotest_global_id = autotest[0]['id']
+
+        else:
+            model = Converter.test_result_to_autotest_post_model(
+                test_result,
+                self.__config.get_project_id())
+
             autotest_response = autotest_api.create_auto_test(auto_test_post_model=model)
-        except Exception as exc:
-            if exc.status == 409:
-                model = Converter.test_result_to_autotest_put_model(
-                    test_result,
-                    self.__config.get_project_id())
+            autotest_global_id = autotest_response['id']
 
-                autotest_response = autotest_api.update_auto_test(auto_test_put_model=model)
-            else:
-                raise exc
-
-        if autotest_response:
+        if autotest_global_id:
             for work_item_id in test_result['workItemsID']:
                 try:
                     autotest_api.link_auto_test_to_work_item(
-                        autotest_response['id'],
+                        autotest_global_id,
                         work_item_id_model=WorkItemIdModel(id=work_item_id))
                 except Exception as exc:
                     logging.error(f"Link with workItem {work_item_id} status: {exc.status}\n{exc.body}")

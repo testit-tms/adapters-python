@@ -81,7 +81,7 @@ class Utils:
             Utils.__set_labels(item, data)
 
         if hasattr(item.function, 'test_workitems_id'):
-            Utils.__set_workitems_id(item, data)
+            data['workItemsID'] = item.function.test_workitems_id
 
         if item.own_markers:
             for mark in item.own_markers:
