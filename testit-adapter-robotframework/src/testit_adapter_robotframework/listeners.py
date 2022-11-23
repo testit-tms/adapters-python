@@ -1,3 +1,5 @@
+import re
+
 from robot.libraries.BuiltIn import BuiltIn
 from robot.api import SuiteVisitor, logger
 from testit_python_commons.services import Utils
@@ -23,12 +25,12 @@ class AutotestAdapter:
     def parse_arguments(args):
         parameters = {}
         for arg in args:
-            arg = arg.replace('"', '').replace("'", '').replace("/", '')
-            if '$' in arg or '@' in arg or '&' in arg:
-                value = str(BuiltIn().get_variable_value(arg))
+            variables = re.findall(r'\${[a-zA-Z-_\\ \d]*}', arg)
+            for v in variables:
+                value = str(BuiltIn().get_variable_value(v))
                 if len(value) > 2000:
                     value = value[:2000]
-                parameters[arg] = value
+                parameters[v] = value
         return parameters if parameters else None
 
     def start_test(self, name, attributes):
@@ -58,8 +60,8 @@ class AutotestAdapter:
             self.active_test.completed_on = convert_time(attributes['endtime'])
             if not self.active_test.message:
                 if self.active_test.outcome == 'Failed':
-                    for s in self.active_test.setupResults + self.active_test.stepResults \
-                             + self.active_test.teardownResults:
+                    for s in self.active_test.setUpResults + self.active_test.stepResults \
+                             + self.active_test.tearDownResults:
                         if s.outcome == 'Failed':
                             self.active_test.message = f"Failed on step: '{s.title}'"
                             break
