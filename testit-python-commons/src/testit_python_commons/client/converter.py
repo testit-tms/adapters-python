@@ -136,9 +136,9 @@ class Converter:
         for link in links:
             post_model_links.append(cls.link_to_link_post_model(
                 link['url'],
-                link['title'],
-                link['type'],
-                link['description']
+                link.get('title', None),
+                link.get('type', None),
+                link.get('description', None)
             ))
 
         return post_model_links
@@ -150,9 +150,9 @@ class Converter:
         for link in links:
             put_model_links.append(cls.link_to_link_put_model(
                 link['url'],
-                link['title'],
-                link['type'],
-                link['description']
+                link.get('title', None),
+                link.get('type', None),
+                link.get('description', None)
             ))
 
         return put_model_links
