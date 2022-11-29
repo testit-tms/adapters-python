@@ -73,11 +73,10 @@ class TmsListener(object):
                             item.array_parametrize_mark_id.append(
                                 item.own_markers.index(mark))
 
+                params = Utils.get_params(item)
                 item.test_external_id = Utils.param_attribute_collector(
                     item.function.test_external_id,
-                    item.callspec.params) if hasattr(item,
-                                                     'array_parametrize_mark_id'
-                                                     ) else item.function.test_external_id
+                    params)
 
                 item.index = index
                 item_id = items.index(item)
@@ -105,12 +104,11 @@ class TmsListener(object):
             item.test_displayname = item.function.__doc__ if \
                 item.function.__doc__ else item.function.__name__
         else:
-            if hasattr(item, 'array_parametrize_mark_id'):
-                item.test_displayname = Utils.param_attribute_collector(
-                    item.function.test_displayname,
-                    item.callspec.params)
-            else:
-                item.test_displayname = item.function.test_displayname
+            params = Utils.get_params(item)
+
+            item.test_displayname = Utils.param_attribute_collector(
+                item.function.test_displayname,
+                params)
 
         self.__executable_test = Utils.form_test(item)
 

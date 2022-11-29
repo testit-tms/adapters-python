@@ -125,21 +125,23 @@ class Utils:
 
     @staticmethod
     def __set_links(item, data):
-        if hasattr(item, 'array_parametrize_mark_id'):
+        params = Utils.get_params(item)
+
+        if params:
             for link in item.function.test_links:
                 data['links'].append({})
                 data['links'][-1]['url'] = Utils.param_attribute_collector(
                     link['url'],
-                    item.callspec.params)
+                    params)
                 data['links'][-1]['title'] = Utils.param_attribute_collector(
                     link['title'],
-                    item.callspec.params) if link['title'] else None
+                    params) if link['title'] else None
                 data['links'][-1]['type'] = Utils.param_attribute_collector(
                     link['type'],
-                    item.callspec.params) if link['type'] else None
+                    params) if link['type'] else None
                 data['links'][-1]['description'] = Utils.param_attribute_collector(
                     link['description'],
-                    item.callspec.params) if link['description'] else None
+                    params) if link['description'] else None
         else:
             data['links'] = item.function.test_links
 
@@ -147,20 +149,26 @@ class Utils:
     def _get_title_from(item):
         if not hasattr(item.function, 'test_title'):
             return None
-        if hasattr(item, 'array_parametrize_mark_id'):
+
+        params = Utils.get_params(item)
+
+        if params:
             return Utils.param_attribute_collector(
                 item.function.test_title,
-                item.callspec.params)
+                params)
         return item.function.test_title
 
     @staticmethod
     def __get_description_from(item):
         if not hasattr(item.function, 'test_description'):
             return None
-        if hasattr(item, 'array_parametrize_mark_id'):
+
+        params = Utils.get_params(item)
+
+        if params:
             return Utils.param_attribute_collector(
                 item.function.test_description,
-                item.callspec.params)
+                params)
         return item.function.test_description
 
     @staticmethod
@@ -214,8 +222,10 @@ class Utils:
                 root_key = param_key
                 id_keys = re.findall(r'\[(.*?)\]', param_key)
                 if len(id_keys) == 0:
-                    base_key = root_key
-                    result = result.replace("{" + root_key + "}", str(run_param[base_key]))
+                    if root_key in run_param:
+                        result = result.replace("{" + root_key + "}", str(run_param[root_key]))
+                    else:
+                        logging.error(f"Parameter {root_key} not found")
                 elif len(id_keys) == 1:
                     base_key = root_key.replace("[" + id_keys[0] + "]", "")
                     id_key = id_keys[0].strip("\'\"")
@@ -240,7 +250,6 @@ class Utils:
             param_names = []
             for param_name in marks[ID].args[0].split(','):
                 param_names.append(param_name.strip())
-            a = attribute[1:-1]
             if attribute[1:-1] != '' and attribute[1:-1] in param_names:
                 param_id = marks[ID].args[0].split(', ').index(attribute[1:-1])
                 return marks[ID].args[1][index][param_id], param_id
@@ -265,3 +274,15 @@ class Utils:
     def getHash(value: str):
         md = hashlib.sha256(bytes(value, encoding='utf-8'))
         return md.hexdigest()
+
+    @staticmethod
+    def get_params(item):
+        params = {}
+
+        if hasattr(item, 'test_properties'):
+            params.update(item.test_properties)
+
+        if hasattr(item, 'callspec'):
+            params.update(item.callspec.params)
+
+        return params
