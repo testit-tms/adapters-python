@@ -41,14 +41,14 @@ pip install testit-adapter-pytest
     
         1. create a project
         2. open DevTools -> network
-        3. go to the project https://{DOMAIN}/projects/20/tests
+        3. go to the project https://{DOMAIN}/projects/{PROJECT_GLOBAL_ID}/tests
         4. GET-request project, Preview tab, copy id field  
     
     * `configurationId` - ID of configuration in TMS instance.
     
         1. create a project  
         2. open DevTools -> network  
-        3. go to the project https://{DOMAIN}/projects/20/tests  
+        3. go to the project https://{DOMAIN}/projects/{PROJECT_GLOBAL_ID}/tests  
         4. GET-request configurations, Preview tab, copy id field  
     
     * `testRunId` - id of the created test run in TMS instance. `testRunId` is optional. If it is not provided, it is created automatically.  
