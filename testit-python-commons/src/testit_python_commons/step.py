@@ -33,15 +33,18 @@ class Step:
                 name = f'Step {str(len(self.steps_data) + 1)}'
 
             args_default_values = inspect.getfullargspec(function).defaults
-            if args or args_default_values:
-                if args_default_values:
-                    args += args_default_values
 
-                function_args_name = inspect.getfullargspec(function).args
-                step_args = [arg_name for arg_name in function_args_name if arg_name not in list(kwargs)]
+            if args or args_default_values:
+                all_keys = inspect.getfullargspec(function).args
+                all_args = list(args)
+
+                if args_default_values:
+                    all_args += list(args_default_values[len(args) - (len(all_keys) - len(args_default_values)):])
+
+                step_args = [arg_name for arg_name in all_keys if arg_name not in list(kwargs)]
 
                 for id in range(0, len(step_args)):
-                    parameters[step_args[id]] = str(args[id])
+                    parameters[step_args[id]] = str(all_args[id])
             if kwargs:
                 for key, parameter in kwargs.items():
                     parameters[key] = str(parameter)
@@ -55,15 +58,18 @@ class Step:
             def step_wrapper(*a, **kw):
                 if self.args:
                     args_default_values = inspect.getfullargspec(function).defaults
-                    if a or args_default_values:
-                        if args_default_values:
-                            a += args_default_values
 
-                        function_args_name = inspect.getfullargspec(function).args
-                        step_args = [arg_name for arg_name in function_args_name if arg_name not in list(kw)]
+                    if a or args_default_values:
+                        all_keys = inspect.getfullargspec(function).args
+                        all_args = list(a)
+
+                        if args_default_values:
+                            all_args += list(args_default_values)
+
+                        step_args = [arg_name for arg_name in all_keys if arg_name not in list(kw)]
 
                         for id in range(0, len(step_args)):
-                            parameters[step_args[id]] = str(a[id])
+                            parameters[step_args[id]] = str(all_args[id])
                     if kw:
                         for key, parameter in kw.items():
                             parameters[key] = str(parameter)
