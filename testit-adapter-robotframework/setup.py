@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='testit-adapter-robotframework',
-    version='2.0.7',
+    version='2.0.8',
     description='Robot Framework adapter for Test IT',
     long_description=open('README.md', "r").read(),
     long_description_content_type="text/markdown",
