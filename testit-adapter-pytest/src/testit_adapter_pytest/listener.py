@@ -1,6 +1,8 @@
 import pickle
 import pytest
 
+from packaging import version
+
 from testit_python_commons.step import Step
 from testit_python_commons.services import AdapterManager
 from testit_python_commons.services import Utils
@@ -16,7 +18,7 @@ STATUS = {
 
 class TmsListener(object):
     __executable_test = None
-    __pytest_check_get_failures = False
+    __pytest_check_info = None
     __failures = None
 
     def __init__(self, adapter_manager: AdapterManager):
@@ -38,9 +40,14 @@ class TmsListener(object):
 
     @adapter.hookimpl
     def get_pytest_check_outcome(self):
-        if self.__pytest_check_get_failures:
-            from pytest_check import check_methods
-            failures = check_methods.get_failures()
+        if self.__pytest_check_info:
+            if version.parse(self.__pytest_check_info.version) < version.parse("1.1.0"):
+                from pytest_check import check_methods as logs
+            else:
+                from pytest_check import check_log as logs
+
+            failures = logs.get_failures()
+
             if failures and self.__failures != failures:
                 self.__failures = failures[:]
                 return 'Failed'
@@ -55,7 +62,7 @@ class TmsListener(object):
 
         for plugin, dist in plugin_info:
             if 'pytest-check' == dist.project_name:
-                self.__pytest_check_get_failures = True
+                self.__pytest_check_info = dist
                 break
 
         resolved_autotests = self.__adapter_manager.get_autotests_for_launch()
