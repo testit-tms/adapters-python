@@ -123,6 +123,8 @@ Launch with command-line parameters (parameters are case-insensitive):
 $ robot -v testit -v tmsUrl:<url> -v tmsPrivateToken:<token> -v tmsProjectId:<id> -v tmsConfigurationId:<id> -v tmsTestRunId:<optional id> -v tmsTestRunName:<optional name> -v tmsProxy:'{"http":"http://localhost:8888","https":"http://localhost:8888"}' -v tmsConfigFile:<optional file> <test directory>
 ```
 
+If you want to enable debug mode then see [How to enable debug logging?](https://github.com/testit-tms/adapters-python/tree/main/testit-python-commons)
+
 ### Tags
 
 Tags can be used to specify information about autotest. Tags are space sensitive, use only one space between words.

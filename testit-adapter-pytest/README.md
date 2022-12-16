@@ -121,6 +121,8 @@ Launch with command-line parameters:
 $ pytest --testit --tmsUrl=<url> --tmsPrivateToken=<token> --tmsProjectId=<id> --tmsConfigurationId=<id> --tmsTestRunId=<optional id> --tmsTestRunName=<optional name> --tmsProxy='{"http":"http://localhost:8888","https":"http://localhost:8888"}'
 ```
 
+If you want to enable debug mode then see [How to enable debug logging?](https://github.com/testit-tms/adapters-python/tree/main/testit-python-commons)
+
 ### Decorators
 
 Decorators can be used to specify information about autotest.

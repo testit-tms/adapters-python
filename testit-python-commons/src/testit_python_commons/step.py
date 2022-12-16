@@ -1,4 +1,5 @@
 import inspect
+import logging
 from datetime import datetime
 from functools import wraps
 
@@ -90,6 +91,8 @@ class Step:
             self.args[0],
             self.args[1] if len(self.args) == 2 else None)
 
+        logging.info(f'Step "{self.args[0]}" was started')
+
     def __exit__(self, exc_type, exc_value, tb):
         outcome = 'Failed' if exc_type else TmsPluginManager.get_plugin_manager().hook.get_pytest_check_outcome()[0] if \
             hasattr(TmsPluginManager.get_plugin_manager().hook, 'get_pytest_check_outcome') else 'Passed'
@@ -100,6 +103,8 @@ class Step:
             self.step_stack,
             outcome,
             duration)
+
+        logging.info(f'Step "{self.args[0]}" was stopped')
 
     def step_append(self, steps, step_stack, step_title, step_description):
         if steps and step_stack:

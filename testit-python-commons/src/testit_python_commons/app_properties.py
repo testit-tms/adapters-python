@@ -53,9 +53,14 @@ class AppProperties:
                 for key, value in parser.items('testit'):
                     properties[key] = Utils.search_in_environ(value)
 
-            if parser.has_section('debug') and parser.has_option('debug', 'tmsproxy'):
-                properties['tmsproxy'] = Utils.search_in_environ(
-                    parser.get('debug', 'tmsproxy'))
+            if parser.has_section('debug'):
+                if parser.has_option('debug', 'tmsproxy'):
+                    properties['tmsproxy'] = Utils.search_in_environ(
+                        parser.get('debug', 'tmsproxy'))
+
+                if parser.has_option('debug', '__dev'):
+                    properties['logs'] = Utils.search_in_environ(
+                        parser.get('debug', '__dev'))
 
             if 'privatetoken' in properties:
                 warnings.warn('The configuration file specifies a private token. It is not safe. Use TMS_PRIVATE_TOKEN environment variable',
