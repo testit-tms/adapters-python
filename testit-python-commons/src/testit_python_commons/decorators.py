@@ -90,7 +90,7 @@ def labels(*test_labels: str):
 
 
 @Utils.deprecated('Use "links" instead.')
-def link(url: str, title: str = None, type: str = None, description: str = None):
+def link(url: str, title: str = None, type: str = None, description: str = None):  # noqa: A002,VNE003
     def outer(function):
         if not hasattr(function, 'test_links'):
             function.test_links = []
@@ -100,7 +100,7 @@ def link(url: str, title: str = None, type: str = None, description: str = None)
     return outer
 
 
-def links(url: str = None, title: str = None, type: str = None,
+def links(url: str = None, title: str = None, type: str = None,  # noqa: A002,VNE003
           description: str = None, links: list or tuple = None):
     def outer(function):
         if not hasattr(function, 'test_links'):

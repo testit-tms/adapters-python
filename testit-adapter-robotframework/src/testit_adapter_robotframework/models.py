@@ -55,12 +55,12 @@ class Step(Default):
 @s(kw_only=True)
 class Link:
     url = attrib(validator=[url_check])
-    link_type = attrib(default='Defect', validator=[link_type_check])
+    type = attrib(default='Defect', validator=[link_type_check])  # noqa: A003,VNE003
     title = attrib(default='')
     description = attrib(default='')
 
     def __attrs_post_init__(self):
-        self.link_type = self.link_type.title()
+        self.type = self.type.title()
 
 
 @s
@@ -118,7 +118,7 @@ class Autotest(Default):
                     self.title = str(value).replace("'", "").replace('"', '')
                 elif attr == 'description':
                     self.description = str(value).replace("'", "").replace('"', '')
-                elif attr == 'workitemsid':
+                elif attr == 'workitemsid' or attr == 'workitemsids':
                     value = ast.literal_eval(value)
                     if isinstance(value, (str, int)):
                         self.workItemsID.append(str(value))
