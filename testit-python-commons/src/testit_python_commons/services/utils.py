@@ -203,8 +203,7 @@ class Utils:
             result, param_id = Utils.mass_param_attribute_collector(
                 item.function.test_workitems_id[0], item.own_markers,
                 item.array_parametrize_mark_id, item.index)
-            if param_id is not None and item.function.test_workitems_id[0][
-                                        1:-1] in \
+            if param_id is not None and item.function.test_workitems_id[0][1:-1] in \
                     item.name[(item.name.find('[') + 1):(item.name.rfind(']'))].split(
                         '-')[param_id]:
                 data['workItemsID'] = result

@@ -18,8 +18,9 @@ class AutotestAdapter:
     @staticmethod
     def get_test_title(attrs):
         t = attrs['type']
-        return "\t".join(attrs['assign'] +
-                         [t if t not in ["SETUP", "TEARDOWN", "KEYWORD"] else "", attrs['kwname']] + attrs['args'])
+        return "\t".join(
+            attrs['assign'] + [t if t not in ["SETUP", "TEARDOWN", "KEYWORD"] else "",
+                               attrs['kwname']] + attrs['args'])
 
     @staticmethod
     def parse_arguments(args):
@@ -60,8 +61,8 @@ class AutotestAdapter:
             self.active_test.completed_on = convert_time(attributes['endtime'])
             if not self.active_test.message:
                 if self.active_test.outcome == 'Failed':
-                    for s in self.active_test.setUpResults + self.active_test.stepResults \
-                             + self.active_test.tearDownResults:
+                    for s in (self.active_test.setUpResults + self.active_test.stepResults +
+                              self.active_test.tearDownResults):
                         if s.outcome == 'Failed':
                             self.active_test.message = f"Failed on step: '{s.title}'"
                             break

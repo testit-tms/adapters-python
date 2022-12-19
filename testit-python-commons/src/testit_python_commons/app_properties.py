@@ -63,9 +63,11 @@ class AppProperties:
                         parser.get('debug', '__dev'))
 
             if 'privatetoken' in properties:
-                warnings.warn('The configuration file specifies a private token. It is not safe. Use TMS_PRIVATE_TOKEN environment variable',
-                              category=Warning,
-                              stacklevel=2)
+                warnings.warn(
+                    'The configuration file specifies a private token. It is not safe.'
+                    ' Use TMS_PRIVATE_TOKEN environment variable',
+                    category=Warning,
+                    stacklevel=2)
                 warnings.simplefilter('default', Warning)
 
         return properties
@@ -143,7 +145,8 @@ class AppProperties:
                 AdapterMode.USE_FILTER,
                 None):
             if properties.get('testrunid') is None:
-                logging.error(f'Adapter mode "{adapter_mode if adapter_mode else "0"}" is enabled. The test run ID is needed, but it was not found!')
+                logging.error(f'Adapter mode "{adapter_mode if adapter_mode else "0"}" is enabled. '
+                              f'The test run ID is needed, but it was not found!')
                 raise SystemExit
         else:
             logging.error(f'Unknown adapter mode "{adapter_mode}"!')

@@ -5,7 +5,6 @@ from attr import Factory, s, attrib, asdict
 from testit_python_commons.services import Utils
 from robot.api import logger
 
-
 LinkTypes = ['Related', 'BlockedBy', 'Defect', 'Issue', 'Requirement', 'Repository']
 
 
@@ -20,8 +19,8 @@ def url_check(self, attribute, value):
             r"(\w+(-\w+)*\.)?"
             r"((\w+(-\w+)*)\.(\w+))"
             r"(\.\w+)*"
-            r"([\w\-._~/]*)*(?<!\.)"
-            , value)):
+            r"([\w\-._~/]*)*(?<!\.)",
+            value)):
         raise ValueError(f"Incorrect URL: {value}")
 
 
@@ -29,6 +28,7 @@ class Default:
 
     def dict(self):
         return asdict(self)
+
 
 @s
 class StepResult(Default):
@@ -41,6 +41,7 @@ class StepResult(Default):
     step_results = attrib(default=Factory(list))
     attachments = attrib(default=Factory(list))
     parameters = attrib(default=Factory(dict))
+
 
 @s
 class Step(Default):
@@ -58,6 +59,7 @@ class Link:
 
     def __attrs_post_init__(self):
         self.type = self.type.title()
+
 
 @s
 class Label:

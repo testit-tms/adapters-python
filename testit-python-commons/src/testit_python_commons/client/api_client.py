@@ -34,7 +34,8 @@ class ApiClientWorker:
     def create_test_run(self):
         test_run_api = TestRunsApi(api_client=self.__api_client)
 
-        test_run_name = f'TestRun_{datetime.today().strftime("%Y-%m-%dT%H:%M:%S")}' if not self.__config.get_test_run_name() else self.__config.get_test_run_name()
+        test_run_name = f'TestRun_{datetime.today().strftime("%Y-%m-%dT%H:%M:%S")}' if \
+            not self.__config.get_test_run_name() else self.__config.get_test_run_name()
         model = TestRunV2PostShortModel(
             project_id=self.__config.get_project_id(),
             name=test_run_name
@@ -111,7 +112,8 @@ class ApiClientWorker:
             id=self.__config.get_test_run_id(),
             auto_test_results_for_test_run_model=[model])
 
-        logging.debug(f'Result of the autotest "{test_result["autoTestName"]}" was set in the test run "{self.__config.get_test_run_id()}"')
+        logging.debug(f'Result of the autotest "{test_result["autoTestName"]}" was set '
+                      f'in the test run "{self.__config.get_test_run_id()}"')
 
     def load_attachments(self, attach_paths: list or tuple):
         attachments_api = AttachmentsApi(api_client=self.__api_client)

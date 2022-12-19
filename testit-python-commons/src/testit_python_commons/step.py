@@ -3,7 +3,6 @@ import logging
 from datetime import datetime
 from functools import wraps
 
-from testit_python_commons.client.converter import Converter
 from testit_python_commons.services import TmsPluginManager
 
 
@@ -94,8 +93,10 @@ class Step:
         logging.debug(f'Step "{self.args[0]}" was started')
 
     def __exit__(self, exc_type, exc_value, tb):
-        outcome = 'Failed' if exc_type else TmsPluginManager.get_plugin_manager().hook.get_pytest_check_outcome()[0] if \
-            hasattr(TmsPluginManager.get_plugin_manager().hook, 'get_pytest_check_outcome') else 'Passed'
+        outcome = 'Failed' if exc_type \
+            else TmsPluginManager.get_plugin_manager().hook.get_pytest_check_outcome()[0] if \
+            hasattr(TmsPluginManager.get_plugin_manager().hook, 'get_pytest_check_outcome') \
+            else 'Passed'
         duration = round(datetime.utcnow().timestamp() * 1000) - self.start_time
         self.steps_data_results = self.result_step_append(
             self.steps_data,

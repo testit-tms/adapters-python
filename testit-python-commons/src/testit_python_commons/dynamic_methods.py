@@ -7,11 +7,14 @@ from testit_python_commons.services.utils import Utils
 def addLink(url: str, title: str = None, type: str = None, description: str = None):
     if hasattr(TmsPluginManager.get_plugin_manager().hook, 'add_link'):
         TmsPluginManager.get_plugin_manager().hook \
-            .add_link(link={
-            "url": url,
-            "title": title,
-            "type": type,
-            "description": description})
+            .add_link(
+            link={
+                "url": url,
+                "title": title,
+                "type": type,
+                "description": description
+            }
+        )
 
 
 def addLinks(url: str = None, title: str = None, type: str = None, description: str = None,
@@ -19,11 +22,14 @@ def addLinks(url: str = None, title: str = None, type: str = None, description: 
     if hasattr(TmsPluginManager.get_plugin_manager().hook, 'add_link'):
         if url:
             TmsPluginManager.get_plugin_manager().hook \
-                .add_link(link={
-                "url": url,
-                "title": title,
-                "type": type,
-                "description": description})
+                .add_link(
+                link={
+                    "url": url,
+                    "title": title,
+                    "type": type,
+                    "description": description
+                }
+            )
         elif links and (isinstance(links, list) or isinstance(links, tuple)):
             for link in links:
                 if isinstance(link, dict) and 'url' in link:
@@ -32,7 +38,7 @@ def addLinks(url: str = None, title: str = None, type: str = None, description: 
                 else:
                     print(f'Link ({link}) can\'t be processed!')
         else:
-            print(f'Links can\'t be processed!\nPlease, set "url" or "links"!')
+            print("Links can't be processed!\nPlease, set 'url' or 'links'!")
 
 
 @Utils.deprecated('Use "addMessage" instead.')

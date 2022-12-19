@@ -38,7 +38,7 @@ jobs:
 
       - name: Run flake8 [${{ matrix.package }}]
         working-directory: ${{ matrix.package }}
-        run: flake8 .
+        run: flake8 --ignore=C901 .
 
       - name: Run mypy [${{ matrix.package }}]
         working-directory: ${{ matrix.package }}

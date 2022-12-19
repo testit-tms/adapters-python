@@ -87,9 +87,8 @@ class TmsListener(object):
 
                 item.index = index
                 item_id = items.index(item)
-                index = index + 1 if item_id + \
-                                     1 < len(items) and item.originalname == \
-                                     items[item_id + 1].originalname else 0
+                index = index + 1 if len(items) > item_id + 1 and items[item_id + 1].originalname == item.originalname \
+                    else 0
 
                 if resolved_autotests \
                         and item.test_external_id in resolved_autotests:
