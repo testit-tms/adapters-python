@@ -98,7 +98,7 @@ class ExcludeTests(SuiteVisitor):
 
     def _is_included(self, test):
         tags = test.tags
-        external_id = Utils.getHash(test.longname.split('.', 1)[-1])
+        external_id = Utils.get_hash(test.longname.split('.', 1)[-1])
         for tag in tags:
             if str(tag).lower().startswith('testit.externalid'):
                 external_id = tag.split(':', 1)[-1].strip()

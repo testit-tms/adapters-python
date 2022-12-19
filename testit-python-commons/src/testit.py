@@ -19,7 +19,7 @@ from testit_python_commons.dynamic_methods import (
     message
 )
 from testit_python_commons.models import LinkType
-from testit_python_commons.step import Step as step
+from testit_python_commons.step import Step as step  # noqa: N813
 
 __all__ = [
     'externalID',

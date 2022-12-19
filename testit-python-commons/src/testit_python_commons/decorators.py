@@ -20,7 +20,7 @@ def inner(function):
 
 
 @Utils.deprecated('Use "workItemIds" instead.')
-def workItemID(*test_workitems_id: int or str):
+def workItemID(*test_workitems_id: int or str):  # noqa: N802
     def outer(function):
         function.test_workitems_id = []
         for test_workitem_id in test_workitems_id:
@@ -30,8 +30,8 @@ def workItemID(*test_workitems_id: int or str):
     return outer
 
 
-def workItemIds(*test_workitems_id: int or str):
-    def outer(function):
+def workItemIds(*test_workitems_id: int or str):  # noqa: N802
+    def outer(function):  # noqa: N802
         function.test_workitems_id = []
         for test_workitem_id in test_workitems_id:
             function.test_workitems_id.append(str(test_workitem_id))
@@ -40,7 +40,7 @@ def workItemIds(*test_workitems_id: int or str):
     return outer
 
 
-def displayName(test_displayname: str):
+def displayName(test_displayname: str):  # noqa: N802
     def outer(function):
         function.test_displayname = test_displayname
         return inner(function)
@@ -49,7 +49,7 @@ def displayName(test_displayname: str):
 
 
 @Utils.deprecated('Use "externalId" instead.')
-def externalID(test_external_id: str):
+def externalID(test_external_id: str):  # noqa: N802
     def outer(function):
         function.test_external_id = test_external_id
         return inner(function)
@@ -57,7 +57,7 @@ def externalID(test_external_id: str):
     return outer
 
 
-def externalId(test_external_id: str):
+def externalId(test_external_id: str):  # noqa: N802
     def outer(function):
         function.test_external_id = test_external_id
         return inner(function)

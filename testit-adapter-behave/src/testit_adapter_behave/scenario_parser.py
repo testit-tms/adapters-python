@@ -80,7 +80,7 @@ def get_scenario_name(scenario):
 
 
 def get_scenario_external_id(scenario):
-    return Utils.getHash(scenario.feature.filename + scenario.name)
+    return Utils.get_hash(scenario.feature.filename + scenario.name)
 
 
 def get_scenario_namespace(scenario):

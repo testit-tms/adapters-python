@@ -4,7 +4,7 @@ from testit_python_commons.step import Step
 
 
 @Utils.deprecated('Use "addLinks" instead.')
-def addLink(url: str, title: str = None, link_type: str = None, description: str = None):
+def addLink(url: str, title: str = None, link_type: str = None, description: str = None):  # noqa: N802
     if hasattr(TmsPluginManager.get_plugin_manager().hook, 'add_link'):
         TmsPluginManager.get_plugin_manager().hook \
             .add_link(
@@ -17,7 +17,7 @@ def addLink(url: str, title: str = None, link_type: str = None, description: str
         )
 
 
-def addLinks(url: str = None, title: str = None, link_type: str = None, description: str = None,
+def addLinks(url: str = None, title: str = None, link_type: str = None, description: str = None,  # noqa: N802
              links: list or tuple = None):
     if hasattr(TmsPluginManager.get_plugin_manager().hook, 'add_link'):
         if url:
@@ -48,7 +48,7 @@ def message(test_message: str):
             .add_message(test_message=test_message)
 
 
-def addMessage(test_message: str):
+def addMessage(test_message: str):   # noqa: N802
     if hasattr(TmsPluginManager.get_plugin_manager().hook, 'add_message'):
         TmsPluginManager.get_plugin_manager().hook \
             .add_message(test_message=test_message)
@@ -64,7 +64,7 @@ def attachments(*attachments_paths):
                 .add_attachments(attach_paths=attachments_paths)
 
 
-def addAttachments(data, is_text: bool = False, name: str = None):
+def addAttachments(data, is_text: bool = False, name: str = None):   # noqa: N802
     if Step.step_is_active():
         if is_text:
             Step.create_attachment(

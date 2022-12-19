@@ -70,17 +70,17 @@ class Label:
 
 @s(kw_only=True)
 class Autotest(Default):
-    externalID = attrib(default=None)
-    autoTestName = attrib()
+    externalID = attrib(default=None)  # noqa: N815
+    autoTestName = attrib()  # noqa: N815
     steps = attrib(default=Factory(list))
-    stepResults = attrib(default=Factory(list))
-    setUp = attrib(default=Factory(list))
-    setUpResults = attrib(default=Factory(list))
-    tearDown = attrib(default=Factory(list))
-    tearDownResults = attrib(default=Factory(list))
-    resultLinks = attrib(default=Factory(list))
+    stepResults = attrib(default=Factory(list))  # noqa: N815
+    setUp = attrib(default=Factory(list))  # noqa: N815
+    setUpResults = attrib(default=Factory(list))  # noqa: N815
+    tearDown = attrib(default=Factory(list))  # noqa: N815
+    tearDownResults = attrib(default=Factory(list))  # noqa: N815
+    resultLinks = attrib(default=Factory(list))  # noqa: N815
     duration = attrib(default=None)
-    failureReasonNames = attrib(default=Factory(list))
+    failureReasonNames = attrib(default=Factory(list))  # noqa: N815
     traces = attrib(default=None)
     outcome = attrib(default=None)
     namespace = attrib(default=None)
@@ -92,7 +92,7 @@ class Autotest(Default):
     description = attrib(default=None)
     links = attrib(default=Factory(list))
     labels = attrib(default=Factory(list))
-    workItemsID = attrib(default=Factory(list))
+    workItemsID = attrib(default=Factory(list))  # noqa: N815
     message = attrib(default="")
     started_on = attrib(default=None)
     completed_on = attrib(default=None)
@@ -144,7 +144,7 @@ class Autotest(Default):
                 else:
                     logger.error(f"[TestIt] Unknown attribute: {attr}")
         if not self.externalID:
-            self.externalID = Utils.getHash(attrs['longname'].split('.', 1)[-1])
+            self.externalID = Utils.get_hash(attrs['longname'].split('.', 1)[-1])
 
     def add_step(self, step_type, title, description, parameters):
         if len(self.step_depth) == 0:

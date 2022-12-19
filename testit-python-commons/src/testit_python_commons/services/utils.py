@@ -245,18 +245,18 @@ class Utils:
 
     @staticmethod
     def mass_param_attribute_collector(attribute, marks, parametrize_id, index):
-        for ID in parametrize_id:
+        for param_index in parametrize_id:
             param_names = []
-            for param_name in marks[ID].args[0].split(','):
+            for param_name in marks[param_index].args[0].split(','):
                 param_names.append(param_name.strip())
             if attribute[1:-1] != '' and attribute[1:-1] in param_names:
-                param_id = marks[ID].args[0].split(', ').index(attribute[1:-1])
-                return marks[ID].args[1][index][param_id], param_id
+                param_id = marks[param_index].args[0].split(', ').index(attribute[1:-1])
+                return marks[param_index].args[1][index][param_id], param_id
         return attribute, None
 
     @staticmethod
     def deprecated(message):
-        def deprecated_decorator(func):
+        def deprecated_decorator(func):  # noqa: N802
             def deprecated_func(*args, **kwargs):
                 warnings.warn(
                     '"{}" is no longer acceptable to compute time between versions.\n{}'.format(func.__name__, message),
@@ -270,7 +270,7 @@ class Utils:
         return deprecated_decorator
 
     @staticmethod
-    def getHash(value: str):
+    def get_hash(value: str):
         md = hashlib.sha256(bytes(value, encoding='utf-8'))
         return md.hexdigest()
 
