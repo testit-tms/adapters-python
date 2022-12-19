@@ -91,7 +91,7 @@ class Step:
             self.args[0],
             self.args[1] if len(self.args) == 2 else None)
 
-        logging.info(f'Step "{self.args[0]}" was started')
+        logging.debug(f'Step "{self.args[0]}" was started')
 
     def __exit__(self, exc_type, exc_value, tb):
         outcome = 'Failed' if exc_type else TmsPluginManager.get_plugin_manager().hook.get_pytest_check_outcome()[0] if \
@@ -104,7 +104,7 @@ class Step:
             outcome,
             duration)
 
-        logging.info(f'Step "{self.args[0]}" was stopped')
+        logging.debug(f'Step "{self.args[0]}" was stopped')
 
     def step_append(self, steps, step_stack, step_title, step_description):
         if steps and step_stack:
