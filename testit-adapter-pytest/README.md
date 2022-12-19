@@ -189,7 +189,7 @@ def oneTwoStep():
 @testit.links(url='https://dumps.example.com/module/JCP-777')
 @testit.links(url='https://dumps.example.com/module/JCP-777', 
               title='JCP-777', 
-              link_type=testit.LinkType.RELATED,
+              type=testit.LinkType.RELATED,
               description='Description of JCP-777')
 @pytest.mark.skipif(True, reason='Because i can')
 def test_skip():
@@ -220,7 +220,8 @@ import testit
    ('param 1', ['E2E', 'test'], 'https://dumps.example.com/module/JCP-777', testit.LinkType.DEFECT, 'JCP-777',
     'Desc of JCP-777'),
    (
-   'param 2', (), 'https://dumps.example.com/module/docs', testit.LinkType.RELATED, 'Documentation', 'Desc of JCP-777'),
+           'param 2', (), 'https://dumps.example.com/module/docs', testit.LinkType.RELATED, 'Documentation',
+           'Desc of JCP-777'),
    ('param 3', ('E2E', 'test'), 'https://dumps.example.com/module/projects', testit.LinkType.REQUIREMENT, 'Projects',
     'Desc of Projects'),
    ('param 4', {'E2E', 'test'}, 'https://dumps.example.com/module/', testit.LinkType.BLOCKED_BY, '', ''),
@@ -229,7 +230,7 @@ import testit
 ])
 def test_1(name, labels, url, link_type, link_title, link_desc):
    testit.addLinks(url='https://dumps.example.com/module/some_module_dump', title='component_dump.dmp',
-                   link_type=testit.LinkType.RELATED, description='Description')
+                   type=testit.LinkType.RELATED, description='Description')
    testit.addLinks(url='https://dumps.example.com/module/some_module_dump')
    testit.addLinks(links=[
       {'url': 'https://dumps.example.com/module/some_module_dump', 'type': testit.LinkType.BLOCKED_BY,

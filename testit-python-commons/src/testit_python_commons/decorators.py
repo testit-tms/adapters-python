@@ -90,24 +90,24 @@ def labels(*test_labels: str):
 
 
 @Utils.deprecated('Use "links" instead.')
-def link(url: str, title: str = None, link_type: str = None, description: str = None):
+def link(url: str, title: str = None, type: str = None, description: str = None):
     def outer(function):
         if not hasattr(function, 'test_links'):
             function.test_links = []
-        function.test_links.append({'url': url, 'title': title, 'type': link_type, 'description': description})
+        function.test_links.append({'url': url, 'title': title, 'type': type, 'description': description})
         return inner(function)
 
     return outer
 
 
-def links(url: str = None, title: str = None, link_type: str = None,
+def links(url: str = None, title: str = None, type: str = None,
           description: str = None, links: list or tuple = None):
     def outer(function):
         if not hasattr(function, 'test_links'):
             function.test_links = []
 
         if url:
-            function.test_links.append({'url': url, 'title': title, 'type': link_type, 'description': description})
+            function.test_links.append({'url': url, 'title': title, 'type': type, 'description': description})
         elif links and (isinstance(links, list) or isinstance(links, tuple)):
             for link in links:
                 if isinstance(link, dict) and 'url' in link:

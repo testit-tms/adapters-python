@@ -4,20 +4,20 @@ from testit_python_commons.step import Step
 
 
 @Utils.deprecated('Use "addLinks" instead.')
-def addLink(url: str, title: str = None, link_type: str = None, description: str = None):  # noqa: N802
+def addLink(url: str, title: str = None, type: str = None, description: str = None):  # noqa: N802
     if hasattr(TmsPluginManager.get_plugin_manager().hook, 'add_link'):
         TmsPluginManager.get_plugin_manager().hook \
             .add_link(
             link={
                 "url": url,
                 "title": title,
-                "type": link_type,
+                "type": type,
                 "description": description
             }
         )
 
 
-def addLinks(url: str = None, title: str = None, link_type: str = None, description: str = None,  # noqa: N802
+def addLinks(url: str = None, title: str = None, type: str = None, description: str = None,  # noqa: N802
              links: list or tuple = None):
     if hasattr(TmsPluginManager.get_plugin_manager().hook, 'add_link'):
         if url:
@@ -26,7 +26,7 @@ def addLinks(url: str = None, title: str = None, link_type: str = None, descript
                 link={
                     "url": url,
                     "title": title,
-                    "type": link_type,
+                    "type": type,
                     "description": description
                 }
             )

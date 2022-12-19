@@ -6,7 +6,6 @@ import warnings
 
 
 class Utils:
-
     @staticmethod
     def search_in_environ(var_name: str):
         if re.fullmatch(r'{[a-zA-Z_]\w*}', var_name) and var_name[1:-1] in os.environ:

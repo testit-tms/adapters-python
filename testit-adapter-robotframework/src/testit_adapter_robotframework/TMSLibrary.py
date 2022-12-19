@@ -65,14 +65,14 @@ class TMSLibrary:
             self.ROBOT_LIBRARY_LISTENER = [AutotestAdapter(self.adapter_manager), TestRunAdapter(self.adapter_manager)]
 
     @enabled
-    def add_link(self, url, link_type='Defect', title=None, description=None):
+    def add_link(self, url, type='Defect', title=None, description=None):
         """
         Adds link to current test.
 
         Valid link types are ``Defect``, ``Issue``, ``Related``, ``BlockedBy``, ``Requirement``, ``Repository``.
 
         """
-        link = Link(url=url, type=link_type, title=title, description=description)
+        link = Link(url=url, link_type=type, title=title, description=description)
         self.ROBOT_LIBRARY_LISTENER[0].active_test.resultLinks.append(link)
 
     @enabled

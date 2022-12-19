@@ -134,7 +134,8 @@ tmsProjectId=<id> -D tmsConfigurationId=<id> -D tmsTestRunId=<optional id> -D tm
 tmsTestRunName=<optional name> -D tmsProxy='{"http":"http://localhost:8888","https":"http://localhost:8888"}'
 ```
 
-If you want to enable debug mode then see [How to enable debug logging?](https://github.com/testit-tms/adapters-python/tree/main/testit-python-commons)
+If you want to enable debug mode then
+see [How to enable debug logging?](https://github.com/testit-tms/adapters-python/tree/main/testit-python-commons)
 
 ### Tags
 
@@ -188,9 +189,7 @@ def enter_project(context):
 
 @when("I create a section")
 def create_section(context):
-    testit.addLinks(url='https://dumps.example.com/module/some_module_dump', 
-                    title='component_dump.dmp',
-                    link_type=testit.LinkType.RELATED, 
+    testit.addLinks(url='https://dumps.example.com/module/some_module_dump', title='component_dump.dmp',
                     description='Description')
 
 
