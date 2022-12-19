@@ -1,13 +1,13 @@
 import pickle
-import pytest
 
 from packaging import version
 
-from testit_python_commons.step import Step
-from testit_python_commons.services import AdapterManager
-from testit_python_commons.services import Utils
-from testit_python_commons.models.outcome_type import OutcomeType
+import pytest
+
 import testit_python_commons.services as adapter
+from testit_python_commons.models.outcome_type import OutcomeType
+from testit_python_commons.services import AdapterManager, Utils
+from testit_python_commons.step import Step
 
 STATUS = {
     'passed': OutcomeType.PASSED,

@@ -1,9 +1,11 @@
-import re
 import ast
+import re
 
-from attr import Factory, s, attrib, asdict
-from testit_python_commons.services import Utils
+from attr import Factory, asdict, attrib, s
+
 from robot.api import logger
+
+from testit_python_commons.services import Utils
 
 LinkTypes = ['Related', 'BlockedBy', 'Defect', 'Issue', 'Requirement', 'Repository']
 
@@ -26,7 +28,7 @@ def url_check(self, attribute, value):
 
 class Default:
 
-    def dict(self):
+    def order(self):
         return asdict(self)
 
 
@@ -53,12 +55,12 @@ class Step(Default):
 @s(kw_only=True)
 class Link:
     url = attrib(validator=[url_check])
-    type = attrib(default='Defect', validator=[link_type_check])
+    link_type = attrib(default='Defect', validator=[link_type_check])
     title = attrib(default='')
     description = attrib(default='')
 
     def __attrs_post_init__(self):
-        self.type = self.type.title()
+        self.link_type = self.link_type.title()
 
 
 @s
@@ -144,14 +146,14 @@ class Autotest(Default):
         if not self.externalID:
             self.externalID = Utils.getHash(attrs['longname'].split('.', 1)[-1])
 
-    def add_step(self, type, title, description, parameters):
+    def add_step(self, step_type, title, description, parameters):
         if len(self.step_depth) == 0:
-            if type.lower() == 'setup':
+            if step_type.lower() == 'setup':
                 self.setUp.append(Step(title, description))
                 self.step_depth.append(self.setUp[-1])
                 self.setUpResults.append(StepResult(title, description, parameters=parameters))
                 self.result_depth.append(self.setUpResults[-1])
-            elif type.lower() == 'teardown':
+            elif step_type.lower() == 'teardown':
                 self.tearDown.append(Step(title, description))
                 self.step_depth.append(self.tearDown[-1])
                 self.tearDownResults.append(StepResult(title, description, parameters=parameters))

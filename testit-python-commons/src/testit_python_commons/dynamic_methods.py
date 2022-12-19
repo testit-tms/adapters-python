@@ -1,23 +1,23 @@
 from testit_python_commons.services import TmsPluginManager
-from testit_python_commons.step import Step
 from testit_python_commons.services.utils import Utils
+from testit_python_commons.step import Step
 
 
 @Utils.deprecated('Use "addLinks" instead.')
-def addLink(url: str, title: str = None, type: str = None, description: str = None):
+def addLink(url: str, title: str = None, link_type: str = None, description: str = None):
     if hasattr(TmsPluginManager.get_plugin_manager().hook, 'add_link'):
         TmsPluginManager.get_plugin_manager().hook \
             .add_link(
             link={
                 "url": url,
                 "title": title,
-                "type": type,
+                "type": link_type,
                 "description": description
             }
         )
 
 
-def addLinks(url: str = None, title: str = None, type: str = None, description: str = None,
+def addLinks(url: str = None, title: str = None, link_type: str = None, description: str = None,
              links: list or tuple = None):
     if hasattr(TmsPluginManager.get_plugin_manager().hook, 'add_link'):
         if url:
@@ -26,7 +26,7 @@ def addLinks(url: str = None, title: str = None, type: str = None, description: 
                 link={
                     "url": url,
                     "title": title,
-                    "type": type,
+                    "type": link_type,
                     "description": description
                 }
             )

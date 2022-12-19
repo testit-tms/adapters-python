@@ -1,11 +1,12 @@
 import re
 
-from robot.libraries.BuiltIn import BuiltIn
 from robot.api import SuiteVisitor, logger
+from robot.libraries.BuiltIn import BuiltIn
+
 from testit_python_commons.services import Utils
 
-from .utils import convert_time, STATUSES
 from .models import Autotest
+from .utils import STATUSES, convert_time
 
 
 class AutotestAdapter:
@@ -17,9 +18,9 @@ class AutotestAdapter:
 
     @staticmethod
     def get_test_title(attrs):
-        t = attrs['type']
+        title = attrs['type']
         return "\t".join(
-            attrs['assign'] + [t if t not in ["SETUP", "TEARDOWN", "KEYWORD"] else "",
+            attrs['assign'] + [title if title not in ["SETUP", "TEARDOWN", "KEYWORD"] else "",
                                attrs['kwname']] + attrs['args'])
 
     @staticmethod
@@ -27,11 +28,11 @@ class AutotestAdapter:
         parameters = {}
         for arg in args:
             variables = re.findall(r'\${[a-zA-Z-_\\ \d]*}', arg)
-            for v in variables:
-                value = str(BuiltIn().get_variable_value(v))
+            for arg_var in variables:
+                value = str(BuiltIn().get_variable_value(arg_var))
                 if len(value) > 2000:
                     value = value[:2000]
-                parameters[v] = value
+                parameters[arg_var] = value
         return parameters if parameters else None
 
     def start_test(self, name, attributes):
@@ -61,14 +62,14 @@ class AutotestAdapter:
             self.active_test.completed_on = convert_time(attributes['endtime'])
             if not self.active_test.message:
                 if self.active_test.outcome == 'Failed':
-                    for s in (self.active_test.setUpResults + self.active_test.stepResults +
-                              self.active_test.tearDownResults):
-                        if s.outcome == 'Failed':
-                            self.active_test.message = f"Failed on step: '{s.title}'"
+                    for step in (self.active_test.setUpResults + self.active_test.stepResults +
+                                 self.active_test.tearDownResults):
+                        if step.outcome == 'Failed':
+                            self.active_test.message = f"Failed on step: '{step.title}'"
                             break
             self.active_test.traces = attributes['message']
             self.active_test.duration = attributes['elapsedtime']
-            self.adapter_manager.write_test(self.active_test.dict())
+            self.adapter_manager.write_test(self.active_test.order())
 
 
 class TestRunAdapter:

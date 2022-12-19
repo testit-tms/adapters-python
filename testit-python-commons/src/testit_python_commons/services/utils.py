@@ -1,18 +1,18 @@
+import hashlib
+import logging
 import os
 import re
 import warnings
-import hashlib
-import logging
 
 
 class Utils:
 
     @staticmethod
-    def search_in_environ(variable: str):
-        if re.fullmatch(r'{[a-zA-Z_]\w*}', variable) and variable[1:-1] in os.environ:
-            return os.environ[variable[1:-1]]
+    def search_in_environ(var_name: str):
+        if re.fullmatch(r'{[a-zA-Z_]\w*}', var_name) and var_name[1:-1] in os.environ:
+            return os.environ[var_name[1:-1]]
 
-        return variable
+        return var_name
 
     @staticmethod
     def autotests_parser(data_autotests: list, configuration: str):

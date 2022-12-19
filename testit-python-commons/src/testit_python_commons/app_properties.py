@@ -1,10 +1,10 @@
 import configparser
+import logging
 import os
 import warnings
-import logging
 
-from testit_python_commons.services.utils import Utils
 from testit_python_commons.models.adapter_mode import AdapterMode
+from testit_python_commons.services.utils import Utils
 
 
 class AppProperties:

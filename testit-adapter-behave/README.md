@@ -188,12 +188,10 @@ def enter_project(context):
 
 @when("I create a section")
 def create_section(context):
-    testit.addLinks(
-        title='component_dump.dmp',
-        type=testit.LinkType.RELATED,
-        url='https://dumps.example.com/module/some_module_dump',
-        description='Description'
-    )
+    testit.addLinks(url='https://dumps.example.com/module/some_module_dump', 
+                    title='component_dump.dmp',
+                    link_type=testit.LinkType.RELATED, 
+                    description='Description')
 
 
 @then("I create a test case")

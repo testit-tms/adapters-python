@@ -1,11 +1,11 @@
-from enum import Enum
 import traceback
+from enum import Enum
 
-from testit_python_commons.services.utils import Utils
 from testit_python_commons.models.outcome_type import OutcomeType
+from testit_python_commons.services.utils import Utils
 
-from .tags_parser import parse_tags
 from .models.tags import TagType
+from .tags_parser import parse_tags
 
 STATUS = {
     'passed': OutcomeType.PASSED,

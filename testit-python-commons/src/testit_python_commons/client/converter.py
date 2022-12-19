@@ -1,11 +1,12 @@
 from testit_api_client.models import (
+    AttachmentPutModelAutoTestStepResultsModel,
     AutoTestPostModel,
     AutoTestPutModel,
+    AutoTestResultsForTestRunModel,
     LinkPostModel,
     LinkPutModel,
-    LinkType,
-    AutoTestResultsForTestRunModel,
-    AttachmentPutModelAutoTestStepResultsModel)
+    LinkType
+)
 
 
 class Converter:

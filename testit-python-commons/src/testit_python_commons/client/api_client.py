@@ -1,17 +1,14 @@
-import os
 import logging
+import os
 from datetime import datetime
 
-from testit_api_client import ApiClient
-from testit_api_client import Configuration
+from testit_api_client import ApiClient, Configuration
+from testit_api_client.apis import AttachmentsApi, AutoTestsApi, TestRunsApi
 from testit_api_client.models import (
+    AttachmentPutModel,
     TestRunV2PostShortModel,
-    WorkItemIdModel,
-    AttachmentPutModel
+    WorkItemIdModel
 )
-from testit_api_client.apis import TestRunsApi
-from testit_api_client.apis import AutoTestsApi
-from testit_api_client.apis import AttachmentsApi
 
 from testit_python_commons.client.client_configuration import ClientConfiguration
 from testit_python_commons.client.converter import Converter

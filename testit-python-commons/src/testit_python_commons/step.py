@@ -43,8 +43,8 @@ class Step:
 
                 step_args = [arg_name for arg_name in all_keys if arg_name not in list(kwargs)]
 
-                for id in range(0, len(step_args)):
-                    parameters[step_args[id]] = str(all_args[id])
+                for index in range(0, len(step_args)):
+                    parameters[step_args[index]] = str(all_args[index])
             if kwargs:
                 for key, parameter in kwargs.items():
                     parameters[key] = str(parameter)
@@ -68,8 +68,8 @@ class Step:
 
                         step_args = [arg_name for arg_name in all_keys if arg_name not in list(kw)]
 
-                        for id in range(0, len(step_args)):
-                            parameters[step_args[id]] = str(all_args[id])
+                        for index in range(0, len(step_args)):
+                            parameters[step_args[index]] = str(all_args[index])
                     if kw:
                         for key, parameter in kw.items():
                             parameters[key] = str(parameter)
