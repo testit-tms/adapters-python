@@ -1,10 +1,8 @@
 from setuptools import find_packages, setup
 
-package_version = '2.0.9'
-
 setup(
     name='testit-adapter-pytest',
-    version=package_version,
+    version='2.0.9',
     description='Pytest adapter for Test IT',
     long_description=open('README.md', "r").read(),
     long_description_content_type="text/markdown",
@@ -22,6 +20,6 @@ setup(
     py_modules=['testit_adapter_pytest'],
     packages=find_packages(where='src'),
     package_dir={'': 'src'},
-    install_requires=['pytest', 'pytest-xdist', f'testit-python-commons=={package_version}'],
+    install_requires=['pytest', 'pytest-xdist', 'testit-python-commons==2.0.9'],
     entry_points={'pytest11': ['testit_adapter_pytest = testit_adapter_pytest.plugin']}
 )
