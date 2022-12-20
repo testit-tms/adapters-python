@@ -1,18 +1,17 @@
+import hashlib
+import logging
 import os
 import re
 import warnings
-import hashlib
-import logging
 
 
 class Utils:
-
     @staticmethod
-    def search_in_environ(variable: str):
-        if re.fullmatch(r'{[a-zA-Z_]\w*}', variable) and variable[1:-1] in os.environ:
-            return os.environ[variable[1:-1]]
+    def search_in_environ(var_name: str):
+        if re.fullmatch(r'{[a-zA-Z_]\w*}', var_name) and var_name[1:-1] in os.environ:
+            return os.environ[var_name[1:-1]]
 
-        return variable
+        return var_name
 
     @staticmethod
     def autotests_parser(data_autotests: list, configuration: str):
@@ -203,8 +202,7 @@ class Utils:
             result, param_id = Utils.mass_param_attribute_collector(
                 item.function.test_workitems_id[0], item.own_markers,
                 item.array_parametrize_mark_id, item.index)
-            if param_id is not None and item.function.test_workitems_id[0][
-                                        1:-1] in \
+            if param_id is not None and item.function.test_workitems_id[0][1:-1] in \
                     item.name[(item.name.find('[') + 1):(item.name.rfind(']'))].split(
                         '-')[param_id]:
                 data['workItemsID'] = result
@@ -246,18 +244,18 @@ class Utils:
 
     @staticmethod
     def mass_param_attribute_collector(attribute, marks, parametrize_id, index):
-        for ID in parametrize_id:
+        for param_index in parametrize_id:
             param_names = []
-            for param_name in marks[ID].args[0].split(','):
+            for param_name in marks[param_index].args[0].split(','):
                 param_names.append(param_name.strip())
             if attribute[1:-1] != '' and attribute[1:-1] in param_names:
-                param_id = marks[ID].args[0].split(', ').index(attribute[1:-1])
-                return marks[ID].args[1][index][param_id], param_id
+                param_id = marks[param_index].args[0].split(', ').index(attribute[1:-1])
+                return marks[param_index].args[1][index][param_id], param_id
         return attribute, None
 
     @staticmethod
     def deprecated(message):
-        def deprecated_decorator(func):
+        def deprecated_decorator(func):  # noqa: N802
             def deprecated_func(*args, **kwargs):
                 warnings.warn(
                     '"{}" is no longer acceptable to compute time between versions.\n{}'.format(func.__name__, message),
@@ -271,7 +269,7 @@ class Utils:
         return deprecated_decorator
 
     @staticmethod
-    def getHash(value: str):
+    def get_hash(value: str):
         md = hashlib.sha256(bytes(value, encoding='utf-8'))
         return md.hexdigest()
 

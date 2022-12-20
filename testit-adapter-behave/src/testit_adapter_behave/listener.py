@@ -1,15 +1,15 @@
-from testit_python_commons.services import AdapterManager
-from testit_python_commons.step import Step
 import testit_python_commons.services as adapter
 from testit_python_commons.models.outcome_type import OutcomeType
+from testit_python_commons.services import AdapterManager
+from testit_python_commons.step import Step
 
+from .models.test_result_step import get_test_result_step_model
 from .scenario_parser import (
     parse_scenario,
     parse_status)
 from .utils import (
     convert_step_to_step,
     convert_step_to_step_result)
-from .models.test_result_step import get_test_result_step_model
 
 
 class AdapterListener(object):

@@ -3,7 +3,7 @@ from behave.formatter.base import Formatter
 from testit_python_commons.services import TmsPluginManager
 
 from .listener import AdapterListener
-from .utils import parse_userdata, filter_out_scenarios
+from .utils import filter_out_scenarios, parse_userdata
 
 
 class AdapterFormatter(Formatter):

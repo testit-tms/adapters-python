@@ -1,5 +1,5 @@
-from .models.tags import TagType
 from .models.label import get_label_model
+from .models.tags import TagType
 from .models.url_link import get_url_link_model
 
 

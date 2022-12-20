@@ -1,8 +1,8 @@
 import inspect
+import logging
 from datetime import datetime
 from functools import wraps
 
-from testit_python_commons.client.converter import Converter
 from testit_python_commons.services import TmsPluginManager
 
 
@@ -43,8 +43,8 @@ class Step:
 
                 step_args = [arg_name for arg_name in all_keys if arg_name not in list(kwargs)]
 
-                for id in range(0, len(step_args)):
-                    parameters[step_args[id]] = str(all_args[id])
+                for index in range(0, len(step_args)):
+                    parameters[step_args[index]] = str(all_args[index])
             if kwargs:
                 for key, parameter in kwargs.items():
                     parameters[key] = str(parameter)
@@ -68,8 +68,8 @@ class Step:
 
                         step_args = [arg_name for arg_name in all_keys if arg_name not in list(kw)]
 
-                        for id in range(0, len(step_args)):
-                            parameters[step_args[id]] = str(all_args[id])
+                        for index in range(0, len(step_args)):
+                            parameters[step_args[index]] = str(all_args[index])
                     if kw:
                         for key, parameter in kw.items():
                             parameters[key] = str(parameter)
@@ -90,9 +90,13 @@ class Step:
             self.args[0],
             self.args[1] if len(self.args) == 2 else None)
 
+        logging.debug(f'Step "{self.args[0]}" was started')
+
     def __exit__(self, exc_type, exc_value, tb):
-        outcome = 'Failed' if exc_type else TmsPluginManager.get_plugin_manager().hook.get_pytest_check_outcome()[0] if \
-            hasattr(TmsPluginManager.get_plugin_manager().hook, 'get_pytest_check_outcome') else 'Passed'
+        outcome = 'Failed' if exc_type \
+            else TmsPluginManager.get_plugin_manager().hook.get_pytest_check_outcome()[0] if \
+            hasattr(TmsPluginManager.get_plugin_manager().hook, 'get_pytest_check_outcome') \
+            else 'Passed'
         duration = round(datetime.utcnow().timestamp() * 1000) - self.start_time
         self.steps_data_results = self.result_step_append(
             self.steps_data,
@@ -100,6 +104,8 @@ class Step:
             self.step_stack,
             outcome,
             duration)
+
+        logging.debug(f'Step "{self.args[0]}" was stopped')
 
     def step_append(self, steps, step_stack, step_title, step_description):
         if steps and step_stack:

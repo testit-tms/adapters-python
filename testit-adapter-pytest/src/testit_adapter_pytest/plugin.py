@@ -1,7 +1,8 @@
 import pytest
 
-from testit_python_commons.services import TmsPluginManager
 from testit_adapter_pytest.listener import TmsListener
+
+from testit_python_commons.services import TmsPluginManager
 
 
 def pytest_addoption(parser):

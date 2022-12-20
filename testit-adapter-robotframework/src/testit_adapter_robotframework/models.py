@@ -1,10 +1,11 @@
-import re
 import ast
+import re
 
-from attr import Factory, s, attrib, asdict
-from testit_python_commons.services import Utils
+from attr import Factory, asdict, attrib, s
+
 from robot.api import logger
 
+from testit_python_commons.services import Utils
 
 LinkTypes = ['Related', 'BlockedBy', 'Defect', 'Issue', 'Requirement', 'Repository']
 
@@ -20,15 +21,16 @@ def url_check(self, attribute, value):
             r"(\w+(-\w+)*\.)?"
             r"((\w+(-\w+)*)\.(\w+))"
             r"(\.\w+)*"
-            r"([\w\-._~/]*)*(?<!\.)"
-            , value)):
+            r"([\w\-._~/]*)*(?<!\.)",
+            value)):
         raise ValueError(f"Incorrect URL: {value}")
 
 
 class Default:
 
-    def dict(self):
+    def order(self):
         return asdict(self)
+
 
 @s
 class StepResult(Default):
@@ -42,6 +44,7 @@ class StepResult(Default):
     attachments = attrib(default=Factory(list))
     parameters = attrib(default=Factory(dict))
 
+
 @s
 class Step(Default):
     title = attrib()
@@ -52,12 +55,13 @@ class Step(Default):
 @s(kw_only=True)
 class Link:
     url = attrib(validator=[url_check])
-    type = attrib(default='Defect', validator=[link_type_check])
+    type = attrib(default='Defect', validator=[link_type_check])  # noqa: A003,VNE003
     title = attrib(default='')
     description = attrib(default='')
 
     def __attrs_post_init__(self):
         self.type = self.type.title()
+
 
 @s
 class Label:
@@ -66,17 +70,17 @@ class Label:
 
 @s(kw_only=True)
 class Autotest(Default):
-    externalID = attrib(default=None)
-    autoTestName = attrib()
+    externalID = attrib(default=None)  # noqa: N815
+    autoTestName = attrib()  # noqa: N815
     steps = attrib(default=Factory(list))
-    stepResults = attrib(default=Factory(list))
-    setUp = attrib(default=Factory(list))
-    setUpResults = attrib(default=Factory(list))
-    tearDown = attrib(default=Factory(list))
-    tearDownResults = attrib(default=Factory(list))
-    resultLinks = attrib(default=Factory(list))
+    stepResults = attrib(default=Factory(list))  # noqa: N815
+    setUp = attrib(default=Factory(list))  # noqa: N815
+    setUpResults = attrib(default=Factory(list))  # noqa: N815
+    tearDown = attrib(default=Factory(list))  # noqa: N815
+    tearDownResults = attrib(default=Factory(list))  # noqa: N815
+    resultLinks = attrib(default=Factory(list))  # noqa: N815
     duration = attrib(default=None)
-    failureReasonNames = attrib(default=Factory(list))
+    failureReasonNames = attrib(default=Factory(list))  # noqa: N815
     traces = attrib(default=None)
     outcome = attrib(default=None)
     namespace = attrib(default=None)
@@ -88,7 +92,7 @@ class Autotest(Default):
     description = attrib(default=None)
     links = attrib(default=Factory(list))
     labels = attrib(default=Factory(list))
-    workItemsID = attrib(default=Factory(list))
+    workItemsID = attrib(default=Factory(list))  # noqa: N815
     message = attrib(default="")
     started_on = attrib(default=None)
     completed_on = attrib(default=None)
@@ -114,7 +118,7 @@ class Autotest(Default):
                     self.title = str(value).replace("'", "").replace('"', '')
                 elif attr == 'description':
                     self.description = str(value).replace("'", "").replace('"', '')
-                elif attr == 'workitemsid':
+                elif attr == 'workitemsid' or attr == 'workitemsids':
                     value = ast.literal_eval(value)
                     if isinstance(value, (str, int)):
                         self.workItemsID.append(str(value))
@@ -140,16 +144,16 @@ class Autotest(Default):
                 else:
                     logger.error(f"[TestIt] Unknown attribute: {attr}")
         if not self.externalID:
-            self.externalID = Utils.getHash(attrs['longname'].split('.', 1)[-1])
+            self.externalID = Utils.get_hash(attrs['longname'].split('.', 1)[-1])
 
-    def add_step(self, type, title, description, parameters):
+    def add_step(self, step_type, title, description, parameters):
         if len(self.step_depth) == 0:
-            if type.lower() == 'setup':
+            if step_type.lower() == 'setup':
                 self.setUp.append(Step(title, description))
                 self.step_depth.append(self.setUp[-1])
                 self.setUpResults.append(StepResult(title, description, parameters=parameters))
                 self.result_depth.append(self.setUpResults[-1])
-            elif type.lower() == 'teardown':
+            elif step_type.lower() == 'teardown':
                 self.tearDown.append(Step(title, description))
                 self.step_depth.append(self.tearDown[-1])
                 self.tearDownResults.append(StepResult(title, description, parameters=parameters))
