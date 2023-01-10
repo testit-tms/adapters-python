@@ -1,7 +1,5 @@
 from pluggy import PluginManager
 
-import testit_python_commons.services.adapter_manager as adapter_manager
-
 
 class TmsPluginManager:
     __plugin_manager = None
@@ -17,6 +15,8 @@ class TmsPluginManager:
     @classmethod
     def get_adapter_manager(cls, option=None):
         if cls.__adapter_manager is None:
+            import testit_python_commons.services.adapter_manager as adapter_manager
+
             cls.__adapter_manager = adapter_manager.AdapterManager(option)
 
         return cls.__adapter_manager
