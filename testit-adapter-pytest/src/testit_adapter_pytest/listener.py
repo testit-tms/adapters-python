@@ -1,13 +1,13 @@
 import pickle
-import pytest
 
 from packaging import version
 
-from testit_python_commons.step import Step
-from testit_python_commons.services import AdapterManager
-from testit_python_commons.services import Utils
-from testit_python_commons.models.outcome_type import OutcomeType
+import pytest
+
 import testit_python_commons.services as adapter
+from testit_python_commons.models.outcome_type import OutcomeType
+from testit_python_commons.services import AdapterManager, Utils
+from testit_python_commons.step import Step
 
 STATUS = {
     'passed': OutcomeType.PASSED,
@@ -69,7 +69,7 @@ class TmsListener(object):
 
         for item in items:
             if not hasattr(item.function, 'test_external_id'):
-                item.test_external_id = Utils.getHash(item.nodeid + item.function.__name__)
+                item.test_external_id = Utils.get_hash(item.nodeid + item.function.__name__)
 
             if hasattr(item.function, 'test_external_id'):
                 if item.own_markers:
@@ -87,9 +87,8 @@ class TmsListener(object):
 
                 item.index = index
                 item_id = items.index(item)
-                index = index + 1 if item_id + \
-                                     1 < len(items) and item.originalname == \
-                                     items[item_id + 1].originalname else 0
+                index = index + 1 if len(items) > item_id + 1 and items[item_id + 1].originalname == item.originalname \
+                    else 0
 
                 if resolved_autotests \
                         and item.test_external_id in resolved_autotests:
@@ -105,7 +104,7 @@ class TmsListener(object):
     @pytest.hookimpl
     def pytest_runtest_protocol(self, item):
         if not hasattr(item.function, 'test_external_id'):
-            item.test_external_id = Utils.getHash(item.nodeid + item.function.__name__)
+            item.test_external_id = Utils.get_hash(item.nodeid + item.function.__name__)
 
         if not hasattr(item.function, 'test_displayname'):
             item.test_displayname = item.function.__doc__ if \

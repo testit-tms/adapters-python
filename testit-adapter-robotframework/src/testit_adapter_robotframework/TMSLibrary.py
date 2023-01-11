@@ -1,8 +1,9 @@
-from testit_python_commons.services import AdapterManager
 from robot.libraries.BuiltIn import BuiltIn
 
-from .models import Option, Link
+from testit_python_commons.services import AdapterManager
+
 from .listeners import AutotestAdapter, TestRunAdapter
+from .models import Link, Option
 
 
 def enabled(func):
@@ -64,7 +65,7 @@ class TMSLibrary:
             self.ROBOT_LIBRARY_LISTENER = [AutotestAdapter(self.adapter_manager), TestRunAdapter(self.adapter_manager)]
 
     @enabled
-    def add_link(self, url, type='Defect', title=None, description=None):
+    def add_link(self, url, type='Defect', title=None, description=None):  # noqa: A002,VNE003
         """
         Adds link to current test.
 

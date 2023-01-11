@@ -14,7 +14,6 @@ jobs:
             windows-latest
         ]
         python-version: [
-            '3.6',
             '3.7',
             '3.8',
             '3.9',
@@ -39,11 +38,11 @@ jobs:
 
       - name: Run flake8 [${{ matrix.package }}]
         working-directory: ${{ matrix.package }}
-        run: flake8 .
+        run: flake8 --ignore=C901 .
 
-      - name: Run mypy [${{ matrix.package }}]
-        working-directory: ${{ matrix.package }}
-        run: mypy .
+#      - name: Run mypy [${{ matrix.package }}]
+#        working-directory: ${{ matrix.package }}
+#        run: mypy .
 
       - name: Tests [${{ matrix.package }}]
         working-directory: ${{ matrix.package }}

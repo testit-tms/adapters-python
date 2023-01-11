@@ -1,29 +1,35 @@
 from testit_python_commons.services import TmsPluginManager
-from testit_python_commons.step import Step
 from testit_python_commons.services.utils import Utils
+from testit_python_commons.step import Step
 
 
 @Utils.deprecated('Use "addLinks" instead.')
-def addLink(url: str, title: str = None, type: str = None, description: str = None):
+def addLink(url: str, title: str = None, type: str = None, description: str = None):  # noqa: A002,VNE003,N802
     if hasattr(TmsPluginManager.get_plugin_manager().hook, 'add_link'):
         TmsPluginManager.get_plugin_manager().hook \
-            .add_link(link={
-            "url": url,
-            "title": title,
-            "type": type,
-            "description": description})
+            .add_link(
+            link={
+                "url": url,
+                "title": title,
+                "type": type,
+                "description": description
+            }
+        )
 
 
-def addLinks(url: str = None, title: str = None, type: str = None, description: str = None,
+def addLinks(url: str = None, title: str = None, type: str = None, description: str = None,  # noqa: A002,VNE003,N802
              links: list or tuple = None):
     if hasattr(TmsPluginManager.get_plugin_manager().hook, 'add_link'):
         if url:
             TmsPluginManager.get_plugin_manager().hook \
-                .add_link(link={
-                "url": url,
-                "title": title,
-                "type": type,
-                "description": description})
+                .add_link(
+                link={
+                    "url": url,
+                    "title": title,
+                    "type": type,
+                    "description": description
+                }
+            )
         elif links and (isinstance(links, list) or isinstance(links, tuple)):
             for link in links:
                 if isinstance(link, dict) and 'url' in link:
@@ -32,7 +38,7 @@ def addLinks(url: str = None, title: str = None, type: str = None, description: 
                 else:
                     print(f'Link ({link}) can\'t be processed!')
         else:
-            print(f'Links can\'t be processed!\nPlease, set "url" or "links"!')
+            print("Links can't be processed!\nPlease, set 'url' or 'links'!")
 
 
 @Utils.deprecated('Use "addMessage" instead.')
@@ -42,7 +48,7 @@ def message(test_message: str):
             .add_message(test_message=test_message)
 
 
-def addMessage(test_message: str):
+def addMessage(test_message: str):   # noqa: N802
     if hasattr(TmsPluginManager.get_plugin_manager().hook, 'add_message'):
         TmsPluginManager.get_plugin_manager().hook \
             .add_message(test_message=test_message)
@@ -58,7 +64,7 @@ def attachments(*attachments_paths):
                 .add_attachments(attach_paths=attachments_paths)
 
 
-def addAttachments(data, is_text: bool = False, name: str = None):
+def addAttachments(data, is_text: bool = False, name: str = None):   # noqa: N802
     if Step.step_is_active():
         if is_text:
             Step.create_attachment(

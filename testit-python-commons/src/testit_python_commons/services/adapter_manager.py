@@ -1,8 +1,8 @@
 import os
 import uuid
 
-from testit_python_commons.app_properties import AppProperties
 import testit_python_commons.client.api_client as api_client
+from testit_python_commons.app_properties import AppProperties
 from testit_python_commons.models.adapter_mode import AdapterMode
 from testit_python_commons.services.adapter_manager_configuration import AdapterManagerConfiguration
 

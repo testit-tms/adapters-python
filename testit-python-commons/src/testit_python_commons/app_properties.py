@@ -1,10 +1,10 @@
 import configparser
+import logging
 import os
 import warnings
-import logging
 
-from testit_python_commons.services.utils import Utils
 from testit_python_commons.models.adapter_mode import AdapterMode
+from testit_python_commons.services.utils import Utils
 
 
 class AppProperties:
@@ -53,14 +53,21 @@ class AppProperties:
                 for key, value in parser.items('testit'):
                     properties[key] = Utils.search_in_environ(value)
 
-            if parser.has_section('debug') and parser.has_option('debug', 'tmsproxy'):
-                properties['tmsproxy'] = Utils.search_in_environ(
-                    parser.get('debug', 'tmsproxy'))
+            if parser.has_section('debug'):
+                if parser.has_option('debug', 'tmsproxy'):
+                    properties['tmsproxy'] = Utils.search_in_environ(
+                        parser.get('debug', 'tmsproxy'))
+
+                if parser.has_option('debug', '__dev'):
+                    properties['logs'] = Utils.search_in_environ(
+                        parser.get('debug', '__dev'))
 
             if 'privatetoken' in properties:
-                warnings.warn('The configuration file specifies a private token. It is not safe. Use TMS_PRIVATE_TOKEN environment variable',
-                              category=Warning,
-                              stacklevel=2)
+                warnings.warn(
+                    'The configuration file specifies a private token. It is not safe.'
+                    ' Use TMS_PRIVATE_TOKEN environment variable',
+                    category=Warning,
+                    stacklevel=2)
                 warnings.simplefilter('default', Warning)
 
         return properties
@@ -138,7 +145,8 @@ class AppProperties:
                 AdapterMode.USE_FILTER,
                 None):
             if properties.get('testrunid') is None:
-                logging.error(f'Adapter mode "{adapter_mode if adapter_mode else "0"}" is enabled. The test run ID is needed, but it was not found!')
+                logging.error(f'Adapter mode "{adapter_mode if adapter_mode else "0"}" is enabled. '
+                              f'The test run ID is needed, but it was not found!')
                 raise SystemExit
         else:
             logging.error(f'Unknown adapter mode "{adapter_mode}"!')

@@ -1,7 +1,7 @@
 from .models.option import Option
-from .tags_parser import parse_tags
 from .models.tags import TagType
 from .scenario_parser import get_scenario_external_id
+from .tags_parser import parse_tags
 
 
 def parse_userdata(userdata):

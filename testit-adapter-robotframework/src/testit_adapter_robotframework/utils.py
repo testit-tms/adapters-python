@@ -8,5 +8,3 @@ def convert_time(time):
 
 
 STATUSES = {'FAIL': 'Failed', 'PASS': 'Passed', 'SKIP': 'Skipped', 'NOT RUN': 'Skipped'}
-
-
