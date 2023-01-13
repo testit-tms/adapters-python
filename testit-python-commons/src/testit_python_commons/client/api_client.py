@@ -18,8 +18,13 @@ from testit_python_commons.services.utils import Utils
 class ApiClientWorker:
 
     def __init__(self, config: ClientConfiguration):
+        client_config = Configuration(host=config.get_url())
+
+        if config.get_cert_validation() == 'false':
+            client_config.verify_ssl = False
+
         self.__api_client = ApiClient(
-            configuration=Configuration(host=config.get_url()),
+            configuration=client_config,
             header_name='Authorization',
             header_value='PrivateToken ' + config.get_private_token()
         )

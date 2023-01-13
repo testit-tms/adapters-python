@@ -80,6 +80,13 @@ def pytest_addoption(parser):
         metavar="tmsConfigFile",
         help='Set custom name of configuration file'
     )
+    parser.getgroup('testit').addoption(
+        '--tmsCertValidation',
+        action="store",
+        dest="set_cert_validation",
+        metavar="false",
+        help='Set custom name of configuration file'
+    )
 
 
 @pytest.mark.tryfirst

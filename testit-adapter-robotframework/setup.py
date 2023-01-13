@@ -2,7 +2,7 @@ from setuptools import find_packages, setup
 
 setup(
     name='testit-adapter-robotframework',
-    version='2.0.10',
+    version='2.0.11',
     description='Robot Framework adapter for Test IT',
     long_description=open('README.md', "r").read(),
     long_description_content_type="text/markdown",
@@ -20,5 +20,5 @@ setup(
     py_modules=['testit_adapter_robotframework'],
     packages=find_packages(where='src'),
     package_dir={'': 'src'},
-    install_requires=['attrs', 'robotframework', 'testit-python-commons==2.0.10']
+    install_requires=['attrs', 'robotframework', 'testit-python-commons==2.0.11']
 )

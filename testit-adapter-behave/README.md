@@ -65,6 +65,8 @@ pip install testit-adapter-behave
           test run.
         * 1 - in this mode, the adapter sends all results to the test run without filtering.
         * 2 - in this mode, the adapter creates a new test run and sends results to the new test run.
+    
+    * `certValidation` - it enables/disables certificate validation. `certValidation` is optional.
 
     * `tmsProxy` - it enables debug mode. `tmsProxy` is optional.
 
@@ -93,6 +95,8 @@ You can use environment variables (environment variables take precedence over fi
 
 * `TMS_PROXY` - it enables debug mode. `TMS_PROXY` is optional.
 
+* `TMS_CERT_VALIDATION` - it enables/disables certificate validation. `TMS_CERT_VALIDATION` is optional.
+
 #### Command line
 
 You also can CLI variables (CLI variables take precedence over environment variables):
@@ -118,6 +122,8 @@ You also can CLI variables (CLI variables take precedence over environment varia
 
 * `tmsProxy` - it enables debug mode. `tmsProxy` is optional.
 
+* `tmsCertValidation` - it enables/disables certificate validation. `tmsCertValidation` is optional.
+
 #### Examples
 
 Launch with a connection_config.ini file in the root directory of the project:
@@ -131,7 +137,7 @@ Launch with command-line parameters:
 ```
 $ behave -f testit_adapter_behave.formatter:AdapterFormatter -D tmsUrl=<url> -D tmsPrivateToken=<token> -D
 tmsProjectId=<id> -D tmsConfigurationId=<id> -D tmsTestRunId=<optional id> -D tmsAdapterMode=<optional> -D
-tmsTestRunName=<optional name> -D tmsProxy='{"http":"http://localhost:8888","https":"http://localhost:8888"}'
+tmsTestRunName=<optional name> -D tmsProxy='{"http":"http://localhost:8888","https":"http://localhost:8888"}' -D tmsCertValidation=<optional boolean>
 ```
 
 If you want to enable debug mode then
