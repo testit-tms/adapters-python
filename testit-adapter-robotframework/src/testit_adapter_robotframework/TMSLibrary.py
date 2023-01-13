@@ -41,7 +41,8 @@ class TMSLibrary:
         self.enabled = built_in.get_variable_value("${testit}", None) is not None
         if self.enabled:
             cli_params = ["tmsUrl", "tmsPrivateToken", "tmsProjectId",
-                          "tmsConfigurationId", "tmsTestRunId", "tmsTestRunName", "tmsAdapterMode", "tmsConfigFile"]
+                          "tmsConfigurationId", "tmsTestRunId", "tmsTestRunName",
+                          "tmsAdapterMode", "tmsConfigFile", "tmsCertValidation"]
             option = Option(**{param: built_in.get_variable_value(f'${{{param}}}', None) for param in cli_params})
             self.adapter_manager = AdapterManager(option)
             pabot_index = built_in.get_variable_value('${PABOTQUEUEINDEX}', None)

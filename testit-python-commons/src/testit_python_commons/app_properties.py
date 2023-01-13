@@ -100,6 +100,9 @@ class AppProperties:
         if hasattr(option, 'set_adapter_mode') and option.set_adapter_mode:
             cli_properties['adaptermode'] = option.set_adapter_mode
 
+        if hasattr(option, 'set_cert_validation') and option.set_cert_validation:
+            cli_properties['certvalidation'] = option.set_cert_validation
+
         return cli_properties
 
     @classmethod
@@ -129,6 +132,9 @@ class AppProperties:
 
         if f'{cls.__env_prefix}_ADAPTER_MODE' in os.environ.keys():
             env_properties['adaptermode'] = os.environ.get(f'{cls.__env_prefix}_ADAPTER_MODE')
+
+        if f'{cls.__env_prefix}_CERT_VALIDATION' in os.environ.keys():
+            env_properties['certvalidation'] = os.environ.get(f'{cls.__env_prefix}_CERT_VALIDATION')
 
         return env_properties
 
