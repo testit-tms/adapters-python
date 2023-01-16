@@ -4,9 +4,12 @@ import os
 import re
 import warnings
 
+from testit_python_commons.services.logger import adapter_logger
+
 
 class Utils:
     @staticmethod
+    @adapter_logger
     def search_in_environ(var_name: str):
         if re.fullmatch(r'{[a-zA-Z_]\w*}', var_name) and var_name[1:-1] in os.environ:
             return os.environ[var_name[1:-1]]
@@ -14,6 +17,7 @@ class Utils:
         return var_name
 
     @staticmethod
+    @adapter_logger
     def autotests_parser(data_autotests: list, configuration: str):
         resolved_autotests = []
 
@@ -24,6 +28,7 @@ class Utils:
         return resolved_autotests
 
     @staticmethod
+    @adapter_logger
     def uuid_check(uuid: str):
         if not re.fullmatch(r'[a-zA-Z0-9]{8}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{12}', uuid):
             logging.error(f'The wrong {uuid}!')
@@ -32,6 +37,7 @@ class Utils:
         return uuid
 
     @staticmethod
+    @adapter_logger
     def url_check(url: str):
         if not re.fullmatch(
                 r"^(ht|f)tp(s?)\:\/\/[0-9a-zA-Z]([-.\w]*[0-9a-zA-Z])*(:(0-9)*)*(\/?)"
@@ -46,6 +52,7 @@ class Utils:
         return url
 
     @staticmethod
+    @adapter_logger
     def form_test(item):
         data = {
             'externalID': item.test_external_id,
@@ -101,6 +108,7 @@ class Utils:
         return data
 
     @staticmethod
+    @adapter_logger
     def __get_parameters_from(item):
         if hasattr(item, 'array_parametrize_mark_id'):
             test_parameters = {}
@@ -110,12 +118,14 @@ class Utils:
         return None
 
     @staticmethod
+    @adapter_logger
     def __get_properties_from(item):
         if hasattr(item, 'test_properties'):
             return item.test_properties
         return None
 
     @staticmethod
+    @adapter_logger
     def __get_classname_from(item):
         i = item.function.__qualname__.find('.')
         if i != -1:
@@ -123,6 +133,7 @@ class Utils:
         return None
 
     @staticmethod
+    @adapter_logger
     def __set_links(item, data):
         params = Utils.get_params(item)
 
@@ -145,6 +156,7 @@ class Utils:
             data['links'] = item.function.test_links
 
     @staticmethod
+    @adapter_logger
     def _get_title_from(item):
         if not hasattr(item.function, 'test_title'):
             return None
@@ -158,6 +170,7 @@ class Utils:
         return item.function.test_title
 
     @staticmethod
+    @adapter_logger
     def __get_description_from(item):
         if not hasattr(item.function, 'test_description'):
             return None
@@ -171,6 +184,7 @@ class Utils:
         return item.function.test_description
 
     @staticmethod
+    @adapter_logger
     def __set_labels(item, data):
         if hasattr(item, 'array_parametrize_mark_id'):
             for one_label in item.function.test_labels:
@@ -197,6 +211,7 @@ class Utils:
                 })
 
     @staticmethod
+    @adapter_logger
     def __set_workitems_id(item, data):
         if hasattr(item, 'array_parametrize_mark_id'):
             result, param_id = Utils.mass_param_attribute_collector(
@@ -212,6 +227,7 @@ class Utils:
             data['workItemsID'] = item.function.test_workitems_id
 
     @staticmethod
+    @adapter_logger
     def param_attribute_collector(attribute, run_param):
         result = attribute
         param_keys = re.findall(r"\{(.*?)\}", attribute)
@@ -243,6 +259,7 @@ class Utils:
         return result
 
     @staticmethod
+    @adapter_logger
     def mass_param_attribute_collector(attribute, marks, parametrize_id, index):
         for param_index in parametrize_id:
             param_names = []
@@ -269,11 +286,13 @@ class Utils:
         return deprecated_decorator
 
     @staticmethod
+    @adapter_logger
     def get_hash(value: str):
         md = hashlib.sha256(bytes(value, encoding='utf-8'))
         return md.hexdigest()
 
     @staticmethod
+    @adapter_logger
     def get_params(item):
         params = {}
 

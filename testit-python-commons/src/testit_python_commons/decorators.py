@@ -1,5 +1,6 @@
 from functools import wraps
 
+from testit_python_commons.services.logger import adapter_logger
 from testit_python_commons.services.utils import Utils
 
 
@@ -20,6 +21,7 @@ def inner(function):
 
 
 @Utils.deprecated('Use "workItemIds" instead.')
+@adapter_logger
 def workItemID(*test_workitems_id: int or str):  # noqa: N802
     def outer(function):
         function.test_workitems_id = []
@@ -30,6 +32,7 @@ def workItemID(*test_workitems_id: int or str):  # noqa: N802
     return outer
 
 
+@adapter_logger
 def workItemIds(*test_workitems_id: int or str):  # noqa: N802
     def outer(function):  # noqa: N802
         function.test_workitems_id = []
@@ -40,6 +43,7 @@ def workItemIds(*test_workitems_id: int or str):  # noqa: N802
     return outer
 
 
+@adapter_logger
 def displayName(test_displayname: str):  # noqa: N802
     def outer(function):
         function.test_displayname = test_displayname
@@ -49,6 +53,7 @@ def displayName(test_displayname: str):  # noqa: N802
 
 
 @Utils.deprecated('Use "externalId" instead.')
+@adapter_logger
 def externalID(test_external_id: str):  # noqa: N802
     def outer(function):
         function.test_external_id = test_external_id
@@ -57,6 +62,7 @@ def externalID(test_external_id: str):  # noqa: N802
     return outer
 
 
+@adapter_logger
 def externalId(test_external_id: str):  # noqa: N802
     def outer(function):
         function.test_external_id = test_external_id
@@ -65,6 +71,7 @@ def externalId(test_external_id: str):  # noqa: N802
     return outer
 
 
+@adapter_logger
 def title(test_title: str):
     def outer(function):
         function.test_title = test_title
@@ -73,6 +80,7 @@ def title(test_title: str):
     return outer
 
 
+@adapter_logger
 def description(test_description: str):
     def outer(function):
         function.test_description = test_description
@@ -81,6 +89,7 @@ def description(test_description: str):
     return outer
 
 
+@adapter_logger
 def labels(*test_labels: str):
     def outer(function):
         function.test_labels = test_labels
@@ -90,6 +99,7 @@ def labels(*test_labels: str):
 
 
 @Utils.deprecated('Use "links" instead.')
+@adapter_logger
 def link(url: str, title: str = None, type: str = None, description: str = None):  # noqa: A002,VNE003
     def outer(function):
         if not hasattr(function, 'test_links'):
@@ -100,6 +110,7 @@ def link(url: str, title: str = None, type: str = None, description: str = None)
     return outer
 
 
+@adapter_logger
 def links(url: str = None, title: str = None, type: str = None,  # noqa: A002,VNE003
           description: str = None, links: list or tuple = None):
     def outer(function):

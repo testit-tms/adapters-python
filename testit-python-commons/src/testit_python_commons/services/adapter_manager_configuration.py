@@ -1,4 +1,5 @@
 from testit_python_commons.models.adapter_mode import AdapterMode
+from testit_python_commons.services.logger import adapter_logger
 from testit_python_commons.services.utils import Utils
 
 
@@ -11,11 +12,14 @@ class AdapterManagerConfiguration:
 
         self.__adapter_mode = app_properties.get('adaptermode', AdapterMode.USE_FILTER)
 
+    @adapter_logger
     def get_test_run_id(self):
         return self.__test_run_id
 
+    @adapter_logger
     def set_test_run_id(self, test_run_id: str):
         self.__test_run_id = test_run_id
 
+    @adapter_logger
     def get_mode(self):
         return self.__adapter_mode
