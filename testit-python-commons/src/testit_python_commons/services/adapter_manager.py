@@ -1,24 +1,20 @@
 import os
 import uuid
-import logging
 
-import testit_python_commons.client.api_client as api_client
-from testit_python_commons.app_properties import AppProperties
-from testit_python_commons.models.adapter_mode import AdapterMode
+from testit_python_commons.client.api_client import ApiClientWorker
+from testit_python_commons.client.client_configuration import ClientConfiguration
 from testit_python_commons.services.adapter_manager_configuration import AdapterManagerConfiguration
+from testit_python_commons.models.adapter_mode import AdapterMode
 from testit_python_commons.services.logger import adapter_logger
 
 
 class AdapterManager:
-    def __init__(self, option=None):
-        app_properties = AppProperties.load_properties(option)
-        client_configuration = api_client.ClientConfiguration(app_properties)
-
-        if client_configuration.get_logs() == 'true':
-            logging.basicConfig(format='\n%(levelname)s (%(asctime)s): %(message)s', level=logging.DEBUG)
-
-        self.__config = AdapterManagerConfiguration(app_properties)
-        self.__api_client = api_client.ApiClientWorker(client_configuration)
+    def __init__(
+            self,
+            adapter_configuration: AdapterManagerConfiguration,
+            client_configuration: ClientConfiguration):
+        self.__config = adapter_configuration
+        self.__api_client = ApiClientWorker(client_configuration)
 
     @adapter_logger
     def set_test_run_id(self, test_run_id: str):

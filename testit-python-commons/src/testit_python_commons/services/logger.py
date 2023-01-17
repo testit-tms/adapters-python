@@ -1,12 +1,14 @@
+import inspect
+
 from functools import wraps
 
-import inspect
-import logging
+from testit_python_commons.services.plugin_manager import TmsPluginManager
 
 
 def adapter_logger(function):
     @wraps(function)
     def wrapper(*args, **kwargs):
+        logger = TmsPluginManager.get_logger()
         parameters = {}
         args_default_values = inspect.getfullargspec(function).defaults
 
@@ -31,7 +33,7 @@ def adapter_logger(function):
         if parameters:
             message += f' with parameters: {parameters}'
 
-        logging.debug(message)
+        logger.debug(message)
 
         result = function(*args, **kwargs)
 
@@ -40,7 +42,7 @@ def adapter_logger(function):
         if result:
             message += f' with result: {result}'
 
-        logging.debug(message)
+        logger.debug(message)
 
         return result
     return wrapper

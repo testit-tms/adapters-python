@@ -10,14 +10,6 @@ from testit_python_commons.services.logger import adapter_logger
 class Utils:
     @staticmethod
     @adapter_logger
-    def search_in_environ(var_name: str):
-        if re.fullmatch(r'{[a-zA-Z_]\w*}', var_name) and var_name[1:-1] in os.environ:
-            return os.environ[var_name[1:-1]]
-
-        return var_name
-
-    @staticmethod
-    @adapter_logger
     def autotests_parser(data_autotests: list, configuration: str):
         resolved_autotests = []
 
@@ -28,7 +20,6 @@ class Utils:
         return resolved_autotests
 
     @staticmethod
-    @adapter_logger
     def uuid_check(uuid: str):
         if not re.fullmatch(r'[a-zA-Z0-9]{8}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{12}', uuid):
             logging.error(f'The wrong {uuid}!')
@@ -37,7 +28,6 @@ class Utils:
         return uuid
 
     @staticmethod
-    @adapter_logger
     def url_check(url: str):
         if not re.fullmatch(
                 r"^(ht|f)tp(s?)\:\/\/[0-9a-zA-Z]([-.\w]*[0-9a-zA-Z])*(:(0-9)*)*(\/?)"

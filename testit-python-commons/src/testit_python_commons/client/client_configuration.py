@@ -61,5 +61,6 @@ class ClientConfiguration:
     def get_logs(self):
         return self.__adapter_logs
 
+    @adapter_logger
     def get_mode(self):
         return self.__adapter_mode

@@ -1,9 +1,14 @@
+import logging
+
 from pluggy import PluginManager
+
+from testit_python_commons.app_properties import AppProperties
 
 
 class TmsPluginManager:
     __plugin_manager = None
     __adapter_manager = None
+    __logger = None
 
     @classmethod
     def get_plugin_manager(cls):
@@ -15,11 +20,30 @@ class TmsPluginManager:
     @classmethod
     def get_adapter_manager(cls, option=None):
         if cls.__adapter_manager is None:
-            import testit_python_commons.services.adapter_manager as adapter_manager
+            from testit_python_commons.services.adapter_manager import AdapterManager
+            from testit_python_commons.client.client_configuration import ClientConfiguration
+            from testit_python_commons.services.adapter_manager_configuration import AdapterManagerConfiguration
 
-            cls.__adapter_manager = adapter_manager.AdapterManager(option)
+            app_properties = AppProperties.load_properties(option)
+
+            cls.get_logger(app_properties.get('logs').lower() == 'true')
+
+            client_configuration = ClientConfiguration(app_properties)
+            adapter_configuration = AdapterManagerConfiguration(app_properties)
+
+            cls.__adapter_manager = AdapterManager(adapter_configuration, client_configuration)
 
         return cls.__adapter_manager
+
+    @classmethod
+    def get_logger(cls, debug: bool = False):
+        if cls.__logger is None:
+            if debug:
+                logging.basicConfig(format='\n%(levelname)s (%(asctime)s): %(message)s', level=logging.DEBUG)
+
+            cls.__logger = logging.getLogger('TmsLogger')
+
+        return cls.__logger
 
     @classmethod
     def __getattr__(cls, attribute):

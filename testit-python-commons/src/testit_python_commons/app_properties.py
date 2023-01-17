@@ -1,10 +1,10 @@
 import configparser
 import logging
 import os
+import re
 import warnings
 
 from testit_python_commons.models.adapter_mode import AdapterMode
-from testit_python_commons.services.utils import Utils
 
 
 class AppProperties:
@@ -51,15 +51,15 @@ class AppProperties:
 
             if parser.has_section('testit'):
                 for key, value in parser.items('testit'):
-                    properties[key] = Utils.search_in_environ(value)
+                    properties[key] = cls.__search_in_environ(value)
 
             if parser.has_section('debug'):
                 if parser.has_option('debug', 'tmsproxy'):
-                    properties['tmsproxy'] = Utils.search_in_environ(
+                    properties['tmsproxy'] = cls.__search_in_environ(
                         parser.get('debug', 'tmsproxy'))
 
                 if parser.has_option('debug', '__dev'):
-                    properties['logs'] = Utils.search_in_environ(
+                    properties['logs'] = cls.__search_in_environ(
                         parser.get('debug', '__dev'))
 
             if 'privatetoken' in properties:
@@ -163,3 +163,10 @@ class AppProperties:
         if properties.get('configurationid') is None:
             logging.error('Configuration ID was not found!')
             raise SystemExit
+
+    @staticmethod
+    def __search_in_environ(var_name: str):
+        if re.fullmatch(r'{[a-zA-Z_]\w*}', var_name) and var_name[1:-1] in os.environ:
+            return os.environ[var_name[1:-1]]
+
+        return var_name
