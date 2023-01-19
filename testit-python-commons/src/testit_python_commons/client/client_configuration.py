@@ -1,3 +1,4 @@
+from testit_python_commons.services.logger import adapter_logger
 from testit_python_commons.services.utils import Utils
 
 
@@ -21,36 +22,47 @@ class ClientConfiguration:
         self.__adapter_mode = app_properties.get('adaptermode')
         self.__cert_validation = app_properties.get('certvalidation').lower()
 
+    @adapter_logger
     def get_url(self):
         return self.__url
 
+    @adapter_logger
     def get_private_token(self):
         return self.__private_token
 
+    @adapter_logger
     def get_project_id(self):
         return self.__project_id
 
+    @adapter_logger
     def set_project_id(self, project_id: str):
         self.__project_id = project_id
 
+    @adapter_logger
     def get_configuration_id(self):
         return self.__configuration_id
 
+    @adapter_logger
     def get_test_run_id(self):
         return self.__test_run_id
 
+    @adapter_logger
     def set_test_run_id(self, test_run_id: str):
         self.__test_run_id = test_run_id
 
+    @adapter_logger
     def get_test_run_name(self):
         return self.__test_run_name
 
+    @adapter_logger
     def get_proxy(self):
         return self.__tms_proxy
 
+    @adapter_logger
     def get_logs(self):
         return self.__adapter_logs
 
+    @adapter_logger
     def get_mode(self):
         return self.__adapter_mode
 

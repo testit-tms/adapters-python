@@ -7,11 +7,12 @@ from testit_api_client.models import (
     LinkPutModel,
     LinkType
 )
+from testit_python_commons.services.logger import adapter_logger
 
 
 class Converter:
-
     @classmethod
+    @adapter_logger
     def test_result_to_autotest_post_model(
             cls,
             test_result: dict,
@@ -32,6 +33,7 @@ class Converter:
         )
 
     @classmethod
+    @adapter_logger
     def test_result_to_autotest_put_model(
             cls,
             test_result: dict,
@@ -68,6 +70,7 @@ class Converter:
             )
 
     @classmethod
+    @adapter_logger
     def test_result_to_testrun_result_post_model(
             cls,
             test_result: dict,
@@ -91,6 +94,7 @@ class Converter:
         )
 
     @staticmethod
+    @adapter_logger
     def link_to_link_post_model(
             url: str,
             title: str,
@@ -111,6 +115,7 @@ class Converter:
             )
 
     @staticmethod
+    @adapter_logger
     def link_to_link_put_model(
             url: str,
             title: str,
@@ -131,6 +136,7 @@ class Converter:
             )
 
     @classmethod
+    @adapter_logger
     def links_to_links_post_model(cls, links: list):
         post_model_links = []
 
@@ -145,6 +151,7 @@ class Converter:
         return post_model_links
 
     @classmethod
+    @adapter_logger
     def links_to_links_put_model(cls, links: list):
         put_model_links = []
 
@@ -159,6 +166,7 @@ class Converter:
         return put_model_links
 
     @staticmethod
+    @adapter_logger
     def step_result_to_attachment_put_model_autotest_step_results_model(
             title: str,
             description: str,

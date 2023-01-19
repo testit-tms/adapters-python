@@ -12,11 +12,11 @@ from testit_api_client.models import (
 
 from testit_python_commons.client.client_configuration import ClientConfiguration
 from testit_python_commons.client.converter import Converter
+from testit_python_commons.services.logger import adapter_logger
 from testit_python_commons.services.utils import Utils
 
 
 class ApiClientWorker:
-
     def __init__(self, config: ClientConfiguration):
         client_config = Configuration(host=config.get_url())
 
@@ -30,9 +30,7 @@ class ApiClientWorker:
         )
         self.__config = config
 
-        if config.get_logs() == 'true':
-            logging.basicConfig(format='\n%(levelname)s:%(message)s', level=logging.DEBUG)
-
+    @adapter_logger
     def create_test_run(self):
         test_run_api = TestRunsApi(api_client=self.__api_client)
 
@@ -43,15 +41,19 @@ class ApiClientWorker:
             name=test_run_name
         )
 
+        logging.debug(f'Create new test run: {model}')
+
         response = test_run_api.create_empty(test_run_v2_post_short_model=model)
 
-        logging.debug(f'Test run "{response["id"]}" was created')
+        logging.debug(f'The test run created: {response["id"]}')
 
         return response['id']
 
+    @adapter_logger
     def set_test_run_id(self, test_run_id: str):
         self.__config.set_test_run_id(test_run_id)
 
+    @adapter_logger
     def get_autotests_by_test_run_id(self):
         test_run_api = TestRunsApi(api_client=self.__api_client)
 
@@ -65,6 +67,7 @@ class ApiClientWorker:
             test_results,
             self.__config.get_configuration_id())
 
+    @adapter_logger
     def write_test(self, test_result: dict):
         test_run_api = TestRunsApi(api_client=self.__api_client)
         autotest_api = AutoTestsApi(api_client=self.__api_client)
@@ -117,6 +120,7 @@ class ApiClientWorker:
         logging.debug(f'Result of the autotest "{test_result["autoTestName"]}" was set '
                       f'in the test run "{self.__config.get_test_run_id()}"')
 
+    @adapter_logger
     def load_attachments(self, attach_paths: list or tuple):
         attachments_api = AttachmentsApi(api_client=self.__api_client)
 
