@@ -1,4 +1,5 @@
 from testit_api_client.models import (
+    AvailableTestResultOutcome,
     AttachmentPutModelAutoTestStepResultsModel,
     AutoTestPostModel,
     AutoTestPutModel,
@@ -78,7 +79,7 @@ class Converter:
         return AutoTestResultsForTestRunModel(
             configuration_id,
             test_result['externalID'],
-            test_result['outcome'],
+            AvailableTestResultOutcome(test_result['outcome']),
             step_results=test_result['stepResults'],
             setup_results=test_result['setUpResults'],
             teardown_results=test_result['tearDownResults'],
@@ -180,7 +181,7 @@ class Converter:
             title=title,
             description=description,
             duration=duration,
-            outcome=outcome,
+            outcome=AvailableTestResultOutcome(outcome),
             parameters=parameters,
             attachments=attachments,
             started_on=started_on,
