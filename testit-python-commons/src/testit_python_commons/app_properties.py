@@ -60,7 +60,7 @@ class AppProperties:
 
                 if parser.has_option('debug', '__dev'):
                     properties['logs'] = cls.__search_in_environ(
-                        parser.get('debug', '__dev'))
+                        parser.get('debug', '__dev')).lower()
 
             if 'privatetoken' in properties:
                 warnings.warn(
@@ -169,6 +169,9 @@ class AppProperties:
         if properties.get('configurationid') is None:
             logging.error('Configuration ID was not found!')
             raise SystemExit
+
+        if properties.get('certvalidation'):
+            properties['certvalidation'] = properties['certvalidation'].lower()
 
     @staticmethod
     def __search_in_environ(var_name: str):

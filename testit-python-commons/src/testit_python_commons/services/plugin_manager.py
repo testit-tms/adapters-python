@@ -26,7 +26,7 @@ class TmsPluginManager:
 
             app_properties = AppProperties.load_properties(option)
 
-            cls.get_logger(app_properties.get('logs').lower() == 'true')
+            cls.get_logger(app_properties.get('logs') == 'true')
 
             client_configuration = ClientConfiguration(app_properties)
             adapter_configuration = AdapterManagerConfiguration(app_properties)

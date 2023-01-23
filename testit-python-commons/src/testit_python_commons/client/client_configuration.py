@@ -18,9 +18,8 @@ class ClientConfiguration:
         self.__configuration_id = Utils.uuid_check(app_properties.get('configurationid'))
         self.__test_run_name = app_properties.get('testrunname')
         self.__tms_proxy = app_properties.get('tmsproxy')
-        self.__adapter_logs = app_properties.get('logs').lower()
         self.__adapter_mode = app_properties.get('adaptermode')
-        self.__cert_validation = app_properties.get('certvalidation').lower()
+        self.__cert_validation = app_properties.get('certvalidation')
 
     @adapter_logger
     def get_url(self):
@@ -57,10 +56,6 @@ class ClientConfiguration:
     @adapter_logger
     def get_proxy(self):
         return self.__tms_proxy
-
-    @adapter_logger
-    def get_logs(self):
-        return self.__adapter_logs
 
     @adapter_logger
     def get_mode(self):
