@@ -22,6 +22,6 @@ setup(
     package_dir={'': 'src'},
     install_requires=[
         'behave',
-        'testit-python-commons==2.0.11',
+        'testit-python-commons==2.0.12',
         'attrs'],
 )

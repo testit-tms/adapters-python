@@ -20,6 +20,6 @@ setup(
     py_modules=['testit_adapter_pytest'],
     packages=find_packages(where='src'),
     package_dir={'': 'src'},
-    install_requires=['pytest', 'pytest-xdist', 'testit-python-commons==2.0.11'],
+    install_requires=['pytest', 'pytest-xdist', 'testit-python-commons==2.0.12'],
     entry_points={'pytest11': ['testit_adapter_pytest = testit_adapter_pytest.plugin']}
 )

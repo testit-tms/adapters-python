@@ -20,5 +20,5 @@ setup(
     py_modules=['testit_adapter_robotframework'],
     packages=find_packages(where='src'),
     package_dir={'': 'src'},
-    install_requires=['attrs', 'robotframework', 'testit-python-commons==2.0.11']
+    install_requires=['attrs', 'robotframework', 'testit-python-commons==2.0.12']
 )
