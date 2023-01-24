@@ -1,4 +1,5 @@
 from testit_api_client.models import (
+    AutoTestStepModel,
     AvailableTestResultOutcome,
     AttachmentPutModelAutoTestStepResultsModel,
     AutoTestPostModel,
@@ -22,9 +23,9 @@ class Converter:
             test_result['externalID'],
             project_id,
             test_result['autoTestName'],
-            steps=test_result['steps'],
-            setup=test_result['setUp'],
-            teardown=test_result['tearDown'],
+            steps=cls.step_results_to_autotest_steps_model(test_result['steps']),
+            setup=cls.step_results_to_autotest_steps_model(test_result['setUp']),
+            teardown=cls.step_results_to_autotest_steps_model(test_result['tearDown']),
             namespace=test_result['namespace'],
             classname=test_result['classname'],
             title=test_result['title'],
@@ -44,9 +45,9 @@ class Converter:
                 test_result['externalID'],
                 project_id,
                 test_result['autoTestName'],
-                steps=test_result['steps'],
-                setup=test_result['setUp'],
-                teardown=test_result['tearDown'],
+                steps=cls.step_results_to_autotest_steps_model(test_result['steps']),
+                setup=cls.step_results_to_autotest_steps_model(test_result['setUp']),
+                teardown=cls.step_results_to_autotest_steps_model(test_result['tearDown']),
                 namespace=test_result['namespace'],
                 classname=test_result['classname'],
                 title=test_result['title'],
@@ -59,9 +60,9 @@ class Converter:
                 test_result['externalID'],
                 project_id,
                 test_result['autoTestName'],
-                steps=test_result['steps'],
-                setup=test_result['setUp'],
-                teardown=test_result['tearDown'],
+                steps=cls.step_results_to_autotest_steps_model(test_result['steps']),
+                setup=cls.step_results_to_autotest_steps_model(test_result['setUp']),
+                teardown=cls.step_results_to_autotest_steps_model(test_result['tearDown']),
                 namespace=test_result['namespace'],
                 classname=test_result['classname'],
                 title=test_result['title'],
@@ -80,9 +81,12 @@ class Converter:
             configuration_id,
             test_result['externalID'],
             AvailableTestResultOutcome(test_result['outcome']),
-            step_results=test_result['stepResults'],
-            setup_results=test_result['setUpResults'],
-            teardown_results=test_result['tearDownResults'],
+            step_results=cls.step_results_to_attachment_put_model_autotest_step_results_model(
+                test_result['stepResults']),
+            setup_results=cls.step_results_to_attachment_put_model_autotest_step_results_model(
+                test_result['setUpResults']),
+            teardown_results=cls.step_results_to_attachment_put_model_autotest_step_results_model(
+                test_result['tearDownResults']),
             traces=test_result['traces'],
             attachments=test_result['attachments'],
             parameters=test_result['parameters'],
@@ -166,22 +170,61 @@ class Converter:
 
         return put_model_links
 
+    @classmethod
+    @adapter_logger
+    def step_results_to_autotest_steps_model(cls, steps: list):
+        autotest_model_steps = []
+
+        for step in steps:
+            autotest_model_steps.append(cls.step_result_to_autotest_step_model(
+                step['title'],
+                step['description']
+            ))
+
+        return autotest_model_steps
+
+    @staticmethod
+    @adapter_logger
+    def step_result_to_autotest_step_model(
+            title: str,
+            description: str = None):
+        return AutoTestStepModel(
+            title=title,
+            description=description)
+
+    @classmethod
+    @adapter_logger
+    def step_results_to_attachment_put_model_autotest_step_results_model(cls, steps: list):
+        autotest_model_step_results = []
+
+        for step in steps:
+            autotest_model_step_results.append(
+                cls.step_result_to_attachment_put_model_autotest_step_results_model(
+                    step['title'],
+                    step['outcome'],
+                    step['description'],
+                    step['duration'],
+                    step['parameters'],
+                    step['attachments']))
+
+        return autotest_model_step_results
+
     @staticmethod
     @adapter_logger
     def step_result_to_attachment_put_model_autotest_step_results_model(
             title: str,
-            description: str,
             outcome: str,
-            duration: str,
-            parameters,
-            attachments,
-            started_on=None,
-            completed_on=None):
+            description: str = None,
+            duration: str = None,
+            parameters: list = None,
+            attachments: list = None,
+            started_on: str = None,
+            completed_on: str = None):
         return AttachmentPutModelAutoTestStepResultsModel(
             title=title,
+            outcome=AvailableTestResultOutcome(outcome),
             description=description,
             duration=duration,
-            outcome=AvailableTestResultOutcome(outcome),
             parameters=parameters,
             attachments=attachments,
             started_on=started_on,
