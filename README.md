@@ -5,3 +5,4 @@ Supported test frameworks :
  1. [Pytest](https://github.com/testit-tms/adapters-python/tree/main/testit-adapter-pytest)
  2. [Behave](https://github.com/testit-tms/adapters-python/tree/main/testit-adapter-behave)
  3. [RobotFramework](https://github.com/testit-tms/adapters-python/tree/main/testit-adapter-robotframework)
+ 4. [Nose](https://github.com/testit-tms/adapters-python/tree/main/testit-adapter-nose) 
