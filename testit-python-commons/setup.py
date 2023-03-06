@@ -2,7 +2,7 @@ from setuptools import find_packages, setup
 
 setup(
     name='testit-python-commons',
-    version='2.1.1',
+    version='2.1.2',
     description='Python commons for Test IT',
     url='https://github.com/testit-tms/adapters-python/',
     author='Integration team',

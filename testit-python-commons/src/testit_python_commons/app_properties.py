@@ -103,6 +103,9 @@ class AppProperties:
         if hasattr(option, 'set_cert_validation') and option.set_cert_validation:
             cli_properties['certvalidation'] = option.set_cert_validation
 
+        if hasattr(option, 'set_automatic_creation_test_cases') and option.set_automatic_creation_test_cases:
+            cli_properties['automaticcreationtestcases'] = option.set_automatic_creation_test_cases
+
         return cli_properties
 
     @classmethod
@@ -135,6 +138,9 @@ class AppProperties:
 
         if f'{cls.__env_prefix}_CERT_VALIDATION' in os.environ.keys():
             env_properties['certvalidation'] = os.environ.get(f'{cls.__env_prefix}_CERT_VALIDATION')
+
+        if f'{cls.__env_prefix}_AUTOMATIC_CREATION_TEST_CASES' in os.environ.keys():
+            env_properties['automaticcreationtestcases'] = os.environ.get(f'{cls.__env_prefix}_AUTOMATIC_CREATION_TEST_CASES')
 
         return env_properties
 
@@ -172,6 +178,9 @@ class AppProperties:
 
         if properties.get('certvalidation'):
             properties['certvalidation'] = properties['certvalidation'].lower()
+
+        if properties.get('automaticcreationtestcases'):
+            properties['automaticcreationtestcases'] = properties['automaticcreationtestcases'].lower()
 
     @staticmethod
     def __search_in_environ(var_name: str):

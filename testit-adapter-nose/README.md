@@ -34,6 +34,7 @@ pip install testit-adapter-nose
     testRunName = <optional name>
     adapterMode = <optional>
     certValidation = <optional boolean>
+    automaticCreationTestCases = <optional boolean>
     
     # This section are optional. It enables debug mode.
     [debug]
@@ -74,15 +75,13 @@ pip install testit-adapter-nose
         * 1 - in this mode, the adapter sends all results to the test run without filtering.
         * 2 - in this mode, the adapter creates a new test run and sends results to the new test run.
     
-    * `certValidation` - it enables/disables certificate validation. `certValidation` is optional.
+    * `certValidation` - it enables/disables certificate validation. Default value - true.
+
+    * `automaticCreationTestCases` - mode of automatic creation test cases. Default value - false. The adapter supports following modes:
+        * true - in this mode, the adapter will create a test case linked to the created autotest (not to the updated autotest).
+        * false - in this mode, the adapter will not create a test case.
 
     * `tmsProxy` - it enables debug mode. `tmsProxy` is optional.
-
-3. Create **unittest.cfg** file in the root directory of the project:
-   ```
-    [unittest]
-    plugins = testit_adapter_nose.plugin
-    ```
 
 #### ENV
 
@@ -109,7 +108,9 @@ You can use environment variables (environment variables take precedence over fi
 
 * `TMS_PROXY` - it enables debug mode. `TMS_PROXY` is optional.
 
-* `TMS_CERT_VALIDATION` - it enables/disables certificate validation. `TMS_CERT_VALIDATION` is optional.
+* `TMS_CERT_VALIDATION` - it enables/disables certificate validation. Default value - true.
+
+* `TMS_AUTOMATIC_CREATION_TEST_CASES` - mode of automatic creation test cases. Default value - false.
 
 #### Examples
 
