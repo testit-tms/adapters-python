@@ -87,6 +87,17 @@ def pytest_addoption(parser):
         metavar="false",
         help='Set custom name of configuration file'
     )
+    parser.getgroup('testit').addoption(
+        '--tmsAutomaticCreationTestCases',
+        action="store",
+        dest="set_automatic_creation_test_cases",
+        metavar="false",
+        help="""
+        Set mode of automatic creation test cases (optional):
+        true - create a test case linked to the created autotest (not to the updated autotest)
+        false - not create a test case (Default)
+        """
+    )
 
 
 @pytest.mark.tryfirst

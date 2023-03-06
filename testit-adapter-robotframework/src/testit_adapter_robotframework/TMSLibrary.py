@@ -42,7 +42,7 @@ class TMSLibrary:
         if self.enabled:
             cli_params = ["tmsUrl", "tmsPrivateToken", "tmsProjectId",
                           "tmsConfigurationId", "tmsTestRunId", "tmsTestRunName",
-                          "tmsAdapterMode", "tmsConfigFile", "tmsCertValidation"]
+                          "tmsAdapterMode", "tmsConfigFile", "tmsCertValidation", "tmsAutomaticCreationTestCases"]
             option = Option(**{param: built_in.get_variable_value(f'${{{param}}}', None) for param in cli_params})
             self.adapter_manager = AdapterManager(option)
             pabot_index = built_in.get_variable_value('${PABOTQUEUEINDEX}', None)

@@ -203,3 +203,7 @@ class Option:
             self.set_adapter_mode = kwargs.get('tmsAdapterMode', None)
         if kwargs.get('tmsConfigFile', None):
             self.set_config_file = kwargs.get('tmsConfigFile', None)
+        if kwargs.get('tmsCertValidation', None):
+            self.set_cert_validation = kwargs.get('tmsCertValidation', None)
+        if kwargs.get('tmsAutomaticCreationTestCases', None):
+            self.set_automatic_creation_test_cases = kwargs.get('tmsAutomaticCreationTestCases', None)

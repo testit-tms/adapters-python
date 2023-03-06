@@ -31,7 +31,8 @@ class Converter:
             title=test_result['title'],
             description=test_result['description'],
             links=cls.links_to_links_post_model(test_result['links']),
-            labels=test_result['labels']
+            labels=test_result['labels'],
+            should_create_work_item=test_result['automaticCreationTestCases']
         )
 
     @classmethod

@@ -37,6 +37,7 @@ class AdapterManager:
 
     @adapter_logger
     def write_test(self, test: dict):
+        test['automaticCreationTestCases'] = self.__config.should_automatic_creation_test_cases()
         self.__api_client.write_test(test)
 
     @adapter_logger
