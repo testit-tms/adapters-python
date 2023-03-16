@@ -177,10 +177,15 @@ class Converter:
         autotest_model_steps = []
 
         for step in steps:
-            autotest_model_steps.append(cls.step_result_to_autotest_step_model(
-                step['title'],
-                step['description']
-            ))
+            autotest_model_steps.append(
+                cls.step_result_to_autotest_step_model(
+                    step['title'],
+                    step['description'],
+                    cls.step_results_to_autotest_steps_model(
+                        step.get('steps', [])
+                    )
+                )
+            )
 
         return autotest_model_steps
 
@@ -188,10 +193,12 @@ class Converter:
     @adapter_logger
     def step_result_to_autotest_step_model(
             title: str,
-            description: str = None):
+            description: str = None,
+            steps: list = None):
         return AutoTestStepModel(
             title=title,
-            description=description)
+            description=description,
+            steps=steps)
 
     @classmethod
     @adapter_logger
@@ -206,7 +213,14 @@ class Converter:
                     step['description'],
                     step['duration'],
                     step['parameters'],
-                    step['attachments']))
+                    step['attachments'],
+                    None,
+                    None,
+                    cls.step_results_to_attachment_put_model_autotest_step_results_model(
+                        step.get('step_results', [])
+                    )
+                )
+            )
 
         return autotest_model_step_results
 
@@ -220,7 +234,9 @@ class Converter:
             parameters: list = None,
             attachments: list = None,
             started_on: str = None,
-            completed_on: str = None):
+            completed_on: str = None,
+            step_results: list = None
+            ):
         return AttachmentPutModelAutoTestStepResultsModel(
             title=title,
             outcome=AvailableTestResultOutcome(outcome),
@@ -229,5 +245,6 @@ class Converter:
             parameters=parameters,
             attachments=attachments,
             started_on=started_on,
-            completed_on=completed_on
+            completed_on=completed_on,
+            step_results=step_results
         )
