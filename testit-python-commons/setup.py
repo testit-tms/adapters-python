@@ -4,6 +4,8 @@ setup(
     name='testit-python-commons',
     version='2.1.3',
     description='Python commons for Test IT',
+    long_description=open('README.md', "r").read(),
+    long_description_content_type="text/markdown",
     url='https://github.com/testit-tms/adapters-python/',
     author='Integration team',
     author_email='integrations@testit.software',
