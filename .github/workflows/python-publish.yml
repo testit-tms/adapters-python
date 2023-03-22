@@ -41,7 +41,7 @@ jobs:
         run: |
           paths=($(ls | grep 'testit'))
           for str in ${paths[@]}; do
-            python -m build -o ./dist $str
+            python -m build -s -o ./dist $str
           done
       - name: Publish package
         uses: pypa/gh-action-pypi-publish@release/v1
