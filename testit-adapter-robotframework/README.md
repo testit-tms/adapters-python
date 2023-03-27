@@ -3,13 +3,6 @@
 
 ## Getting Started
 
-### Compatibility
-
-| Test IT | Adapter |
-|---------|---------|
-| 3.5     | 2.0     |
-| 4.0     | 2.1     |
-
 ### Installation
 ```
 pip install testit-adapter-robotframework
