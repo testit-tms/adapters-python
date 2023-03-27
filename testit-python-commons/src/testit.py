@@ -1,6 +1,7 @@
 from testit_python_commons.decorators import (
     description,
     displayName,
+    nameSpace,
     externalID,
     externalId,
     labels,
@@ -25,6 +26,7 @@ __all__ = [
     'externalID',
     'externalId',
     'displayName',
+    'nameSpace',
     'workItemID',
     'workItemIds',
     'title',
