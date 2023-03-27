@@ -160,13 +160,15 @@ Use tags to specify information about autotest.
 
 Description of tags:
 
-- `WorkItemIds` - linking an autotest to a test case.
-- `DisplayName` - name of the autotest in Test IT.
-- `ExternalId` - ID of the autotest within the project in Test IT.
-- `Title` - title in the autotest card.
-- `Description` - description in the autotest card.
-- `Labels` - tags in the autotest card.
-- `Links` - links in the autotest card.
+- `WorkItemIds` - linking an autotest to a test case
+- `DisplayName` - name of the autotest in the TMS system
+- `ExternalId` - ID of the autotest within the project in the TMS system
+- `Title` - title in the autotest card
+- `Description` - description in the autotest card
+- `Labels` - tags in the autotest card
+- `Links` - links in the autotest card
+- `NameSpace` - directory in the TMS system (default - file's name of test)
+- `ClassName` - subdirectory in the TMS system (default - class's name of test)
 
 Description of methods:
 
