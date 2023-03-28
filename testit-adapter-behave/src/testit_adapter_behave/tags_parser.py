@@ -38,6 +38,12 @@ def parse_tags(tags):
                 parse_labels(
                     tag[len(TagType.LABELS):]))
 
+        elif TagType.NAMESPACE in tag:
+            parsed_tags[TagType.NAMESPACE] = tag[len(TagType.NAMESPACE):]
+
+        elif TagType.CLASSNAME in tag:
+            parsed_tags[TagType.CLASSNAME] = tag[len(TagType.CLASSNAME):]
+
     return parsed_tags
 
 

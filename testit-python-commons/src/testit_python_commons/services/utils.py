@@ -83,6 +83,9 @@ class Utils:
         if hasattr(item.function, 'test_namespace'):
             data['namespace'] = item.function.test_namespace
 
+        if hasattr(item.function, 'test_classname'):
+            data['classname'] = item.function.test_classname
+
         if item.own_markers:
             for mark in item.own_markers:
                 if mark.name == 'skip' or mark.name == 'skipif':

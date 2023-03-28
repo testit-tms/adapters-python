@@ -60,6 +60,14 @@ def nameSpace(test_namespace: str):  # noqa: N802
     return outer
 
 
+def className(test_classname: str):  # noqa: N802
+    def outer(function):
+        function.test_classname = test_classname
+        return inner(function)
+
+    return outer
+
+
 @Utils.deprecated('Use "externalId" instead.')
 @adapter_logger
 def externalID(test_external_id: str):  # noqa: N802

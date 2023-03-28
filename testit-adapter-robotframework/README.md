@@ -154,12 +154,14 @@ Tags can be used to specify information about autotest. Tags are space sensitive
 
 Description of tags:
 - `testit.workItemsId` - linking an autotest to a test case
-- `testit.displayName` - name of the autotest in the Test IT system (default - name of test)
-- `testit.externalId` - ID of the autotest within the project in the Test IT System
+- `testit.displayName` - name of the autotest in the TMS system (default - name of test)
+- `testit.externalId` - ID of the autotest within the project in the TMS system
 - `testit.title` - title in the autotest card (default - name of test)
 - `testit.description` - description in the autotest card (default - documentation of test)
 - `testit.links` - links in the autotest card
 - `testit.labels` - labels in the autotest card
+- `testit.nameSpace` - directory in the TMS system (default - file's name of test)
+- `testit.className` - subdirectory in the TMS system (default - class's name of test)
 
 Description of methods:
 - `Add Links` - links in the autotest result
