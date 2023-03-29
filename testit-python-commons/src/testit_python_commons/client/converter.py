@@ -7,12 +7,44 @@ from testit_api_client.models import (
     AutoTestResultsForTestRunModel,
     LinkPostModel,
     LinkPutModel,
-    LinkType
+    LinkType,
+    TestRunV2PostShortModel
 )
 from testit_python_commons.services.logger import adapter_logger
 
 
 class Converter:
+    @classmethod
+    @adapter_logger
+    def test_run_to_test_run_short_model(cls, project_id, name):
+        return TestRunV2PostShortModel(
+            project_id=project_id,
+            name=name
+        )
+
+    @classmethod
+    @adapter_logger
+    def get_id_from_create_test_run_response(cls, response):
+        return response['id']
+
+    @classmethod
+    @adapter_logger
+    def get_resolved_autotests_from_get_test_run_response(cls, response, configuration: str):
+        autotests = response['_data_store']['test_results']
+
+        return cls.__get_resolved_autotests(autotests, configuration)
+
+    @staticmethod
+    @adapter_logger
+    def __get_resolved_autotests(autotests: list, configuration: str):
+        resolved_autotests = []
+
+        for autotest in autotests:
+            if configuration == autotest['_data_store']['configuration_id']:
+                resolved_autotests.append(autotest._data_store['auto_test']._data_store['external_id'])
+
+        return resolved_autotests
+
     @classmethod
     @adapter_logger
     def test_result_to_autotest_post_model(

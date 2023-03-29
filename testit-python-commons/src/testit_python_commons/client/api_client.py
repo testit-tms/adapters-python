@@ -6,14 +6,12 @@ from testit_api_client import ApiClient, Configuration
 from testit_api_client.apis import AttachmentsApi, AutoTestsApi, TestRunsApi
 from testit_api_client.models import (
     AttachmentPutModel,
-    TestRunV2PostShortModel,
     WorkItemIdModel
 )
 
 from testit_python_commons.client.client_configuration import ClientConfiguration
 from testit_python_commons.client.converter import Converter
 from testit_python_commons.services.logger import adapter_logger
-from testit_python_commons.services.utils import Utils
 
 
 class ApiClientWorker:
@@ -36,18 +34,14 @@ class ApiClientWorker:
 
         test_run_name = f'TestRun_{datetime.today().strftime("%Y-%m-%dT%H:%M:%S")}' if \
             not self.__config.get_test_run_name() else self.__config.get_test_run_name()
-        model = TestRunV2PostShortModel(
-            project_id=self.__config.get_project_id(),
-            name=test_run_name
+        model = Converter.test_run_to_test_run_short_model(
+            self.__config.get_project_id(),
+            test_run_name
         )
-
-        logging.debug(f'Create new test run: {model}')
 
         response = test_run_api.create_empty(test_run_v2_post_short_model=model)
 
-        logging.debug(f'The test run created: {response["id"]}')
-
-        return response['id']
+        return Converter.get_id_from_create_test_run_response(response)
 
     @adapter_logger
     def set_test_run_id(self, test_run_id: str):
@@ -59,12 +53,8 @@ class ApiClientWorker:
 
         response = test_run_api.get_test_run_by_id(self.__config.get_test_run_id())
 
-        test_results = response['_data_store']['test_results']
-
-        logging.debug(f'{len(test_results)} autotests were taken from the test run "{self.__config.get_test_run_id()}"')
-
-        return Utils.autotests_parser(
-            test_results,
+        return Converter.get_resolved_autotests_from_get_test_run_response(
+            response,
             self.__config.get_configuration_id())
 
     @adapter_logger
