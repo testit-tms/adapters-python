@@ -41,11 +41,7 @@ class ApiClientWorker:
             name=test_run_name
         )
 
-        logging.debug(f'Create new test run: {model}')
-
         response = test_run_api.create_empty(test_run_v2_post_short_model=model)
-
-        logging.debug(f'The test run created: {response["id"]}')
 
         return response['id']
 
