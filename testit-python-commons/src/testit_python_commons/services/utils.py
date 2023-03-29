@@ -1,24 +1,13 @@
 import hashlib
 import logging
-import os
 import re
 import warnings
+import inspect
 
 from testit_python_commons.services.logger import adapter_logger
 
 
 class Utils:
-    @staticmethod
-    @adapter_logger
-    def autotests_parser(data_autotests: list, configuration: str):
-        resolved_autotests = []
-
-        for data_autotest in data_autotests:
-            if configuration == data_autotest['_data_store']['configuration_id']:
-                resolved_autotests.append(data_autotest._data_store['auto_test']._data_store['external_id'])
-
-        return resolved_autotests
-
     @staticmethod
     def uuid_check(uuid: str):
         if not re.fullmatch(r'[a-zA-Z0-9]{8}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{12}', uuid):
@@ -299,3 +288,27 @@ class Utils:
             params.update(item.callspec.params)
 
         return params
+
+    @staticmethod
+    def get_function_parameters(function, *args, **kwargs):
+        parameters = {}
+        args_default_values = inspect.getfullargspec(function).defaults
+
+        if args or args_default_values:
+            all_keys = inspect.getfullargspec(function).args
+            all_args = list(args)
+
+            if args_default_values:
+                all_args += list(args_default_values[len(args) - (len(all_keys) - len(args_default_values)):])
+
+            method_args = [arg_name for arg_name in all_keys if arg_name not in list(kwargs)]
+
+            if len(method_args) == len(all_args):
+                for index in range(0, len(method_args)):
+                    parameters[method_args[index]] = str(all_args[index])
+
+        if kwargs:
+            for key, parameter in kwargs.items():
+                parameters[key] = str(parameter)
+
+        return parameters

@@ -1,10 +1,11 @@
-import inspect
 import logging
 from datetime import datetime
 from functools import wraps
 
-from testit_python_commons.services import TmsPluginManager
-
+from testit_python_commons.services import (
+    TmsPluginManager,
+    Utils
+)
 
 class Step:
     step_stack = []
@@ -18,7 +19,6 @@ class Step:
             self.parameters = kwargs['parameters']
 
     def __call__(self, *args, **kwargs):
-        parameters = {}
         if self.args and callable(self.args[0]):
             function = self.args[0]
 
@@ -32,22 +32,7 @@ class Step:
             else:
                 name = f'Step {str(len(self.steps_data) + 1)}'
 
-            args_default_values = inspect.getfullargspec(function).defaults
-
-            if args or args_default_values:
-                all_keys = inspect.getfullargspec(function).args
-                all_args = list(args)
-
-                if args_default_values:
-                    all_args += list(args_default_values[len(args) - (len(all_keys) - len(args_default_values)):])
-
-                step_args = [arg_name for arg_name in all_keys if arg_name not in list(kwargs)]
-
-                for index in range(0, len(step_args)):
-                    parameters[step_args[index]] = str(all_args[index])
-            if kwargs:
-                for key, parameter in kwargs.items():
-                    parameters[key] = str(parameter)
+            parameters = Utils.get_function_parameters(function, *args, **kwargs)
 
             with Step(name, function.__name__, parameters=parameters):
                 return function(*args, **kwargs)
@@ -57,26 +42,11 @@ class Step:
             @wraps(function)
             def step_wrapper(*a, **kw):
                 if self.args:
-                    args_default_values = inspect.getfullargspec(function).defaults
-
-                    if a or args_default_values:
-                        all_keys = inspect.getfullargspec(function).args
-                        all_args = list(a)
-
-                        if args_default_values:
-                            all_args += list(args_default_values)
-
-                        step_args = [arg_name for arg_name in all_keys if arg_name not in list(kw)]
-
-                        for index in range(0, len(step_args)):
-                            parameters[step_args[index]] = str(all_args[index])
-                    if kw:
-                        for key, parameter in kw.items():
-                            parameters[key] = str(parameter)
+                    params = Utils.get_function_parameters(function, *a, **kw)
 
                     with Step(
-                            self.args[0], self.args[1], parameters=parameters) if len(self.args) == 2 \
-                            else Step(self.args[0], parameters=parameters
+                            self.args[0], self.args[1], parameters=params) if len(self.args) == 2 \
+                            else Step(self.args[0], parameters=params
                                       ):
                         return function(*a, **kw)
 
