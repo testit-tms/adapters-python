@@ -1,3 +1,4 @@
+import types
 from functools import wraps
 
 from testit_python_commons.services.logger import adapter_logger
@@ -15,9 +16,11 @@ def inner(function):
                            'callspec') and key not in function.callspec.params:
                     function.test_properties[key] = str(value)
         function(*args, **kwargs)
-        return function
 
-    return wrapper
+    if isinstance(function, types.FunctionType):
+        return wrapper
+
+    return function
 
 
 @Utils.deprecated('Use "workItemIds" instead.')
