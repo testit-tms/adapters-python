@@ -34,8 +34,8 @@ class Utils:
     @adapter_logger
     def form_test(item):
         data = {
-            'externalID': item.test_external_id,
-            'autoTestName': item.test_displayname,
+            'externalID': Utils.__get_external_id_from(item),
+            'autoTestName': Utils.__get_display_name_from(item),
             'steps': [],
             'stepResults': [],
             'setUp': [],
@@ -47,33 +47,18 @@ class Utils:
             'outcome': None,
             'failureReasonName': None,
             'traces': None,
-            'namespace': item.function.__module__,
             'attachments': [],
             'parameters': Utils.__get_parameters_from(item),
             'properties': Utils.__get_properties_from(item),
-            'classname': Utils.__get_classname_from(item),
-            'title': Utils._get_title_from(item),
+            'namespace': Utils.__get_namespace_from(item),
+            'classname': Utils.__get_class_name_from(item),
+            'title': Utils.__get_title_from(item),
             'description': Utils.__get_description_from(item),
-            'links': [],
-            'labels': [],
-            'workItemsID': [],
+            'links': Utils.__get_links_from(item),
+            'labels': Utils.__get_labels_from(item),
+            'workItemsID': Utils.__get_work_item_ids_from(item),
             'message': None
         }
-
-        if hasattr(item.function, 'test_links'):
-            Utils.__set_links(item, data)
-
-        if hasattr(item.function, 'test_labels'):
-            Utils.__set_labels(item, data)
-
-        if hasattr(item.function, 'test_workitems_id'):
-            data['workItemsID'] = item.function.test_workitems_id
-
-        if hasattr(item.function, 'test_namespace'):
-            data['namespace'] = item.function.test_namespace
-
-        if hasattr(item.function, 'test_classname'):
-            data['classname'] = item.function.test_classname
 
         if item.own_markers:
             for mark in item.own_markers:
@@ -94,6 +79,110 @@ class Utils:
 
     @staticmethod
     @adapter_logger
+    def __get_display_name_from(item):
+        display_name = Utils.__search_attribute(item, 'test_displayname')
+
+        if not display_name:
+            return item.function.__doc__ if \
+                item.function.__doc__ else item.function.__name__
+
+        params = Utils.get_params(item)
+
+        return Utils.param_attribute_collector(
+            display_name,
+            params)
+
+    @staticmethod
+    @adapter_logger
+    def __get_external_id_from(item):
+        external_id = Utils.__search_attribute(item, 'test_external_id')
+
+        if not external_id:
+            return Utils.get_hash(item.nodeid + item.function.__name__)
+
+        params = Utils.get_params(item)
+
+        return Utils.param_attribute_collector(
+            external_id,
+            params)
+
+    @staticmethod
+    @adapter_logger
+    def __get_title_from(item):
+        title = Utils.__search_attribute(item, 'test_title')
+
+        if not title:
+            return None
+
+        params = Utils.get_params(item)
+
+        return Utils.param_attribute_collector(
+            title,
+            params)
+
+    @staticmethod
+    @adapter_logger
+    def __get_description_from(item):
+        description = Utils.__search_attribute(item, 'test_description')
+
+        if not description:
+            return None
+
+        params = Utils.get_params(item)
+
+        return Utils.param_attribute_collector(
+            description,
+            params)
+
+    @staticmethod
+    @adapter_logger
+    def __get_namespace_from(item):
+        namespace = Utils.__search_attribute(item, 'test_namespace')
+
+        if not namespace:
+            return item.function.__module__
+
+        params = Utils.get_params(item)
+
+        return Utils.param_attribute_collector(
+            namespace,
+            params)
+
+    @staticmethod
+    @adapter_logger
+    def __get_class_name_from(item):
+        class_name = Utils.__search_attribute(item, 'test_classname')
+
+        if not class_name:
+            i = item.function.__qualname__.find('.')
+
+            if i != -1:
+                return item.function.__qualname__[:i]
+
+            return None
+
+        params = Utils.get_params(item)
+
+        return Utils.param_attribute_collector(
+            class_name,
+            params)
+
+    @staticmethod
+    @adapter_logger
+    def __get_links_from(item):
+        links = Utils.__search_attribute(item, 'test_links')
+
+        if not links:
+            return []
+
+        params = Utils.get_params(item)
+
+        return Utils.__set_params_in_links(
+            links,
+            params)
+
+    @staticmethod
+    @adapter_logger
     def __get_parameters_from(item):
         if hasattr(item, 'array_parametrize_mark_id'):
             test_parameters = {}
@@ -111,68 +200,44 @@ class Utils:
 
     @staticmethod
     @adapter_logger
-    def __get_classname_from(item):
-        i = item.function.__qualname__.find('.')
-        if i != -1:
-            return item.function.__qualname__[:i]
-        return None
+    def __set_params_in_links(links, params):
+        if not params:
+            return links
 
+        links_with_params = []
+
+        for link in links:
+            links_with_params.append(
+                {
+                    'url': Utils.param_attribute_collector(
+                        link['url'],
+                        params),
+                    'title': Utils.param_attribute_collector(
+                        link['title'],
+                        params) if link['title'] else None,
+                    'type': Utils.param_attribute_collector(
+                        link['type'],
+                        params) if link['type'] else None,
+                    'description': Utils.param_attribute_collector(
+                        link['description'],
+                        params) if link['description'] else None
+                })
+
+        return links_with_params
+
+    # TODO: Need refactor
     @staticmethod
     @adapter_logger
-    def __set_links(item, data):
-        params = Utils.get_params(item)
+    def __get_labels_from(item):
+        test_labels = Utils.__search_attribute(item, 'test_labels')
 
-        if params:
-            for link in item.function.test_links:
-                data['links'].append({})
-                data['links'][-1]['url'] = Utils.param_attribute_collector(
-                    link['url'],
-                    params)
-                data['links'][-1]['title'] = Utils.param_attribute_collector(
-                    link['title'],
-                    params) if link['title'] else None
-                data['links'][-1]['type'] = Utils.param_attribute_collector(
-                    link['type'],
-                    params) if link['type'] else None
-                data['links'][-1]['description'] = Utils.param_attribute_collector(
-                    link['description'],
-                    params) if link['description'] else None
-        else:
-            data['links'] = item.function.test_links
+        if not test_labels:
+            return []
 
-    @staticmethod
-    @adapter_logger
-    def _get_title_from(item):
-        if not hasattr(item.function, 'test_title'):
-            return None
+        labels = []
 
-        params = Utils.get_params(item)
-
-        if params:
-            return Utils.param_attribute_collector(
-                item.function.test_title,
-                params)
-        return item.function.test_title
-
-    @staticmethod
-    @adapter_logger
-    def __get_description_from(item):
-        if not hasattr(item.function, 'test_description'):
-            return None
-
-        params = Utils.get_params(item)
-
-        if params:
-            return Utils.param_attribute_collector(
-                item.function.test_description,
-                params)
-        return item.function.test_description
-
-    @staticmethod
-    @adapter_logger
-    def __set_labels(item, data):
         if hasattr(item, 'array_parametrize_mark_id'):
-            for one_label in item.function.test_labels:
+            for one_label in test_labels:
                 result, param_id = Utils.mass_param_attribute_collector(
                     one_label,
                     item.own_markers,
@@ -182,34 +247,42 @@ class Utils:
                         item.name[(item.name.find('[') + 1):(item.name.rfind(']'))].split(
                             '-')[param_id]:
                     for label in result:
-                        data['labels'].append({
+                        labels.append({
                             'name': label
                         })
                 else:
-                    data['labels'].append({
+                    labels.append({
                         'name': result
                     })
         else:
-            for label in item.function.test_labels:
-                data['labels'].append({
+            for label in test_labels:
+                labels.append({
                     'name': label
                 })
 
+        return labels
+
+    # TODO: Need refactor
     @staticmethod
     @adapter_logger
-    def __set_workitems_id(item, data):
+    def __get_work_item_ids_from(item):
+        test_workitems_id = Utils.__search_attribute(item, 'test_workitems_id')
+
+        if not test_workitems_id:
+            return []
+
         if hasattr(item, 'array_parametrize_mark_id'):
             result, param_id = Utils.mass_param_attribute_collector(
-                item.function.test_workitems_id[0], item.own_markers,
+                test_workitems_id[0], item.own_markers,
                 item.array_parametrize_mark_id, item.index)
-            if param_id is not None and item.function.test_workitems_id[0][1:-1] in \
+            if param_id is not None and test_workitems_id[0][1:-1] in \
                     item.name[(item.name.find('[') + 1):(item.name.rfind(']'))].split(
                         '-')[param_id]:
-                data['workItemsID'] = result
+                return result
             else:
-                data['workItemsID'] = [result]
+                return [result]
         else:
-            data['workItemsID'] = item.function.test_workitems_id
+            return test_workitems_id
 
     @staticmethod
     @adapter_logger
@@ -288,6 +361,17 @@ class Utils:
             params.update(item.callspec.params)
 
         return params
+
+    @staticmethod
+    @adapter_logger
+    def __search_attribute(item, attribute):
+        if hasattr(item.function, attribute):
+            return getattr(item.function, attribute)
+
+        if hasattr(item.cls, attribute):
+            return getattr(item.cls, attribute)
+
+        return
 
     @staticmethod
     def get_function_parameters(function, *args, **kwargs):

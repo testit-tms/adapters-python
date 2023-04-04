@@ -2,7 +2,7 @@ from setuptools import find_packages, setup
 
 setup(
     name='testit-python-commons',
-    version='2.1.4',
+    version='2.1.5',
     description='Python commons for Test IT',
     long_description=open('README.md', "r").read(),
     long_description_content_type="text/markdown",
