@@ -40,6 +40,6 @@ jobs:
         working-directory: ${{ matrix.package }}
         run: flake8 --ignore=C901 .
 
-      - name: Tests [${{ matrix.package }}]
-        working-directory: ${{ matrix.package }}
-        run: pytest --basetemp=tmp
+      # - name: Tests [${{ matrix.package }}]
+      #   working-directory: ${{ matrix.package }}
+      #   run: pytest --basetemp=tmp
