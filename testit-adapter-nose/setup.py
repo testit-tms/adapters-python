@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='testit-adapter-nose',
-    version='2.1.4',
+    version='2.1.5',
     description='Nose adapter for Test IT',
     long_description=open('README.md', "r").read(),
     long_description_content_type="text/markdown",
@@ -20,7 +20,7 @@ setup(
     py_modules=['testit_adapter_nose'],
     packages=find_packages(where='src'),
     package_dir={'': 'src'},
-    install_requires=['attrs', 'nose2', 'testit-python-commons==2.1.4'],
+    install_requires=['attrs', 'nose2', 'testit-python-commons==2.1.5'],
     entry_points={
             'nose.plugins.0.10': [
                 'testit_adapter_nose = testit_adapter_nose.plugin:TmsPlugin',
