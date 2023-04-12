@@ -1,3 +1,5 @@
+import logging
+
 from testit_python_commons.services import TmsPluginManager
 from testit_python_commons.services.logger import adapter_logger
 from testit_python_commons.services.utils import Utils
@@ -39,9 +41,9 @@ def addLinks(url: str = None, title: str = None, type: str = None, description: 
                     TmsPluginManager.get_plugin_manager().hook \
                         .add_link(link=link)
                 else:
-                    print(f'Link ({link}) can\'t be processed!')
+                    logging.warning(f'Link ({link}) can\'t be processed!')
         else:
-            print("Links can't be processed!\nPlease, set 'url' or 'links'!")
+            logging.warning("Links can't be processed!\nPlease, set 'url' or 'links'!")
 
 
 @Utils.deprecated('Use "addMessage" instead.')
@@ -83,7 +85,7 @@ def addAttachments(data, is_text: bool = False, name: str = None):   # noqa: N80
             elif isinstance(data, tuple) or isinstance(data, list):
                 Step.add_attachments(data)
             else:
-                print(f'File ({data}) not found!')
+                logging.warning(f'File ({data}) not found!')
     else:
         if is_text and hasattr(TmsPluginManager.get_plugin_manager().hook, 'create_attachment'):
             Step.create_attachment(str(data), name)
@@ -99,4 +101,4 @@ def addAttachments(data, is_text: bool = False, name: str = None):   # noqa: N80
                 TmsPluginManager.get_plugin_manager().hook \
                     .add_attachments(attach_paths=data)
             else:
-                print(f'({data}) is not path!')
+                logging.warning(f'({data}) is not path!')
