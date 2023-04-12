@@ -1,13 +1,13 @@
 from testit_python_commons.decorators import (
+    className,
     description,
     displayName,
-    nameSpace,
-    className,
     externalID,
     externalId,
     labels,
     link,
     links,
+    nameSpace,
     title,
     workItemID,
     workItemIds

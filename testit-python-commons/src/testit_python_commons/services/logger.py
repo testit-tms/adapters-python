@@ -1,5 +1,4 @@
 import inspect
-
 from functools import wraps
 
 from testit_python_commons.services.plugin_manager import TmsPluginManager
@@ -30,6 +29,7 @@ def adapter_logger(function):
 
         return result
     return wrapper
+
 
 def get_function_parameters(function, *args, **kwargs):
     parameters = {}

@@ -1,15 +1,16 @@
 from testit_api_client.models import (
-    AutoTestStepModel,
-    AvailableTestResultOutcome,
     AttachmentPutModelAutoTestStepResultsModel,
     AutoTestPostModel,
     AutoTestPutModel,
     AutoTestResultsForTestRunModel,
+    AutoTestStepModel,
+    AvailableTestResultOutcome,
     LinkPostModel,
     LinkPutModel,
     LinkType,
     TestRunV2PostShortModel
 )
+
 from testit_python_commons.services.logger import adapter_logger
 
 
@@ -267,8 +268,7 @@ class Converter:
             attachments: list = None,
             started_on: str = None,
             completed_on: str = None,
-            step_results: list = None
-            ):
+            step_results: list = None):
         return AttachmentPutModelAutoTestStepResultsModel(
             title=title,
             outcome=AvailableTestResultOutcome(outcome),

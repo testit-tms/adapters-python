@@ -140,7 +140,8 @@ class AppProperties:
             env_properties['certvalidation'] = os.environ.get(f'{cls.__env_prefix}_CERT_VALIDATION')
 
         if f'{cls.__env_prefix}_AUTOMATIC_CREATION_TEST_CASES' in os.environ.keys():
-            env_properties['automaticcreationtestcases'] = os.environ.get(f'{cls.__env_prefix}_AUTOMATIC_CREATION_TEST_CASES')
+            env_properties['automaticcreationtestcases'] = os.environ.get(
+                f'{cls.__env_prefix}_AUTOMATIC_CREATION_TEST_CASES')
 
         return env_properties
 

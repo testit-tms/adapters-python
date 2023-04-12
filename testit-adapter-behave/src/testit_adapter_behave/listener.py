@@ -42,8 +42,9 @@ class AdapterListener(object):
         executable_step = get_test_result_step_model()
 
         for argument in match.arguments:
-            executable_step['description'] += f'{argument.name} = {argument.original} '
-            executable_step['parameters'][argument.name] = argument.original
+            name = argument.name if argument.name else 'param' + str(match.arguments.index(argument))
+            executable_step['description'] += f'{name} = {argument.original} '
+            executable_step['parameters'][name] = argument.original
 
         self.__executable_test[scope].append(executable_step)
 

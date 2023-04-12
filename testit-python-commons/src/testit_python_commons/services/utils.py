@@ -1,8 +1,8 @@
 import hashlib
+import inspect
 import logging
 import re
 import warnings
-import inspect
 
 from testit_python_commons.services.logger import adapter_logger
 
