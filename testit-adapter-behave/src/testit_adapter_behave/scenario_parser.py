@@ -96,7 +96,7 @@ def get_scenario_namespace(scenario):
 def get_scenario_parameters(scenario):
     row = scenario._row
 
-    return {name: value for name, value in zip(row.headings, row.cells)} if row else None
+    return {name: value for name, value in zip(row.headings, row.cells)} if row else {}
 
 
 def get_scenario_status(scenario):
