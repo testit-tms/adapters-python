@@ -1,6 +1,6 @@
 from robot.libraries.BuiltIn import BuiltIn
 
-from testit_python_commons.services import AdapterManager
+from testit_python_commons.services import TmsPluginManager
 
 from .listeners import AutotestAdapter, TestRunAdapter
 from .models import Link, Option
@@ -44,7 +44,7 @@ class TMSLibrary:
                           "tmsConfigurationId", "tmsTestRunId", "tmsTestRunName",
                           "tmsAdapterMode", "tmsConfigFile", "tmsCertValidation", "tmsAutomaticCreationTestCases"]
             option = Option(**{param: built_in.get_variable_value(f'${{{param}}}', None) for param in cli_params})
-            self.adapter_manager = AdapterManager(option)
+            self.adapter_manager = TmsPluginManager.get_adapter_manager(option)
             pabot_index = built_in.get_variable_value('${PABOTQUEUEINDEX}', None)
             if pabot_index is not None:
                 try:
