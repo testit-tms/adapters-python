@@ -88,7 +88,6 @@ def addAttachments(data, is_text: bool = False, name: str = None):   # noqa: N80
                 logging.warning(f'File ({data}) not found!')
     else:
         if is_text and hasattr(TmsPluginManager.get_plugin_manager().hook, 'create_attachment'):
-            Step.create_attachment(str(data), name)
             TmsPluginManager.get_plugin_manager().hook \
                 .create_attachment(
                 body=str(data),
