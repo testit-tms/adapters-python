@@ -1,3 +1,4 @@
+import testit_python_commons.services as adapter
 from testit_python_commons.services import AdapterManager
 from testit_python_commons.step import Step
 from .utils import (
@@ -38,3 +39,23 @@ class AdapterListener(object):
 
         self.__adapter_manager.write_test(self.__executable_test)
         self.__executable_test = None
+
+    @adapter.hookimpl
+    def add_link(self, link):
+        if self.__executable_test:
+            self.__executable_test['resultLinks'].append(link)
+
+    @adapter.hookimpl
+    def add_message(self, test_message):
+        if self.__executable_test:
+            self.__executable_test['message'] = str(test_message)
+
+    @adapter.hookimpl
+    def add_attachments(self, attach_paths: list or tuple):
+        if self.__executable_test:
+            self.__executable_test['attachments'] += self.__adapter_manager.load_attachments(attach_paths)
+
+    @adapter.hookimpl
+    def create_attachment(self, body, name: str):
+        if self.__executable_test:
+            self.__executable_test['attachments'] += self.__adapter_manager.create_attachment(body, name)
