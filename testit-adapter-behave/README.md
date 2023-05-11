@@ -19,15 +19,15 @@ pip install testit-adapter-behave
 1. Create **connection_config.ini** file in the root directory of the project:
     ```
     [testit]
-    URL = url
-    privateToken = token
-    projectId = id
-    configurationId = id
-    testRunId = optional id
-    testRunName = optional name
-    adapterMode = optional
-    certValidation = optional boolean
-    automaticCreationTestCases = optional boolean
+    URL = URL
+    privateToken = USER_PRIVATE_TOKEN
+    projectId = PROJECT_ID
+    configurationId = CONFIGURATION_ID
+    testRunId = TEST_RUN_ID
+    testRunName = TEST_RUN_NAME
+    adapterMode = ADAPTER_MODE
+    certValidation = CERT_VALIDATION
+    automaticCreationTestCases = AUTOMATIC_CREATION_TEST_CASES
     
     # This section are optional. It enables debug mode.
     [debug]
