@@ -19,15 +19,15 @@ pip install testit-adapter-pytest
 1. Create **connection_config.ini** file in the root directory of the project:
     ```
     [testit]
-    URL = <url>
-    privateToken = <token>
-    projectId = <id>
-    configurationId = <id>
-    testRunId = <optional id>
-    testRunName = <optional name>
-    adapterMode = <optional>
-    certValidation = <optional boolean>
-    automaticCreationTestCases = <optional boolean>
+    URL = url
+    privateToken = token
+    projectId = id
+    configurationId = id
+    testRunId = optional id
+    testRunName = optional name
+    adapterMode = optional
+    certValidation = optional boolean
+    automaticCreationTestCases = optional boolean
     
     # This section are optional. It enables debug mode.
     [debug]
