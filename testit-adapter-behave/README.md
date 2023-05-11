@@ -14,125 +14,39 @@ pip install testit-adapter-behave
 
 ### Configuration
 
+| Property                   | Environment variable              | CLI argument                  | Required | Description                                                                                                                                                                                                                                                                                                                                                                            |
+|----------------------------|-----------------------------------|-------------------------------|----------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| url                        | TMS_URL                           | tmsUrl                        | ✔        | Location of the TMS instance                                                                                                                                                                                                                                                                                                                                                           |
+| privateToken               | TMS_PRIVATE_TOKEN                 | tmsPrivateToken               | ✔        | API secret key [How to getting API secret key?](https://github.com/testit-tms/.github/tree/main/configuration#privatetoken)                                                                                                                                                                                                                                                            |
+| projectId                  | TMS_PROJECT_ID                    | tmsProjectId                  | ✔        | ID of project in TMS instance [How to getting project ID?](https://github.com/testit-tms/.github/tree/main/configuration#projectid)                                                                                                                                                                                                                                                    |
+| configurationId            | TMS_CONFIGURATION_ID              | tmsConfigurationId            | ✔        | ID of configuration in TMS instance [How to getting configuration ID?](https://github.com/testit-tms/.github/tree/main/configuration#configurationid)                                                                                                                                                                                                                                  |
+| testRunId                  | TMS_TEST_RUN_ID                   | tmsTestRunId                  | ❌        | ID of the created test run in TMS instance. If it is not provided, it is created automatically                                                                                                                                                                                                                                                                                         |
+| testRunName                | TMS_TEST_RUN_NAME                 | tmsTestRunName                | ❌        | Parameter for specifying the name of test run in TMS instance. If it is not provided, it is created automatically                                                                                                                                                                                                                                                                      |
+| adapterMode                | TMS_ADAPTER_MODE                  | tmsAdapterMode                | ❌        | Adapter mode. Default value - 0. The adapter supports following modes:<br/>0 - in this mode, the adapter filters tests by test run ID and configuration ID, and sends the results to the test run<br/>1 - in this mode, the adapter sends all results to the test run without filtering<br/>2 - in this mode, the adapter creates a new test run and sends results to the new test run |
+| certValidation             | TMS_CERT_VALIDATION               | tmsCertValidation             | ❌        | It enables/disables certificate validation. Default value - true                                                                                                                                                                                                                                                                                                                       |
+| automaticCreationTestCases | TMS_AUTOMATIC_CREATION_TEST_CASES | tmsAutomaticCreationTestCases | ❌        | Mode of automatic creation test cases. Default value - false. The adapter supports following modes:<br/>true - in this mode, the adapter will create a test case linked to the created autotest (not to the updated autotest)<br/>false - in this mode, the adapter will not create a test case                                                                                        |
+| tmsProxy                   | TMS_PROXY                         | tmsProxy                      | ❌        | It enables debug mode                                                                                                                                                                                                                                                                                                                                                                  |
+| -                          | TMS_CONFIG_FILE                   | tmsConfigFile                 | ❌        | Name of the configuration file If it is not provided, it is used default file name                                                                                                                                                                                                                                                                                                     |
+
 #### File
 
-1. Create **connection_config.ini** file in the root directory of the project:
-    ```
-    [testit]
-    URL = URL
-    privateToken = USER_PRIVATE_TOKEN
-    projectId = PROJECT_ID
-    configurationId = CONFIGURATION_ID
-    testRunId = TEST_RUN_ID
-    testRunName = TEST_RUN_NAME
-    adapterMode = ADAPTER_MODE
-    certValidation = CERT_VALIDATION
-    automaticCreationTestCases = AUTOMATIC_CREATION_TEST_CASES
-    
-    # This section are optional. It enables debug mode.
-    [debug]
-    tmsProxy = {"http": "http://localhost:8888", "https": "http://localhost:8888"}
-    ```
+Create **connection_config.ini** file in the root directory of the project:
+```
+[testit]
+URL = URL
+privateToken = USER_PRIVATE_TOKEN
+projectId = PROJECT_ID
+configurationId = CONFIGURATION_ID
+testRunId = TEST_RUN_ID
+testRunName = TEST_RUN_NAME
+adapterMode = ADAPTER_MODE
+certValidation = CERT_VALIDATION
+automaticCreationTestCases = AUTOMATIC_CREATION_TEST_CASES
 
-2. Fill parameters with your configuration, where:
-    * `URL` - location of the TMS instance
-
-    * `privateToken` - API secret key
-        1. go to the https://{DOMAIN}/user-profile profile
-        2. copy the API secret key
-
-    * `projectId` - ID of project in TMS instance.
-
-        1. create a project
-        2. open DevTools -> network
-        3. go to the project https://{DOMAIN}/projects/{PROJECT_GLOBAL_ID}/tests
-        4. GET-request project, Preview tab, copy id field
-
-    * `configurationId` - ID of configuration in TMS instance.
-
-        1. create a project
-        2. open DevTools -> network
-        3. go to the project https://{DOMAIN}/projects/{PROJECT_GLOBAL_ID}/tests
-        4. GET-request configurations, Preview tab, copy id field
-
-    * `testRunId` - id of the created test run in TMS instance. `testRunId` is optional. If it is not provided, it is
-      created automatically.
-
-    * `testRunName` - parameter for specifying the name of test run in TMS instance. `testRunName` is optional. If it is
-      not provided, it is created automatically.
-
-    * `adapterMode` - adapter mode. Default value - 0. The adapter supports following modes:
-
-        * 0 - in this mode, the adapter filters tests by test run ID and configuration ID, and sends the results to the
-          test run.
-        * 1 - in this mode, the adapter sends all results to the test run without filtering.
-        * 2 - in this mode, the adapter creates a new test run and sends results to the new test run.
-    
-    * `certValidation` - it enables/disables certificate validation. Default value - true.
-
-    * `automaticCreationTestCases` - mode of automatic creation test cases. Default value - false. The adapter supports following modes:
-        * true - in this mode, the adapter will create a test case linked to the created autotest (not to the updated autotest).
-        * false - in this mode, the adapter will not create a test case.
-
-    * `tmsProxy` - it enables debug mode. `tmsProxy` is optional.
-
-#### ENV
-
-You can use environment variables (environment variables take precedence over file variables):
-
-* `TMS_URL` - location of the TMS instance.
-
-* `TMS_PRIVATE_TOKEN` - API secret key.
-
-* `TMS_PROJECT_ID` - ID of a project in TMS instance.
-
-* `TMS_CONFIGURATION_ID` - ID of a configuration in TMS instance.
-
-* `TMS_ADAPTER_MODE` - adapter mode. Default value - 0.
-
-* `TMS_TEST_RUN_ID` - ID of the created test-run in TMS instance. `TMS_TEST_RUN_ID` is optional. If it is not provided,
-  it is created automatically.
-
-* `TMS_TEST_RUN_NAME` - name of the new test-run.`TMS_TEST_RUN_NAME` is optional. If it is not provided, it is created
-  automatically.
-
-* `TMS_CONFIG_FILE` - name of the configuration file. `TMS_CONFIG_FILE` is optional. If it is not provided, it is used
-  default file name.
-
-* `TMS_PROXY` - it enables debug mode. `TMS_PROXY` is optional.
-
-* `TMS_CERT_VALIDATION` - it enables/disables certificate validation. Default value - true.
-
-* `TMS_AUTOMATIC_CREATION_TEST_CASES` - mode of automatic creation test cases. Default value - false.
-
-#### Command line
-
-You also can CLI variables (CLI variables take precedence over environment variables):
-
-* `tmsUrl` - location of the TMS instance.
-
-* `tmsPrivateToken` - API secret key.
-
-* `tmsProjectId` - ID of a project in TMS instance.
-
-* `tmsConfigurationId` - ID of a configuration in TMS instance.
-
-* `tmsAdapterMode` - adapter mode. Default value - 0.
-
-* `tmsTestRunId` - ID of the created test-run in TMS instance. `tmsTestRunId` is optional. If it is not provided, it is
-  created automatically.
-
-* `tmsTestRunName` - name of the new test-run.`tmsTestRunName` is optional. If it is not provided, it is created
-  automatically.
-
-* `tmsConfigFile` - name of the configuration file. `tmsConfigFile` is optional. If it is not provided, it is used
-  default file name.
-
-* `tmsProxy` - it enables debug mode. `tmsProxy` is optional.
-
-* `tmsCertValidation` - it enables/disables certificate validation. Default value - true.
-
-* `tmsAutomaticCreationTestCases` - mode of automatic creation test cases. Default value - false.
+# This section are optional. It enables debug mode.
+[debug]
+tmsProxy = {"http": "http://localhost:8888", "https": "http://localhost:8888"}
+```
 
 #### Examples
 
@@ -145,10 +59,10 @@ $ behave -f testit_adapter_behave.formatter:AdapterFormatter
 Launch with command-line parameters:
 
 ```
-$ behave -f testit_adapter_behave.formatter:AdapterFormatter -D tmsUrl=<url> -D tmsPrivateToken=<token> -D
-tmsProjectId=<id> -D tmsConfigurationId=<id> -D tmsTestRunId=<optional id> -D tmsAdapterMode=<optional> -D
-tmsTestRunName=<optional name> -D tmsProxy='{"http":"http://localhost:8888","https":"http://localhost:8888"}' -D
-tmsCertValidation=<optional boolean> -D tmsAutomaticCreationTestCases=<optional boolean>
+$ behave -f testit_adapter_behave.formatter:AdapterFormatter -D tmsUrl=URL -D tmsPrivateToken=USER_PRIVATE_TOKEN -D
+tmsProjectId=PROJECT_ID -D tmsConfigurationId=CONFIGURATION_ID -D tmsTestRunId=TEST_RUN_ID -D tmsAdapterMode=ADAPTER_MODE -D
+tmsTestRunName=TEST_RUN_NAME -D tmsProxy='{"http":"http://localhost:8888","https":"http://localhost:8888"}' -D
+tmsCertValidation=CERT_VALIDATION -D tmsAutomaticCreationTestCases=AUTOMATIC_CREATION_TEST_CASES
 ```
 
 If you want to enable debug mode then
