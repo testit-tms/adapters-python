@@ -51,7 +51,7 @@ jobs:
       - name: Build package
         working-directory: ${{ matrix.package }}
         run: |
-          python -m build -s -o ./dist
+          python -m build -s
       - name: Publish package for ${{ matrix.package }}
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
