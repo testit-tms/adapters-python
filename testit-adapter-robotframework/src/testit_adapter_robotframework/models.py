@@ -141,6 +141,10 @@ class Autotest(Default):
                         self.labels.append(Label(value))
                     elif isinstance(value, list):
                         self.labels.extend([Label(item) for item in value if isinstance(item, (str, int))])
+                elif attr == 'namespace':
+                    self.namespace = str(value).replace("'", "").replace('"', '')
+                elif attr == 'classname':
+                    self.classname = str(value).replace("'", "").replace('"', '')
                 else:
                     logger.error(f"[TestIt] Unknown attribute: {attr}")
         if not self.externalID:
