@@ -51,10 +51,7 @@ jobs:
       - name: Build package
         working-directory: ${{ matrix.package }}
         run: |
-          paths=($(ls | grep 'testit'))
-          for str in ${paths[@]}; do
-            python -m build -s -o ./dist $str
-          done
+          python -m build -s -o ./dist
       - name: Publish package for ${{ matrix.package }}
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
