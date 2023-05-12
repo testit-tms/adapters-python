@@ -57,5 +57,5 @@ jobs:
         with:
           skip-existing: true
           user: __token__
-          packages-dir: ${{ matrix.package }}
+          packages-dir: ${{ matrix.package }}/dist/
           password: ${{ secrets.PYPI_API_TOKEN }}
