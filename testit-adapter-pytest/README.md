@@ -1,4 +1,4 @@
- Usage# Test IT TMS adapter for Pytest
+# Test IT TMS adapter for Pytest
 
 ![Test IT](https://raw.githubusercontent.com/testit-tms/adapters-python/master/images/banner.png)
 
