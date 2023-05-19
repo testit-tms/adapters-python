@@ -9,7 +9,8 @@ from .scenario_parser import (
     parse_status)
 from .utils import (
     convert_step_to_step,
-    convert_step_to_step_result)
+    convert_step_to_step_result,
+    convert_executable_test_to_test_result_model)
 
 
 class AdapterListener(object):
@@ -34,7 +35,8 @@ class AdapterListener(object):
         self.__steps_count = len(scenario.steps)
 
     def set_scenario(self):
-        self.__adapter_manager.write_test(self.__executable_test)
+        self.__adapter_manager.write_test(
+            convert_executable_test_to_test_result_model(self.__executable_test))
 
     def get_step_parameters(self, match):
         scope = self.get_scope()

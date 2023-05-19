@@ -1,4 +1,4 @@
-# Test IT TMS adapter for Pytest
+ Usage# Test IT TMS adapter for Pytest
 
 ![Test IT](https://raw.githubusercontent.com/testit-tms/adapters-python/master/images/banner.png)
 
@@ -10,7 +10,7 @@
 pip install testit-adapter-pytest
 ```
 
-## Usage
+##
 
 ### Configuration
 
