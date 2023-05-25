@@ -2,6 +2,7 @@ import logging
 import types
 from functools import wraps
 
+from testit_python_commons.models.link import Link
 from testit_python_commons.services.logger import adapter_logger
 from testit_python_commons.services.utils import Utils
 
@@ -124,7 +125,14 @@ def link(url: str, title: str = None, type: str = None, description: str = None)
     def outer(function):
         if not hasattr(function, 'test_links'):
             function.test_links = []
-        function.test_links.append({'url': url, 'title': title, 'type': type, 'description': description})
+
+        function.test_links.append(
+            Link() \
+                .set_url(url) \
+                .set_title(title) \
+                .set_link_type(type) \
+                .set_description(description))
+
         return inner(function)
 
     return outer
@@ -138,16 +146,17 @@ def links(url: str = None, title: str = None, type: str = None,  # noqa: A002,VN
             function.test_links = []
 
         if url:
-            function.test_links.append({'url': url, 'title': title, 'type': type, 'description': description})
+            function.test_links.append(
+                Link() \
+                    .set_url(url) \
+                    .set_title(title) \
+                    .set_link_type(type) \
+                    .set_description(description))
         elif links and (isinstance(links, list) or isinstance(links, tuple)):
             for link in links:
                 if isinstance(link, dict) and 'url' in link:
                     function.test_links.append(
-                        {'url': link['url'],
-                         'title': link['title'] if 'title' in link else None,
-                         'type': link['type'] if 'type' in link else None,
-                         'description': link['description'] if 'description' in link else None}
-                    )
+                        Utils.convert_link_dict_to_link_model(link))
                 else:
                     logging.warning(f'Link ({link}) can\'t be processed!')
         else:

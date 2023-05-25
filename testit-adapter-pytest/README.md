@@ -10,7 +10,7 @@
 pip install testit-adapter-pytest
 ```
 
-## Usage
+##
 
 ### Configuration
 

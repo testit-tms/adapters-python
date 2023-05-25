@@ -3,7 +3,8 @@ from testit_python_commons.services import AdapterManager
 from testit_python_commons.step import Step
 from .utils import (
     form_test,
-    get_outcome
+    get_outcome,
+    convert_executable_test_to_test_result_model
 )
 
 
@@ -37,7 +38,8 @@ class AdapterListener(object):
         self.__executable_test['steps'] = test_steps
         self.__executable_test['stepResults'] = test_results_steps
 
-        self.__adapter_manager.write_test(self.__executable_test)
+        self.__adapter_manager.write_test(
+            convert_executable_test_to_test_result_model(self.__executable_test))
         self.__executable_test = None
 
     @adapter.hookimpl

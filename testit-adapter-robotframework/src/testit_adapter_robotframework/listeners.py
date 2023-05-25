@@ -3,10 +3,8 @@ import re
 from robot.api import SuiteVisitor, logger
 from robot.libraries.BuiltIn import BuiltIn
 
-from testit_python_commons.services import Utils
-
 from .models import Autotest
-from .utils import STATUSES, convert_time
+from .utils import STATUSES, convert_time, convert_executable_test_to_test_result_model, get_hash
 
 
 class AutotestAdapter:
@@ -69,7 +67,8 @@ class AutotestAdapter:
                             break
             self.active_test.traces = attributes['message']
             self.active_test.duration = attributes['elapsedtime']
-            self.adapter_manager.write_test(self.active_test.order())
+            self.adapter_manager.write_test(
+                convert_executable_test_to_test_result_model(self.active_test.order()))
 
 
 class TestRunAdapter:
@@ -98,7 +97,7 @@ class ExcludeTests(SuiteVisitor):
 
     def _is_included(self, test):
         tags = test.tags
-        external_id = Utils.get_hash(test.longname.split('.', 1)[-1])
+        external_id = get_hash(test.longname.split('.', 1)[-1])
         for tag in tags:
             if str(tag).lower().startswith('testit.externalid'):
                 external_id = tag.split(':', 1)[-1].strip()

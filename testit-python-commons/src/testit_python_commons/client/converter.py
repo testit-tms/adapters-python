@@ -1,3 +1,5 @@
+import typing
+
 from testit_api_client.models import (
     AttachmentPutModelAutoTestStepResultsModel,
     AutoTestPostModel,
@@ -11,6 +13,9 @@ from testit_api_client.models import (
     TestRunV2PostShortModel
 )
 
+from testit_python_commons.models.link import Link
+from testit_python_commons.models.step_result import StepResult
+from testit_python_commons.models.test_result import TestResult
 from testit_python_commons.services.logger import adapter_logger
 
 
@@ -50,233 +55,166 @@ class Converter:
     @adapter_logger
     def test_result_to_autotest_post_model(
             cls,
-            test_result: dict,
+            test_result: TestResult,
             project_id: str):
         return AutoTestPostModel(
-            test_result['externalID'],
+            test_result.get_external_id(),
             project_id,
-            test_result['autoTestName'],
-            steps=cls.step_results_to_autotest_steps_model(test_result['steps']),
-            setup=cls.step_results_to_autotest_steps_model(test_result['setUp']),
-            teardown=cls.step_results_to_autotest_steps_model(test_result['tearDown']),
-            namespace=test_result['namespace'],
-            classname=test_result['classname'],
-            title=test_result['title'],
-            description=test_result['description'],
-            links=cls.links_to_links_post_model(test_result['links']),
-            labels=test_result['labels'],
-            should_create_work_item=test_result['automaticCreationTestCases']
+            test_result.get_autotest_name(),
+            steps=cls.step_results_to_autotest_steps_model(
+                test_result.get_step_results()),
+            setup=cls.step_results_to_autotest_steps_model(
+                test_result.get_setup_results()),
+            teardown=cls.step_results_to_autotest_steps_model(
+                test_result.get_teardown_results()),
+            namespace=test_result.get_namespace(),
+            classname=test_result.get_classname(),
+            title=test_result.get_title(),
+            description=test_result.get_description(),
+            links=cls.links_to_links_post_model(test_result.get_links()),
+            labels=test_result.get_labels(),
+            should_create_work_item=test_result.get_automatic_creation_test_cases()
         )
 
     @classmethod
     @adapter_logger
     def test_result_to_autotest_put_model(
             cls,
-            test_result: dict,
+            test_result: TestResult,
             project_id: str):
-        if test_result['outcome'] == 'Passed':
+        if test_result.get_outcome() == 'Passed':
             return AutoTestPutModel(
-                test_result['externalID'],
+                test_result.get_external_id(),
                 project_id,
-                test_result['autoTestName'],
-                steps=cls.step_results_to_autotest_steps_model(test_result['steps']),
-                setup=cls.step_results_to_autotest_steps_model(test_result['setUp']),
-                teardown=cls.step_results_to_autotest_steps_model(test_result['tearDown']),
-                namespace=test_result['namespace'],
-                classname=test_result['classname'],
-                title=test_result['title'],
-                description=test_result['description'],
-                links=cls.links_to_links_put_model(test_result['links']),
-                labels=test_result['labels']
+                test_result.get_autotest_name(),
+                steps=cls.step_results_to_autotest_steps_model(
+                    test_result.get_step_results()),
+                setup=cls.step_results_to_autotest_steps_model(
+                    test_result.get_setup_results()),
+                teardown=cls.step_results_to_autotest_steps_model(
+                    test_result.get_teardown_results()),
+                namespace=test_result.get_namespace(),
+                classname=test_result.get_classname(),
+                title=test_result.get_title(),
+                description=test_result.get_description(),
+                links=cls.links_to_links_put_model(test_result.get_links()),
+                labels=test_result.get_labels()
             )
         else:
             return AutoTestPutModel(
-                test_result['externalID'],
+                test_result.get_external_id(),
                 project_id,
-                test_result['autoTestName'],
-                steps=cls.step_results_to_autotest_steps_model(test_result['steps']),
-                setup=cls.step_results_to_autotest_steps_model(test_result['setUp']),
-                teardown=cls.step_results_to_autotest_steps_model(test_result['tearDown']),
-                namespace=test_result['namespace'],
-                classname=test_result['classname'],
-                title=test_result['title'],
-                description=test_result['description'],
-                links=cls.links_to_links_put_model(test_result['links']),
-                labels=test_result['labels']
+                test_result.get_autotest_name(),
+                steps=cls.step_results_to_autotest_steps_model(
+                    test_result.get_step_results()),
+                setup=cls.step_results_to_autotest_steps_model(
+                    test_result.get_setup_results()),
+                teardown=cls.step_results_to_autotest_steps_model(
+                    test_result.get_teardown_results()),
+                namespace=test_result.get_namespace(),
+                classname=test_result.get_classname(),
+                title=test_result.get_title(),
+                description=test_result.get_description(),
+                links=cls.links_to_links_put_model(test_result.get_links()),
+                labels=test_result.get_labels()
             )
 
     @classmethod
     @adapter_logger
     def test_result_to_testrun_result_post_model(
             cls,
-            test_result: dict,
+            test_result: TestResult,
             configuration_id: str):
         return AutoTestResultsForTestRunModel(
             configuration_id,
-            test_result['externalID'],
-            AvailableTestResultOutcome(test_result['outcome']),
+            test_result.get_external_id(),
+            AvailableTestResultOutcome(test_result.get_outcome()),
             step_results=cls.step_results_to_attachment_put_model_autotest_step_results_model(
-                test_result['stepResults']),
+                test_result.get_step_results()),
             setup_results=cls.step_results_to_attachment_put_model_autotest_step_results_model(
-                test_result['setUpResults']),
+                test_result.get_setup_results()),
             teardown_results=cls.step_results_to_attachment_put_model_autotest_step_results_model(
-                test_result['tearDownResults']),
-            traces=test_result['traces'],
-            attachments=test_result['attachments'],
-            parameters=test_result['parameters'],
-            properties=test_result['properties'],
-            links=cls.links_to_links_post_model(test_result['resultLinks']),
-            duration=round(test_result['duration']),
-            message=test_result['message'],
-            started_on=test_result.get('started_on', None),
-            completed_on=test_result.get('completed_on', None)
+                test_result.get_teardown_results()),
+            traces=test_result.get_traces(),
+            attachments=test_result.get_attachments(),
+            parameters=test_result.get_parameters(),
+            properties=test_result.get_properties(),
+            links=cls.links_to_links_post_model(
+                test_result.get_result_links()),
+            duration=round(test_result.get_duration()),
+            message=test_result.get_message(),
+            started_on=test_result.get_started_on(),
+            completed_on=test_result.get_completed_on()
         )
-
-    @staticmethod
-    @adapter_logger
-    def link_to_link_post_model(
-            url: str,
-            title: str,
-            url_type: str,
-            description: str):
-        if url_type:
-            return LinkPostModel(
-                url,
-                title=title,
-                type=LinkType(value=url_type),
-                description=description
-            )
-        else:
-            return LinkPostModel(
-                url,
-                title=title,
-                description=description
-            )
-
-    @staticmethod
-    @adapter_logger
-    def link_to_link_put_model(
-            url: str,
-            title: str,
-            url_type: str,
-            description: str):
-        if url_type:
-            return LinkPutModel(
-                url,
-                title=title,
-                type=LinkType(value=url_type),
-                description=description
-            )
-        else:
-            return LinkPutModel(
-                url,
-                title=title,
-                description=description
-            )
 
     @classmethod
     @adapter_logger
-    def links_to_links_post_model(cls, links: list):
+    def links_to_links_post_model(cls, links: typing.List[Link]):
         post_model_links = []
 
         for link in links:
-            post_model_links.append(cls.link_to_link_post_model(
-                link['url'],
-                link.get('title', None),
-                link.get('type', None),
-                link.get('description', None)
-            ))
+            post_model_links.append(
+                LinkPostModel(
+                    url=link.get_url(),
+                    title=link.get_title(),
+                    type=LinkType(link.get_link_type()) if link.get_link_type() else None,
+                    description=link.get_description()
+                )
+            )
 
         return post_model_links
 
     @classmethod
     @adapter_logger
-    def links_to_links_put_model(cls, links: list):
+    def links_to_links_put_model(cls, links: typing.List[Link]):
         put_model_links = []
 
         for link in links:
-            put_model_links.append(cls.link_to_link_put_model(
-                link['url'],
-                link.get('title', None),
-                link.get('type', None),
-                link.get('description', None)
-            ))
+            put_model_links.append(
+                LinkPutModel(
+                    url=link.get_url(),
+                    title=link.get_title(),
+                    type=LinkType(link.get_link_type()) if link.get_link_type() else None,
+                    description=link.get_description()
+                )
+            )
 
         return put_model_links
 
     @classmethod
     @adapter_logger
-    def step_results_to_autotest_steps_model(cls, steps: list):
+    def step_results_to_autotest_steps_model(cls, step_results: typing.List[StepResult]):
         autotest_model_steps = []
 
-        for step in steps:
+        for step_result in step_results:
             autotest_model_steps.append(
-                cls.step_result_to_autotest_step_model(
-                    step['title'],
-                    step['description'],
-                    cls.step_results_to_autotest_steps_model(
-                        step.get('steps', [])
-                    )
-                )
+                AutoTestStepModel(
+                    title=step_result.get_title(),
+                    description=step_result.get_description(),
+                    steps=step_result.get_step_results())
             )
 
         return autotest_model_steps
 
-    @staticmethod
-    @adapter_logger
-    def step_result_to_autotest_step_model(
-            title: str,
-            description: str = None,
-            steps: list = None):
-        return AutoTestStepModel(
-            title=title,
-            description=description,
-            steps=steps)
-
     @classmethod
     @adapter_logger
-    def step_results_to_attachment_put_model_autotest_step_results_model(cls, steps: list):
+    def step_results_to_attachment_put_model_autotest_step_results_model(cls, step_results: typing.List[StepResult]):
         autotest_model_step_results = []
 
-        for step in steps:
+        for step_result in step_results:
             autotest_model_step_results.append(
-                cls.step_result_to_attachment_put_model_autotest_step_results_model(
-                    step['title'],
-                    step['outcome'],
-                    step['description'],
-                    step['duration'],
-                    step['parameters'],
-                    step['attachments'],
-                    None,
-                    None,
-                    cls.step_results_to_attachment_put_model_autotest_step_results_model(
-                        step.get('step_results', [])
-                    )
+                AttachmentPutModelAutoTestStepResultsModel(
+                    title=step_result.get_title(),
+                    outcome=AvailableTestResultOutcome(step_result.get_outcome()),
+                    description=step_result.get_description(),
+                    duration=step_result.get_duration(),
+                    parameters=step_result.get_parameters(),
+                    attachments=step_result.get_attachments(),
+                    started_on=step_result.get_started_on(),
+                    completed_on=step_result.get_completed_on(),
+                    step_results=cls.step_results_to_attachment_put_model_autotest_step_results_model(
+                        step_result.get_step_results())
                 )
             )
 
         return autotest_model_step_results
-
-    @staticmethod
-    @adapter_logger
-    def step_result_to_attachment_put_model_autotest_step_results_model(
-            title: str,
-            outcome: str,
-            description: str = None,
-            duration: str = None,
-            parameters: list = None,
-            attachments: list = None,
-            started_on: str = None,
-            completed_on: str = None,
-            step_results: list = None):
-        return AttachmentPutModelAutoTestStepResultsModel(
-            title=title,
-            outcome=AvailableTestResultOutcome(outcome),
-            description=description,
-            duration=duration,
-            parameters=parameters,
-            attachments=attachments,
-            started_on=started_on,
-            completed_on=completed_on,
-            step_results=step_results
-        )

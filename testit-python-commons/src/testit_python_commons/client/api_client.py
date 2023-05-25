@@ -11,6 +11,7 @@ from testit_api_client.models import (
 
 from testit_python_commons.client.client_configuration import ClientConfiguration
 from testit_python_commons.client.converter import Converter
+from testit_python_commons.models.test_result import TestResult
 from testit_python_commons.services.logger import adapter_logger
 
 
@@ -58,15 +59,15 @@ class ApiClientWorker:
             self.__config.get_configuration_id())
 
     @adapter_logger
-    def write_test(self, test_result: dict):
+    def write_test(self, test_result: TestResult):
         test_run_api = TestRunsApi(api_client=self.__api_client)
         autotest_api = AutoTestsApi(api_client=self.__api_client)
 
         autotest = autotest_api.get_all_auto_tests(project_id=self.__config.get_project_id(),
-                                                   external_id=test_result['externalID'])
+                                                   external_id=test_result.get_external_id())
 
         if autotest:
-            logging.debug(f'Autotest "{test_result["autoTestName"]}" was found')
+            logging.debug(f'Autotest "{test_result.get_autotest_name()}" was found')
 
             model = Converter.test_result_to_autotest_put_model(
                 test_result,
@@ -75,9 +76,9 @@ class ApiClientWorker:
             autotest_api.update_auto_test(auto_test_put_model=model)
             autotest_global_id = autotest[0]['id']
 
-            logging.debug(f'Autotest "{test_result["autoTestName"]}" was updated')
+            logging.debug(f'Autotest "{test_result.get_autotest_name()}" was updated')
         else:
-            logging.debug(f'Autotest "{test_result["autoTestName"]}" was not found')
+            logging.debug(f'Autotest "{test_result.get_autotest_name()}" was not found')
 
             model = Converter.test_result_to_autotest_post_model(
                 test_result,
@@ -86,10 +87,10 @@ class ApiClientWorker:
             autotest_response = autotest_api.create_auto_test(auto_test_post_model=model)
             autotest_global_id = autotest_response['id']
 
-            logging.debug(f'Autotest "{test_result["autoTestName"]}" was created')
+            logging.debug(f'Autotest "{test_result.get_autotest_name()}" was created')
 
         if autotest_global_id:
-            for work_item_id in test_result['workItemsID']:
+            for work_item_id in test_result.get_work_item_ids():
                 try:
                     autotest_api.link_auto_test_to_work_item(
                         autotest_global_id,
@@ -107,7 +108,7 @@ class ApiClientWorker:
             id=self.__config.get_test_run_id(),
             auto_test_results_for_test_run_model=[model])
 
-        logging.debug(f'Result of the autotest "{test_result["autoTestName"]}" was set '
+        logging.debug(f'Result of the autotest "{test_result.get_autotest_name()}" was set '
                       f'in the test run "{self.__config.get_test_run_id()}"')
 
     @adapter_logger

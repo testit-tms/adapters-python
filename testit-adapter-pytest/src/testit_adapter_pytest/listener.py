@@ -6,8 +6,10 @@ import pytest
 
 import testit_python_commons.services as adapter
 from testit_python_commons.models.outcome_type import OutcomeType
-from testit_python_commons.services import AdapterManager, Utils
+from testit_python_commons.services import AdapterManager
 from testit_python_commons.step import Step
+
+import testit_adapter_pytest.utils as utils
 
 STATUS = {
     'passed': OutcomeType.PASSED,
@@ -69,7 +71,7 @@ class TmsListener(object):
 
         for item in items:
             if not hasattr(item.function, 'test_external_id'):
-                item.test_external_id = Utils.get_hash(item.nodeid + item.function.__name__)
+                item.test_external_id = utils.get_hash(item.nodeid + item.function.__name__)
 
             if hasattr(item.function, 'test_external_id'):
                 if item.own_markers:
@@ -80,8 +82,8 @@ class TmsListener(object):
                             item.array_parametrize_mark_id.append(
                                 item.own_markers.index(mark))
 
-                params = Utils.get_params(item)
-                item.test_external_id = Utils.param_attribute_collector(
+                params = utils.get_params(item)
+                item.test_external_id = utils.param_attribute_collector(
                     item.function.test_external_id,
                     params)
 
@@ -104,19 +106,19 @@ class TmsListener(object):
     @pytest.hookimpl
     def pytest_runtest_protocol(self, item):
         if not hasattr(item.function, 'test_external_id'):
-            item.test_external_id = Utils.get_hash(item.nodeid + item.function.__name__)
+            item.test_external_id = utils.get_hash(item.nodeid + item.function.__name__)
 
         if not hasattr(item.function, 'test_displayname'):
             item.test_displayname = item.function.__doc__ if \
                 item.function.__doc__ else item.function.__name__
         else:
-            params = Utils.get_params(item)
+            params = utils.get_params(item)
 
-            item.test_displayname = Utils.param_attribute_collector(
+            item.test_displayname = utils.param_attribute_collector(
                 item.function.test_displayname,
                 params)
 
-        self.__executable_test = Utils.form_test(item)
+        self.__executable_test = utils.form_test(item)
 
     @pytest.hookimpl(hookwrapper=True)
     def pytest_fixture_setup(self, fixturedef):
@@ -175,7 +177,8 @@ class TmsListener(object):
         if not self.__executable_test:
             return
 
-        self.__adapter_manager.write_test(self.__executable_test)
+        self.__adapter_manager.write_test(
+            utils.convert_executable_test_to_test_result_model(self.__executable_test))
 
     @adapter.hookimpl
     def add_link(self, link):
