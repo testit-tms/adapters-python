@@ -208,7 +208,7 @@ class Converter:
                     outcome=AvailableTestResultOutcome(step_result.get_outcome()),
                     description=step_result.get_description(),
                     duration=step_result.get_duration(),
-                    parameters=step_result.get_duration(),
+                    parameters=step_result.get_parameters(),
                     attachments=step_result.get_attachments(),
                     started_on=step_result.get_started_on(),
                     completed_on=step_result.get_completed_on(),

@@ -1,3 +1,4 @@
+import hashlib
 import typing
 from datetime import datetime
 
@@ -59,6 +60,11 @@ def step_results_to_autotest_steps_model(step_results: dict) -> typing.List[Step
         autotest_model_steps.append(step_result_model)
 
     return autotest_model_steps
+
+
+def get_hash(value: str):
+    md = hashlib.sha256(bytes(value, encoding='utf-8'))
+    return md.hexdigest()
 
 
 STATUSES = {'FAIL': 'Failed', 'PASS': 'Passed', 'SKIP': 'Skipped', 'NOT RUN': 'Skipped'}
