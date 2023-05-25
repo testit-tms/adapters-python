@@ -72,6 +72,7 @@ class ApiClientWorker:
             model = Converter.test_result_to_autotest_put_model(
                 test_result,
                 self.__config.get_project_id())
+            model.is_flaky = autotest[0]['is_flaky']
 
             autotest_api.update_auto_test(auto_test_put_model=model)
             autotest_global_id = autotest[0]['id']
