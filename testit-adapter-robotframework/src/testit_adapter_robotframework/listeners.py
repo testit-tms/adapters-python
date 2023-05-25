@@ -88,7 +88,7 @@ class ExcludeTests(SuiteVisitor):
 
     def __init__(self, *tests):
         self.tests = tests
-        if len(self.tests):
+        if not len(self.tests):
             logger.error('No tests to run!')
             raise SystemExit
 
