@@ -215,7 +215,8 @@ class Converter:
                 AutoTestStepModel(
                     title=step_result.get_title(),
                     description=step_result.get_description(),
-                    steps=step_result.get_step_results())
+                    steps=cls.step_results_to_autotest_steps_model(
+                        step_result.get_step_results()))
             )
 
         return autotest_model_steps
