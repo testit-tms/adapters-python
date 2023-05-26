@@ -147,6 +147,40 @@ class Converter:
             completed_on=test_result.get_completed_on()
         )
 
+    @staticmethod
+    @adapter_logger
+    def link_to_link_post_model(link: Link) -> LinkPostModel:
+        if link.get_link_type():
+            return LinkPostModel(
+                url=link.get_url(),
+                title=link.get_title(),
+                type=LinkType(link.get_link_type()),
+                description=link.get_description()
+            )
+        else:
+            return LinkPostModel(
+                url=link.get_url(),
+                title=link.get_title(),
+                description=link.get_description()
+            )
+
+    @staticmethod
+    @adapter_logger
+    def link_to_link_put_model(link: Link) -> LinkPutModel:
+        if link.get_link_type():
+            return LinkPutModel(
+                url=link.get_url(),
+                title=link.get_title(),
+                type=LinkType(link.get_link_type()),
+                description=link.get_description()
+            )
+        else:
+            return LinkPutModel(
+                url=link.get_url(),
+                title=link.get_title(),
+                description=link.get_description()
+            )
+
     @classmethod
     @adapter_logger
     def links_to_links_post_model(cls, links: typing.List[Link]):
@@ -154,12 +188,7 @@ class Converter:
 
         for link in links:
             post_model_links.append(
-                LinkPostModel(
-                    url=link.get_url(),
-                    title=link.get_title(),
-                    type=LinkType(link.get_link_type()) if link.get_link_type() else None,
-                    description=link.get_description()
-                )
+                cls.link_to_link_post_model(link)
             )
 
         return post_model_links
@@ -171,12 +200,7 @@ class Converter:
 
         for link in links:
             put_model_links.append(
-                LinkPutModel(
-                    url=link.get_url(),
-                    title=link.get_title(),
-                    type=LinkType(link.get_link_type()) if link.get_link_type() else None,
-                    description=link.get_description()
-                )
+                cls.link_to_link_put_model(link)
             )
 
         return put_model_links
@@ -191,7 +215,8 @@ class Converter:
                 AutoTestStepModel(
                     title=step_result.get_title(),
                     description=step_result.get_description(),
-                    steps=step_result.get_step_results())
+                    steps=cls.step_results_to_autotest_steps_model(
+                        step_result.get_step_results()))
             )
 
         return autotest_model_steps

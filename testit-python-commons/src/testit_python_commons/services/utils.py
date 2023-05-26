@@ -1,4 +1,3 @@
-import hashlib
 import inspect
 import logging
 import re

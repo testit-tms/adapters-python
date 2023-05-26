@@ -3,6 +3,7 @@ import logging
 import re
 import typing
 
+from testit_python_commons.models.link import Link
 from testit_python_commons.models.step_result import StepResult
 from testit_python_commons.models.test_result import TestResult
 
@@ -172,21 +173,25 @@ def __set_params_in_links(links, params):
     links_with_params = []
 
     for link in links:
-        links_with_params.append(
-            {
-                'url': param_attribute_collector(
-                    link['url'],
-                    params),
-                'title': param_attribute_collector(
-                    link['title'],
-                    params) if link['title'] else None,
-                'type': param_attribute_collector(
-                    link['type'],
-                    params) if link['type'] else None,
-                'description': param_attribute_collector(
-                    link['description'],
-                    params) if link['description'] else None
-            })
+        link_with_params = Link()\
+            .set_url(
+                param_attribute_collector(
+                    link.get_url(),
+                    params))\
+            .set_title(
+                param_attribute_collector(
+                    link.get_title(),
+                    params) if link.get_title() else None)\
+            .set_link_type(
+                param_attribute_collector(
+                    link.get_link_type(),
+                    params) if link.get_link_type() else None)\
+            .set_description(
+                param_attribute_collector(
+                    link.get_description(),
+                    params) if link.get_description() else None)
+
+        links_with_params.append(link_with_params)
 
     return links_with_params
 

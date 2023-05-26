@@ -1,4 +1,3 @@
-import inspect
 from functools import wraps
 
 from testit_python_commons.services.plugin_manager import TmsPluginManager

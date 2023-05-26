@@ -70,31 +70,32 @@ class TmsListener(object):
         resolved_autotests = self.__adapter_manager.get_autotests_for_launch()
 
         for item in items:
-            if not hasattr(item.function, 'test_external_id'):
+            if hasattr(item.function, 'test_external_id'):
+                item.test_external_id = item.function.test_external_id
+            else:
                 item.test_external_id = utils.get_hash(item.nodeid + item.function.__name__)
 
-            if hasattr(item.function, 'test_external_id'):
-                if item.own_markers:
-                    for mark in item.own_markers:
-                        if mark.name == 'parametrize':
-                            if not hasattr(item, 'array_parametrize_mark_id'):
-                                item.array_parametrize_mark_id = []
-                            item.array_parametrize_mark_id.append(
-                                item.own_markers.index(mark))
+            if item.own_markers:
+                for mark in item.own_markers:
+                    if mark.name == 'parametrize':
+                        if not hasattr(item, 'array_parametrize_mark_id'):
+                            item.array_parametrize_mark_id = []
+                        item.array_parametrize_mark_id.append(
+                            item.own_markers.index(mark))
 
-                params = utils.get_params(item)
-                item.test_external_id = utils.param_attribute_collector(
-                    item.function.test_external_id,
-                    params)
+            params = utils.get_params(item)
+            item.test_external_id = utils.param_attribute_collector(
+                item.test_external_id,
+                params)
 
-                item.index = index
-                item_id = items.index(item)
-                index = index + 1 if len(items) > item_id + 1 and items[item_id + 1].originalname == item.originalname \
-                    else 0
+            item.index = index
+            item_id = items.index(item)
+            index = index + 1 if len(items) > item_id + 1 and items[item_id + 1].originalname == item.originalname \
+                else 0
 
-                if resolved_autotests \
-                        and item.test_external_id in resolved_autotests:
-                    selected_items.append(item)
+            if resolved_autotests \
+                    and item.test_external_id in resolved_autotests:
+                selected_items.append(item)
         if resolved_autotests:
             if not selected_items:
                 print('The specified tests were not found!')

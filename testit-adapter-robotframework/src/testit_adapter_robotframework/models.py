@@ -4,8 +4,10 @@ import re
 from attr import Factory, asdict, attrib, s
 
 from robot.api import logger
+from testit_python_commons.models.link import Link
 
-from testit_python_commons.services import Utils
+from .utils import get_hash
+
 
 LinkTypes = ['Related', 'BlockedBy', 'Defect', 'Issue', 'Requirement', 'Repository']
 
@@ -50,17 +52,6 @@ class Step(Default):
     title = attrib()
     description = attrib()
     steps = attrib(default=Factory(list))
-
-
-@s(kw_only=True)
-class Link:
-    url = attrib(validator=[url_check])
-    type = attrib(default='Defect', validator=[link_type_check])  # noqa: A003,VNE003
-    title = attrib(default='')
-    description = attrib(default='')
-
-    def __attrs_post_init__(self):
-        self.type = self.type.title()
 
 
 @s
@@ -130,9 +121,17 @@ class Autotest(Default):
                     value = ast.literal_eval(value)
                     try:
                         if isinstance(value, dict):
-                            self.links.append(Link(**value))
+                            self.links.append(Link()\
+                                .set_url(value['url'])\
+                                .set_title(value.get('title', None))\
+                                .set_link_type(value.get('type', None))\
+                                .set_description(value.get('description', None)))
                         elif isinstance(value, list):
-                            self.links.extend([Link(**link) for link in value if isinstance(link, dict)])
+                            self.links.extend([Link()\
+                                .set_url(link['url'])\
+                                .set_title(link.get('title', None))\
+                                .set_link_type(link.get('type', None))\
+                                .set_description(link.get('description', None)) for link in value if isinstance(link, dict)])
                     except ValueError as e:
                         logger.error(f"[TestIt] Link Error: {e}")
                 elif attr == 'labels':
@@ -148,7 +147,7 @@ class Autotest(Default):
                 else:
                     logger.error(f"[TestIt] Unknown attribute: {attr}")
         if not self.externalID:
-            self.externalID = Utils.get_hash(attrs['longname'].split('.', 1)[-1])
+            self.externalID = get_hash(attrs['longname'].split('.', 1)[-1])
 
     def add_step(self, step_type, title, description, parameters):
         if len(self.step_depth) == 0:
