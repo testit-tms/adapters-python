@@ -3,7 +3,7 @@ from robot.libraries.BuiltIn import BuiltIn
 from testit_python_commons.services import TmsPluginManager
 
 from .listeners import AutotestAdapter, TestRunAdapter
-from .models import Link, Option
+from .models import Option
 
 
 def enabled(func):
@@ -73,7 +73,13 @@ class TMSLibrary:
         Valid link types are ``Defect``, ``Issue``, ``Related``, ``BlockedBy``, ``Requirement``, ``Repository``.
 
         """
-        link = Link(url=url, type=type, title=title, description=description)
+        from testit_python_commons.models.link import Link
+
+        link = Link()\
+            .set_url(url)\
+            .set_title(title)\
+            .set_link_type(type)\
+            .set_description(description)
         self.ROBOT_LIBRARY_LISTENER[0].active_test.resultLinks.append(link)
 
     @enabled
