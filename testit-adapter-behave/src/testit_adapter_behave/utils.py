@@ -1,3 +1,4 @@
+import hashlib
 import typing
 
 from testit_python_commons.models.step_result import StepResult
@@ -141,3 +142,8 @@ def step_results_to_autotest_steps_model(step_results: dict) -> typing.List[Step
         autotest_model_steps.append(step_result_model)
 
     return autotest_model_steps
+
+
+def get_hash(value: str):
+    md = hashlib.sha256(bytes(value, encoding='utf-8'))
+    return md.hexdigest()

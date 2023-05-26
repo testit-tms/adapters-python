@@ -1,9 +1,14 @@
-# TODO: Add model to python-commons; implement via attrs
-def get_url_link_model(label):
-    return {
-        'url': label,
-        # TODO: Make optional in Converter python-commons
-        'title': None,
-        'type': None,
-        'description': None
-    }
+from testit_python_commons.models.link import Link
+
+
+def get_url_to_link_model(url: str) -> Link:
+    return Link() \
+        .set_url(url)
+
+
+def get_dict_to_link_model(link: dict) -> Link:
+    return Link() \
+        .set_url(link['url']) \
+        .set_title(link.get('title', None)) \
+        .set_link_type(link.get('type', None)) \
+        .set_description(link.get('description', None))

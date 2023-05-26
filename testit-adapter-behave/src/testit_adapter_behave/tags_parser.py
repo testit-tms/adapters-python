@@ -1,6 +1,6 @@
 from .models.label import get_label_model
 from .models.tags import TagType
-from .models.url_link import get_url_link_model
+from .models.url_link import get_url_to_link_model, get_dict_to_link_model
 
 
 def parse_tags(tags):
@@ -65,14 +65,15 @@ def parse_links(tag: str):
     json_links = parse_json(tag)
 
     if not json_links:
-        for link in parse_massive(tag):
-            parsed_links.append(get_url_link_model(link))
+        for url in parse_massive(tag):
+            parsed_links.append(get_url_to_link_model(url))
 
     if isinstance(json_links, tuple):
-        parsed_links.extend(json_links)
+        for url in json_links:
+            parsed_links.append(get_url_to_link_model(url))
 
     if isinstance(json_links, dict):
-        parsed_links.append(json_links)
+        parsed_links.append(get_dict_to_link_model(json_links))
 
     return parsed_links
 

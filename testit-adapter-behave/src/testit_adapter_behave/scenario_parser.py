@@ -2,7 +2,6 @@ import traceback
 from enum import Enum
 
 from testit_python_commons.models.outcome_type import OutcomeType
-from testit_python_commons.services.utils import Utils
 
 from .models.tags import TagType
 from .tags_parser import parse_tags
@@ -86,7 +85,9 @@ def get_scenario_name(scenario):
 
 
 def get_scenario_external_id(scenario):
-    return Utils.get_hash(scenario.feature.filename + scenario.name)
+    from .utils import get_hash
+
+    return get_hash(scenario.feature.filename + scenario.name)
 
 
 def get_scenario_namespace(scenario):
