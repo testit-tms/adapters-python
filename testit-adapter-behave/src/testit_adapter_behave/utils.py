@@ -54,13 +54,17 @@ def parse_userdata(userdata):
 
 def filter_out_scenarios(tests_for_launch, scenarios):
     if tests_for_launch:
+        included_scenarios = []
+
         for i in range(len(scenarios)):
             tags = parse_tags(scenarios[i].tags + scenarios[i].feature.tags)
             external_id = tags[TagType.EXTERNAL_ID] if \
                 TagType.EXTERNAL_ID in tags and tags[TagType.EXTERNAL_ID] else get_scenario_external_id(scenarios[i])
 
-            if external_id not in tests_for_launch:
-                del scenarios[i]
+            if external_id in tests_for_launch:
+                included_scenarios.append(scenarios[i])
+
+        scenarios = included_scenarios
 
     return scenarios
 
