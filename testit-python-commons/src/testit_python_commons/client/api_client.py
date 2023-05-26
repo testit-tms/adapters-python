@@ -66,7 +66,7 @@ class ApiClientWorker:
         autotest = autotest_api.get_all_auto_tests(project_id=self.__config.get_project_id(),
                                                    external_id=test_result.get_external_id())
 
-        if autotest:
+        if autotest and autotest[0]['is_deleted'] is False:
             logging.debug(f'Autotest "{test_result.get_autotest_name()}" was found')
 
             model = Converter.test_result_to_autotest_put_model(
