@@ -127,10 +127,10 @@ def link(url: str, title: str = None, type: str = None, description: str = None)
             function.test_links = []
 
         function.test_links.append(
-            Link() \
-                .set_url(url) \
-                .set_title(title) \
-                .set_link_type(type) \
+            Link()
+                .set_url(url)
+                .set_title(title)
+                .set_link_type(type)
                 .set_description(description))
 
         return inner(function)
@@ -147,10 +147,10 @@ def links(url: str = None, title: str = None, type: str = None,  # noqa: A002,VN
 
         if url:
             function.test_links.append(
-                Link() \
-                    .set_url(url) \
-                    .set_title(title) \
-                    .set_link_type(type) \
+                Link()
+                    .set_url(url)
+                    .set_title(title)
+                    .set_link_type(type)
                     .set_description(description))
         elif links and (isinstance(links, list) or isinstance(links, tuple)):
             for link in links:
