@@ -98,7 +98,7 @@ class ApiClientWorker:
                         autotest_global_id,
                         work_item_id_model=WorkItemIdModel(id=work_item_id))
 
-                    logging.debug(f'Autotest "{test_result["autoTestName"]}" was linked with workItem "{work_item_id}"')
+                    logging.debug(f'Autotest "{test_result.get_autotest_name()}" was linked with workItem "{work_item_id}"')
                 except Exception as exc:
                     logging.error(f'Link with workItem "{work_item_id}" status: {exc.status}\n{exc.body}')
 
