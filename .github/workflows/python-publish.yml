@@ -40,7 +40,7 @@ jobs:
         run: |
           paths=($(ls | grep 'testit'))
           for str in ${paths[@]}; do
-            VERSION=$(grep "version='" $str/setup.py | grep -o "[0-9]{1,}\.[0-9]{1,}\.[0-9]{1,}"); 
+            VERSION=$(grep "version='" $str/setup.py | grep -o -E "[0-9]{1,}\.[0-9]{1,}\.[0-9]{1,}"); 
             if [ $VERSION != ${{ github.event.release.tag_name }} ]; then echo "Incorrect package version in $str"; exit 1; fi
           done
       - name: Install dependencies for ${{ matrix.package }}
