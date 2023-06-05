@@ -22,6 +22,8 @@ class ApiClientWorker:
         if config.get_cert_validation() == 'false':
             client_config.verify_ssl = False
 
+        client_config.proxy = config.get_proxy()
+
         self.__api_client = ApiClient(
             configuration=client_config,
             header_name='Authorization',
