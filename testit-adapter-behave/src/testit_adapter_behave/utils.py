@@ -5,6 +5,8 @@ from testit_python_commons.models.step_result import StepResult
 from testit_python_commons.models.test_result import TestResult
 
 from .models.option import Option
+from .models.autotest import Autotest
+from .models.step_result import ScenarioStepResult
 from .models.tags import TagType
 from .scenario_parser import get_scenario_external_id
 from .tags_parser import parse_tags
@@ -59,7 +61,7 @@ def filter_out_scenarios(tests_for_launch, scenarios):
         for i in range(len(scenarios)):
             tags = parse_tags(scenarios[i].tags + scenarios[i].feature.tags)
             external_id = tags[TagType.EXTERNAL_ID] if \
-                TagType.EXTERNAL_ID in tags and tags[TagType.EXTERNAL_ID] else get_scenario_external_id(scenarios[i])
+                TagType.EXTERNAL_ID in tags and tags[TagType.EXTERNAL_ID] else get_hash(scenarios[i].feature.filename + scenarios[i].name)
 
             if external_id in tests_for_launch:
                 included_scenarios.append(scenarios[i])
@@ -69,81 +71,45 @@ def filter_out_scenarios(tests_for_launch, scenarios):
     return scenarios
 
 
-# TODO: Add to python-commons
-def convert_step_to_step(step, nested_steps):
-    return {
-        'title': step['title'],
-        'description': step['description'],
-        'steps': nested_steps,
-    }
-
-
-# TODO: Add to python-commons
-def convert_step_to_step_result(step, nested_step_results):
-    model = {
-        'title': step['title'],
-        'description': step['description'],
-        'duration': step['duration'],
-        'outcome': step['outcome'],
-        'parameters': step['parameters'],
-        'attachments': step['attachments'],
-        # TODO: Add to model
-        # started_on: started_on,
-        # completed_on: completed_on
-    }
-
-    if nested_step_results:
-        model['step_results'] = nested_step_results
-
-    return model
-
-
-def convert_executable_test_to_test_result_model(executable_test: dict) -> TestResult:
+def convert_executable_test_to_test_result_model(executable_test: Autotest) -> TestResult:
     return TestResult()\
-        .set_external_id(executable_test['externalID'])\
-        .set_autotest_name(executable_test['autoTestName'])\
+        .set_external_id(executable_test.external_id)\
+        .set_autotest_name(executable_test.name)\
         .set_step_results(
-            step_results_to_autotest_steps_model(executable_test['stepResults']))\
+            step_results_to_autotest_steps_model(executable_test.step_results))\
         .set_setup_results(
-            step_results_to_autotest_steps_model(executable_test['setUpResults']))\
-        .set_teardown_results(
-            step_results_to_autotest_steps_model(executable_test['tearDownResults']))\
-        .set_duration(executable_test['duration'])\
-        .set_outcome(executable_test['outcome'])\
-        .set_traces(executable_test['traces'])\
-        .set_attachments(executable_test['attachments'])\
-        .set_parameters(executable_test['parameters'])\
-        .set_properties(executable_test['properties'])\
-        .set_namespace(executable_test['namespace'])\
-        .set_classname(executable_test['classname'])\
-        .set_title(executable_test['title'])\
-        .set_description(executable_test['description'])\
-        .set_links(executable_test['links'])\
-        .set_result_links(executable_test['resultLinks'])\
-        .set_labels(executable_test['labels'])\
-        .set_work_item_ids(executable_test['workItemsID'])\
-        .set_message(executable_test['message'])
+            step_results_to_autotest_steps_model(executable_test.setup_results))\
+        .set_duration(executable_test.duration)\
+        .set_outcome(executable_test.outcome)\
+        .set_traces(executable_test.traces)\
+        .set_attachments(executable_test.attachments)\
+        .set_parameters(executable_test.parameters)\
+        .set_properties(executable_test.properties)\
+        .set_namespace(executable_test.namespace)\
+        .set_classname(executable_test.classname)\
+        .set_title(executable_test.title)\
+        .set_description(executable_test.description)\
+        .set_links(executable_test.links)\
+        .set_result_links(executable_test.result_links)\
+        .set_labels(executable_test.labels)\
+        .set_work_item_ids(executable_test.work_item_ids)\
+        .set_message(executable_test.message)
 
 
-def step_results_to_autotest_steps_model(step_results: dict) -> typing.List[StepResult]:
+def step_results_to_autotest_steps_model(step_results: typing.List[ScenarioStepResult]) -> typing.List[StepResult]:
     autotest_model_steps = []
 
     for step_result in step_results:
-        step_result_model = StepResult()\
-            .set_title(step_result['title'])\
-            .set_description(step_result['description'])\
-            .set_outcome(step_result['outcome'])\
-            .set_duration(step_result['duration'])\
-            .set_attachments(step_result['attachments'])
-
-        if 'parameters' in step_result:
-            step_result_model.set_parameters(step_result['parameters'])
-
-        if 'step_results' in step_result:
-            step_result_model.set_step_results(
-                step_results_to_autotest_steps_model(step_result['step_results']))
-
-        autotest_model_steps.append(step_result_model)
+        autotest_model_steps.append(
+            StepResult()\
+                .set_title(step_result.title)\
+                .set_description(step_result.description)\
+                .set_outcome(step_result.outcome)\
+                .set_duration(step_result.duration)\
+                .set_attachments(step_result.attachments)\
+                .set_parameters(step_result.parameters)\
+                .set_step_results(
+                    step_results_to_autotest_steps_model(step_result.step_results)))
 
     return autotest_model_steps
 

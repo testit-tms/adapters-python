@@ -3,7 +3,7 @@ from .models.tags import TagType
 from .models.url_link import get_url_to_link_model, get_dict_to_link_model
 
 
-def parse_tags(tags):
+def parse_tags(tags) -> dict:
     parsed_tags = {
         TagType.LINKS: [],
         TagType.LABELS: [],

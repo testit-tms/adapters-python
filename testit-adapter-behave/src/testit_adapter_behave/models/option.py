@@ -1,7 +1,6 @@
 from attr import attrib, attrs
 
 
-# TODO: Add model to python-commons
 @attrs(kw_only=True)
 class Option(object):
     set_url = attrib(default=None)
