@@ -3,7 +3,7 @@ from robot.libraries.BuiltIn import BuiltIn
 from testit_python_commons.services import TmsPluginManager
 
 from .listeners import AutotestAdapter, TestRunAdapter
-from .models import Option
+from .models.option import Option
 
 
 def enabled(func):

@@ -1,66 +1,18 @@
 import ast
 import re
 
-from attr import Factory, asdict, attrib, s
-
+from attr import Factory, attrib, s
 from robot.api import logger
+
 from testit_python_commons.models.link import Link
 
-from .utils import get_hash
-
-
-LinkTypes = ['Related', 'BlockedBy', 'Defect', 'Issue', 'Requirement', 'Repository']
-
-
-def link_type_check(self, attribute, value):
-    if value.title() not in LinkTypes:
-        raise ValueError(f"Incorrect Link type: {value}")
-
-
-def url_check(self, attribute, value):
-    if not bool(re.match(
-            r"(https?|ftp)://"
-            r"(\w+(-\w+)*\.)?"
-            r"((\w+(-\w+)*)\.(\w+))"
-            r"(\.\w+)*"
-            r"([\w\-._~/]*)*(?<!\.)",
-            value)):
-        raise ValueError(f"Incorrect URL: {value}")
-
-
-class Default:
-
-    def order(self):
-        return asdict(self)
-
-
-@s
-class StepResult(Default):
-    title = attrib(default='')
-    description = attrib(default='')
-    started_on = attrib(default=None)
-    completed_on = attrib(default=None)
-    duration = attrib(default=None)
-    outcome = attrib(default=None)
-    step_results = attrib(default=Factory(list))
-    attachments = attrib(default=Factory(list))
-    parameters = attrib(default=Factory(dict))
-
-
-@s
-class Step(Default):
-    title = attrib()
-    description = attrib()
-    steps = attrib(default=Factory(list))
-
-
-@s
-class Label:
-    name = attrib()
+from .label import Label
+from .step_result import AutotestStepResult
+from ..utils import get_hash
 
 
 @s(kw_only=True)
-class Autotest(Default):
+class Autotest:
     externalID = attrib(default=None)  # noqa: N815
     autoTestName = attrib()  # noqa: N815
     steps = attrib(default=Factory(list))
@@ -152,24 +104,16 @@ class Autotest(Default):
     def add_step(self, step_type, title, description, parameters):
         if len(self.step_depth) == 0:
             if step_type.lower() == 'setup':
-                self.setUp.append(Step(title, description))
-                self.step_depth.append(self.setUp[-1])
-                self.setUpResults.append(StepResult(title, description, parameters=parameters))
+                self.setUpResults.append(AutotestStepResult(title, description, parameters=parameters))
                 self.result_depth.append(self.setUpResults[-1])
             elif step_type.lower() == 'teardown':
-                self.tearDown.append(Step(title, description))
-                self.step_depth.append(self.tearDown[-1])
-                self.tearDownResults.append(StepResult(title, description, parameters=parameters))
+                self.tearDownResults.append(AutotestStepResult(title, description, parameters=parameters))
                 self.result_depth.append(self.tearDownResults[-1])
             else:
-                self.steps.append(Step(title, description))
-                self.step_depth.append(self.steps[-1])
-                self.stepResults.append(StepResult(title, description, parameters=parameters))
+                self.stepResults.append(AutotestStepResult(title, description, parameters=parameters))
                 self.result_depth.append(self.stepResults[-1])
         elif 1 <= len(self.step_depth) < 14:
-            self.step_depth[-1].steps.append(Step(title, description))
-            self.step_depth.append(self.step_depth[-1].steps[-1])
-            self.result_depth[-1].step_results.append(StepResult(title, description, parameters=parameters))
+            self.result_depth[-1].step_results.append(AutotestStepResult(title, description, parameters=parameters))
             self.result_depth.append(self.result_depth[-1].step_results[-1])
 
     def add_step_result(self, title, start, complete, duration, outcome):
@@ -183,30 +127,3 @@ class Autotest(Default):
         if self.step_depth:
             if self.step_depth[-1].title == title:
                 self.step_depth.pop()
-
-
-class Option:
-
-    def __init__(self, **kwargs):
-        if kwargs.get('tmsUrl', None):
-            self.set_url = kwargs.get('tmsUrl', None)
-        if kwargs.get('tmsPrivateToken', None):
-            self.set_private_token = kwargs.get('tmsPrivateToken', None)
-        if kwargs.get('tmsProjectId', None):
-            self.set_project_id = kwargs.get('tmsProjectId', None)
-        if kwargs.get('tmsConfigurationId', None):
-            self.set_configuration_id = kwargs.get('tmsConfigurationId', None)
-        if kwargs.get('tmsTestRunId', None):
-            self.set_test_run_id = kwargs.get('tmsTestRunId', None)
-        if kwargs.get('tmsTestRunId', None):
-            self.set_tms_proxy = kwargs.get('tmsTestRunId', None)
-        if kwargs.get('tmsTestRunName', None):
-            self.set_test_run_name = kwargs.get('tmsTestRunName', None)
-        if kwargs.get('tmsAdapterMode', None):
-            self.set_adapter_mode = kwargs.get('tmsAdapterMode', None)
-        if kwargs.get('tmsConfigFile', None):
-            self.set_config_file = kwargs.get('tmsConfigFile', None)
-        if kwargs.get('tmsCertValidation', None):
-            self.set_cert_validation = kwargs.get('tmsCertValidation', None)
-        if kwargs.get('tmsAutomaticCreationTestCases', None):
-            self.set_automatic_creation_test_cases = kwargs.get('tmsAutomaticCreationTestCases', None)

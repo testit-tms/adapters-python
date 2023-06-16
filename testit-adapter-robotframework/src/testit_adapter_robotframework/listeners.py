@@ -3,7 +3,7 @@ import re
 from robot.api import SuiteVisitor, logger
 from robot.libraries.BuiltIn import BuiltIn
 
-from .models import Autotest
+from .models.autotest import Autotest
 from .utils import STATUSES, convert_time, convert_executable_test_to_test_result_model, get_hash
 
 
@@ -68,7 +68,7 @@ class AutotestAdapter:
             self.active_test.traces = attributes['message']
             self.active_test.duration = attributes['elapsedtime']
             self.adapter_manager.write_test(
-                convert_executable_test_to_test_result_model(self.active_test.order()))
+                convert_executable_test_to_test_result_model(self.active_test))
 
 
 class TestRunAdapter:
