@@ -1,8 +1,9 @@
 import testit_python_commons.services as adapter
 from testit_python_commons.services import AdapterManager
 from testit_python_commons.step import Step
+
+from .autotest_parser import AutotestParser
 from .utils import (
-    form_test,
     get_outcome,
     convert_executable_test_to_test_result_model
 )
@@ -23,20 +24,19 @@ class AdapterListener(object):
         return self.__adapter_manager.get_autotests_for_launch()
 
     def start_test(self, test):
-        self.__executable_test = form_test(test)
+        self.__executable_test = AutotestParser.parse(test)
 
     def set_outcome(self, event):
         outcome, message, trace = get_outcome(event)
 
-        self.__executable_test['outcome'] = outcome
-        self.__executable_test['message'] = message
-        self.__executable_test['traces'] = trace
+        self.__executable_test.outcome = outcome
+        self.__executable_test.message = message
+        self.__executable_test.traces = trace
 
     def stop_test(self):
         test_steps, test_results_steps = Step.get_steps_data()
 
-        self.__executable_test['steps'] = test_steps
-        self.__executable_test['stepResults'] = test_results_steps
+        self.__executable_test.step_results = test_results_steps
 
         self.__adapter_manager.write_test(
             convert_executable_test_to_test_result_model(self.__executable_test))
@@ -45,19 +45,19 @@ class AdapterListener(object):
     @adapter.hookimpl
     def add_link(self, link):
         if self.__executable_test:
-            self.__executable_test['resultLinks'].append(link)
+            self.__executable_test.result_links.append(link)
 
     @adapter.hookimpl
     def add_message(self, test_message):
         if self.__executable_test:
-            self.__executable_test['message'] = str(test_message)
+            self.__executable_test.message = str(test_message)
 
     @adapter.hookimpl
     def add_attachments(self, attach_paths: list or tuple):
         if self.__executable_test:
-            self.__executable_test['attachments'] += self.__adapter_manager.load_attachments(attach_paths)
+            self.__executable_test.attachments += self.__adapter_manager.load_attachments(attach_paths)
 
     @adapter.hookimpl
     def create_attachment(self, body, name: str):
         if self.__executable_test:
-            self.__executable_test['attachments'] += self.__adapter_manager.create_attachment(body, name)
+            self.__executable_test.attachments += self.__adapter_manager.create_attachment(body, name)
