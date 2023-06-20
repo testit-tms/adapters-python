@@ -1,132 +1,101 @@
-import logging
 from datetime import datetime
+import logging
 from functools import wraps
+from typing import Any, Callable, TypeVar
 
+from testit_python_commons.models.step_result import StepResult
 from testit_python_commons.services import (
     TmsPluginManager,
+    StepManager,
     Utils
 )
 
 
-class Step:
-    step_stack = []
-    steps_data = []
-    steps_data_results = []
-    attachments = []
+Func = TypeVar("Func", bound=Callable[..., Any])
 
-    def __init__(self, *args, **kwargs):
-        self.args = args
-        if 'parameters' in kwargs and kwargs['parameters']:
-            self.parameters = kwargs['parameters']
 
-    def __call__(self, *args, **kwargs):
-        if self.args and callable(self.args[0]):
-            function = self.args[0]
+def step(*args, **kwargs):
+    if callable(args[0]):
+        function = args[0]
+        return StepContext(function.__name__, None, {})(function)
+    else:
+        title = get_title(args, kwargs)
+        description = get_description(args, kwargs)
 
-            if self.step_stack:
-                name = f'Step {str(self.step_stack[0] + 1)}'
-                steps = self.steps_data[self.step_stack[0]]['steps']
-                for step_id in self.step_stack[1:]:
-                    name += f'.{step_id + 1}'
-                    steps = steps[step_id]['steps']
-                name += f'.{len(steps) + 1}'
-            else:
-                name = f'Step {str(len(self.steps_data) + 1)}'
+        return StepContext(title, description, {})
 
-            parameters = Utils.get_function_parameters(function, *args, **kwargs)
 
-            with Step(name, function.__name__, parameters=parameters):
-                return function(*args, **kwargs)
-        else:
-            function = args[0]
+def get_title(args: tuple, kwargs: dict):
+    if 'title' in kwargs:
+        return kwargs['title']
 
-            @wraps(function)
-            def step_wrapper(*a, **kw):
-                if self.args:
-                    params = Utils.get_function_parameters(function, *a, **kw)
+    if len(args) > 0:
+        if isinstance(args[0], str):
+            return args[0]
 
-                    with Step(
-                            self.args[0], self.args[1], parameters=params) if len(self.args) == 2 \
-                            else Step(self.args[0], parameters=params
-                                      ):
-                        return function(*a, **kw)
+        logging.error(f'Cannot to get step title: {args[1]}. The title must be of string type.')
 
-            return step_wrapper
+def get_description(args: tuple, kwargs: dict):
+    if 'description' in kwargs:
+        return kwargs['description']
+
+    if len(args) > 1:
+        if isinstance(args[1], str):
+            return args[1]
+        logging.error(f'Cannot to get step description: {args[1]}. The description must be of string type.')
+
+class StepContext:
+
+    def __init__(self, title, description, parameters):
+        self.__title = title
+        self.__description = description
+        self.__parameters = parameters
+        self.__attachments = []
 
     def __enter__(self):
-        self.start_time = round(datetime.utcnow().timestamp() * 1000)
-        self.steps_data = self.step_append(
-            self.steps_data,
-            self.step_stack,
-            self.args[0],
-            self.args[1] if len(self.args) == 2 else None)
+        self.__start_time = round(datetime.utcnow().timestamp() * 1000)
+        self.__step_result = StepResult()
 
-        logging.debug(f'Step "{self.args[0]}" was started')
+        self.__step_result\
+            .set_title(self.__title)\
+            .set_description(self.__description)\
+            .set_parameters(self.__parameters)\
+            .set_started_on()
 
-    def __exit__(self, exc_type, exc_value, tb):
+        logging.debug(f'Step "{self.__title}" was started')
+
+        StepManager.start_step(self.__step_result)
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
         outcome = 'Failed' if exc_type \
             else TmsPluginManager.get_plugin_manager().hook.get_pytest_check_outcome()[0] if \
             hasattr(TmsPluginManager.get_plugin_manager().hook, 'get_pytest_check_outcome') \
             else 'Passed'
-        duration = round(datetime.utcnow().timestamp() * 1000) - self.start_time
-        self.steps_data_results = self.result_step_append(
-            self.steps_data,
-            self.steps_data_results,
-            self.step_stack,
-            outcome,
-            duration)
+        duration = round(datetime.utcnow().timestamp() * 1000) - self.__start_time
 
-        logging.debug(f'Step "{self.args[0]}" was stopped')
+        self.__step_result\
+            .set_outcome(outcome)\
+            .set_duration(duration)\
+            .set_attachments(self.__attachments)\
+            .set_completed_on()
 
-    def step_append(self, steps, step_stack, step_title, step_description):
-        if steps and step_stack:
-            steps[step_stack[0]]['steps'] = self.step_append(steps[step_stack[0]]['steps'], step_stack[1:], step_title,
-                                                             step_description)
-        else:
-            steps.append({'title': step_title, 'description': step_description, 'steps': []})
-            self.step_stack.append(len(steps) - 1)
-            self.attachments.append([])
-        return steps
+        StepManager.stop_step()
 
-    def result_step_append(self, steps, steps_results, step_stack, outcome, duration):
-        if steps and len(step_stack) == 1:
-            while len(steps_results) < step_stack[0] + 1:
-                steps_results.append({})
-            steps_results[step_stack[0]]['title'] = steps[step_stack[0]]['title']
-            steps_results[step_stack[0]]['description'] = steps[step_stack[0]]['description']
-            steps_results[step_stack[0]]['outcome'] = outcome
-            steps_results[step_stack[0]]['duration'] = duration
-            steps_results[step_stack[0]]['parameters'] = self.parameters if hasattr(self, 'parameters') else None
-            steps_results[step_stack[0]]['attachments'] = self.attachments[-1]
-            del self.step_stack[-1]
-            del self.attachments[-1]
-        else:
-            while len(steps_results) < step_stack[0] + 1:
-                steps_results.append({'step_results': []})
-            steps_results[step_stack[0]]['step_results'] = self.result_step_append(
-                steps[step_stack[0]]['steps'],
-                steps_results[step_stack[0]]['step_results'],
-                step_stack[1:],
-                outcome,
-                duration)
-        return steps_results
+    def __call__(self, function: Func) -> Func:
+        @wraps(function)
+        def impl(*args, **kwargs):
+            __tracebackhide__ = True
+            parameters = Utils.get_function_parameters(function, *args, **kwargs)
 
-    @classmethod
-    def get_steps_data(cls):
-        data = cls.steps_data
-        result_data = cls.steps_data_results
-        cls.steps_data = []
-        cls.steps_data_results = []
-        return data, result_data
+            title = self.__title if self.__title else function.__name__
 
-    @classmethod
-    def step_is_active(cls):
-        return len(cls.step_stack) != 0
+            with StepContext(title, self.__description, parameters):
+                return function(*args, **kwargs)
 
-    @classmethod
-    def add_attachments(cls, attachments_paths):
-        cls.attachments[-1] += TmsPluginManager.get_adapter_manager().load_attachments(attachments_paths)
+        return impl
 
-    @classmethod
-    def create_attachment(cls, body, name):
-        cls.attachments[-1] += TmsPluginManager.get_adapter_manager().create_attachment(body, name)
+    def add_attachments(self, attachments_paths):
+        self.__attachments[-1] += TmsPluginManager.get_adapter_manager().load_attachments(attachments_paths)
+
+    def create_attachment(self, body, name):
+        self.__attachments[-1] += TmsPluginManager.get_adapter_manager().create_attachment(body, name)
