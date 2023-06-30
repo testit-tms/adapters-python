@@ -89,7 +89,9 @@ class ApiClientWorker:
                     model = Converter.work_item_id_to_work_item_id_model_model(work_item_id)
 
                     self.__autotest_api.link_auto_test_to_work_item(
-                        autotest_global_id,
+                        path_params={
+                            'id': autotest_global_id,
+                        },
                         body=model)
 
                     logging.debug(f'Autotest "{test_result.get_autotest_name()}" was linked with workItem "{work_item_id}"')
@@ -101,7 +103,9 @@ class ApiClientWorker:
             self.__config.get_configuration_id())
 
         self.__test_run_api.set_auto_test_results_for_test_run(
-            self.__config.get_test_run_id(),
+            path_params={
+                'id': self.__config.get_test_run_id(),
+            },
             body=[model])
 
         logging.debug(f'Result of the autotest "{test_result.get_autotest_name()}" was set '

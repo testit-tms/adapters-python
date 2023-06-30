@@ -68,12 +68,12 @@ class Converter:
     @classmethod
     @adapter_logger
     def get_id_from_create_test_run_response(cls, response):
-        return response['id']
+        return response.body['id']
 
     @classmethod
     @adapter_logger
     def get_resolved_autotests_from_get_test_run_response(cls, response, configuration: str):
-        autotests = response['_data_store']['test_results']
+        autotests = response.body['_data_store']['test_results']
 
         return cls.__get_resolved_autotests(autotests, configuration)
 
