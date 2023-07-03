@@ -177,6 +177,9 @@ class AppProperties:
             logging.error('Configuration ID was not found!')
             raise SystemExit
 
+        if properties.get('testrunname'):
+            properties['testrunname'] = properties['testrunname'].encode('cp1251').decode('utf8')
+
         if properties.get('certvalidation'):
             properties['certvalidation'] = properties['certvalidation'].lower()
 
