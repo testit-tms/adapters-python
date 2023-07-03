@@ -247,10 +247,8 @@ def __get_work_item_ids_from(item):
                 item.name[(item.name.find('[') + 1):(item.name.rfind(']'))].split(
                     '-')[param_id]:
             return result
-        else:
-            return [result]
-    else:
-        return test_workitems_id
+
+    return test_workitems_id
 
 
 def param_attribute_collector(attribute, run_param):
