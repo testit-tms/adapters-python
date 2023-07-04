@@ -243,14 +243,13 @@ def __get_work_item_ids_from(item):
         result, param_id = mass_param_attribute_collector(
             test_workitems_id[0], item.own_markers,
             item.array_parametrize_mark_id, item.index)
+
         if param_id is not None and test_workitems_id[0][1:-1] in \
                 item.name[(item.name.find('[') + 1):(item.name.rfind(']'))].split(
                     '-')[param_id]:
             return result
-        else:
-            return [result]
-    else:
-        return test_workitems_id
+
+    return test_workitems_id
 
 
 def param_attribute_collector(attribute, run_param):
