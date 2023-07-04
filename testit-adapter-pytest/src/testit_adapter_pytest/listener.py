@@ -7,7 +7,7 @@ import pytest
 import testit_python_commons.services as adapter
 from testit_python_commons.models.outcome_type import OutcomeType
 from testit_python_commons.services import AdapterManager
-from testit_python_commons.step import Step
+from testit_python_commons.services import StepManager
 
 import testit_adapter_pytest.utils as utils
 
@@ -23,8 +23,9 @@ class TmsListener(object):
     __pytest_check_info = None
     __failures = None
 
-    def __init__(self, adapter_manager: AdapterManager):
+    def __init__(self, adapter_manager: AdapterManager, step_manager: StepManager):
         self.__adapter_manager = adapter_manager
+        self.__step_manager = step_manager
 
     @pytest.hookimpl
     def pytest_configure(self, config):
@@ -125,10 +126,9 @@ class TmsListener(object):
     def pytest_fixture_setup(self, fixturedef):
         yield
         if self.__executable_test:
-            steps_data, results_steps_data = Step.get_steps_data()
+            results_steps_data = self.__step_manager.get_steps_tree()
 
             if fixturedef.scope == 'function':
-                self.__executable_test['setUp'] += steps_data
                 self.__executable_test['setUpResults'] += results_steps_data
 
     @pytest.hookimpl(hookwrapper=True, trylast=True)
@@ -138,8 +138,7 @@ class TmsListener(object):
         if not self.__executable_test:
             return
 
-        test_steps, test_results_steps = Step.get_steps_data()
-        self.__executable_test['steps'] = test_steps
+        test_results_steps = self.__step_manager.get_steps_tree()
         self.__executable_test['stepResults'] = test_results_steps
 
     @pytest.hookimpl
@@ -147,10 +146,9 @@ class TmsListener(object):
         if not self.__executable_test:
             return
 
-        teardown_steps, teardown_results_steps = Step.get_steps_data()
+        teardown_results_steps = self.__step_manager.get_steps_tree()
 
         if fixturedef.scope == 'function':
-            self.__executable_test['tearDown'] += teardown_steps
             self.__executable_test['tearDownResults'] += teardown_results_steps
 
     @pytest.hookimpl

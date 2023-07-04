@@ -2,12 +2,14 @@ import logging
 
 from pluggy import PluginManager
 
+from testit_python_commons.services.step_manager import StepManager
 from testit_python_commons.app_properties import AppProperties
 
 
 class TmsPluginManager:
     __plugin_manager = None
     __adapter_manager = None
+    __step_manager = None
     __logger = None
 
     @classmethod
@@ -34,6 +36,13 @@ class TmsPluginManager:
             cls.__adapter_manager = AdapterManager(adapter_configuration, client_configuration)
 
         return cls.__adapter_manager
+
+    @classmethod
+    def get_step_manager(cls) -> StepManager:
+        if cls.__step_manager is None:
+            cls.__step_manager = StepManager()
+
+        return cls.__step_manager
 
     @classmethod
     def get_logger(cls, debug: bool = False):

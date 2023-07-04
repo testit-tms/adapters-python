@@ -104,7 +104,8 @@ def pytest_addoption(parser):
 def pytest_cmdline_main(config):
     if config.option.tms_report:
         listener = TmsListener(
-            TmsPluginManager.get_adapter_manager(config.option))
+            TmsPluginManager.get_adapter_manager(config.option),
+            TmsPluginManager.get_step_manager())
 
         config.pluginmanager.register(listener)
         TmsPluginManager.get_plugin_manager().register(listener)

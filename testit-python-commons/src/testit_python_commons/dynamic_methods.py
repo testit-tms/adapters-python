@@ -4,7 +4,6 @@ from testit_python_commons.models.link import Link
 from testit_python_commons.services import TmsPluginManager
 from testit_python_commons.services.logger import adapter_logger
 from testit_python_commons.services.utils import Utils
-from testit_python_commons.step import Step
 
 
 @Utils.deprecated('Use "addLinks" instead.')
@@ -61,8 +60,12 @@ def addMessage(test_message: str):   # noqa: N802
 @Utils.deprecated('Use "addAttachments" instead.')
 @adapter_logger
 def attachments(*attachments_paths):
-    if Step.step_is_active():
-        Step.add_attachments(attachments_paths)
+    active_step = TmsPluginManager.get_step_manager().get_active_step()
+
+    if active_step:
+        attachment_ids = TmsPluginManager.get_adapter_manager().load_attachments(attachments_paths)
+
+        active_step.set_attachments(active_step.get_attachments() + attachment_ids)
     else:
         if hasattr(TmsPluginManager.get_plugin_manager().hook, 'add_attachments'):
             TmsPluginManager.get_plugin_manager().hook \
@@ -71,30 +74,43 @@ def attachments(*attachments_paths):
 
 @adapter_logger
 def addAttachments(data, is_text: bool = False, name: str = None):   # noqa: N802
-    if Step.step_is_active():
-        if is_text:
-            Step.create_attachment(
-                str(data),
-                name)
-        else:
-            if isinstance(data, str):
-                Step.add_attachments([data])
-            elif isinstance(data, tuple) or isinstance(data, list):
-                Step.add_attachments(data)
-            else:
-                logging.warning(f'File ({data}) not found!')
+    active_step = TmsPluginManager.get_step_manager().get_active_step()
+
+    if active_step:
+        add_attachments_to_step(active_step, data, is_text, name)
     else:
-        if is_text and hasattr(TmsPluginManager.get_plugin_manager().hook, 'create_attachment'):
+        add_attachments_to_test(data, is_text, name)
+
+
+@adapter_logger
+def add_attachments_to_step(step, data, is_text: bool = False, name: str = None):
+    if is_text:
+        attachment_ids = TmsPluginManager.get_adapter_manager().create_attachment(str(data), name)
+    else:
+        if isinstance(data, str):
+            attachment_ids = TmsPluginManager.get_adapter_manager().load_attachments([data])
+        elif isinstance(data, tuple) or isinstance(data, list):
+            attachment_ids = TmsPluginManager.get_adapter_manager().load_attachments(data)
+        else:
+            logging.warning(f'File ({data}) not found!')
+            return
+
+    step.set_attachments(step.get_attachments() + attachment_ids)
+
+
+@adapter_logger
+def add_attachments_to_test(data, is_text: bool = False, name: str = None):
+    if is_text and hasattr(TmsPluginManager.get_plugin_manager().hook, 'create_attachment'):
+        TmsPluginManager.get_plugin_manager().hook \
+            .create_attachment(
+            body=str(data),
+            name=name)
+    elif hasattr(TmsPluginManager.get_plugin_manager().hook, 'add_attachments'):
+        if isinstance(data, str):
             TmsPluginManager.get_plugin_manager().hook \
-                .create_attachment(
-                body=str(data),
-                name=name)
-        elif hasattr(TmsPluginManager.get_plugin_manager().hook, 'add_attachments'):
-            if isinstance(data, str):
-                TmsPluginManager.get_plugin_manager().hook \
-                    .add_attachments(attach_paths=[data])
-            elif isinstance(data, tuple) or isinstance(data, list):
-                TmsPluginManager.get_plugin_manager().hook \
-                    .add_attachments(attach_paths=data)
-            else:
-                logging.warning(f'({data}) is not path!')
+                .add_attachments(attach_paths=[data])
+        elif isinstance(data, tuple) or isinstance(data, list):
+            TmsPluginManager.get_plugin_manager().hook \
+                .add_attachments(attach_paths=data)
+        else:
+            logging.warning(f'({data}) is not path!')

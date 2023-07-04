@@ -1,15 +1,15 @@
 import testit_python_commons.services as adapter
 from testit_python_commons.models.outcome_type import OutcomeType
-from testit_python_commons.services import AdapterManager
-from testit_python_commons.step import Step
+from testit_python_commons.services import (
+    AdapterManager,
+    StepManager)
 
 from .models.test_result_step import get_test_result_step_model
 from .scenario_parser import (
     parse_scenario,
     parse_status)
 from .utils import (
-    convert_step_to_step,
-    convert_step_to_step_result,
+    convert_step_to_step_result_model,
     convert_executable_test_to_test_result_model)
 
 
@@ -18,8 +18,9 @@ class AdapterListener(object):
     __background_steps_count = 0
     __steps_count = 0
 
-    def __init__(self, adapter_manager: AdapterManager):
+    def __init__(self, adapter_manager: AdapterManager, step_manager: StepManager):
         self.__adapter_manager = adapter_manager
+        self.__step_manager = step_manager
 
     def start_launch(self):
         test_run_id = self.__adapter_manager.get_test_run_id()
@@ -60,15 +61,12 @@ class AdapterListener(object):
         self.__executable_test['duration'] += result.duration * 1000
 
         # TODO: Add to python-commons
-        nested_steps, nested_step_results = Step.get_steps_data()
+        nested_step_results = self.__step_manager.get_steps_tree()
         executable_step = self.__executable_test[scope][-1]
         # TODO: Fix in python-commons
         result_scope = f'{scope}Results' if scope == 'setUp' else 'stepResults'
-        self.__executable_test[scope][-1] = convert_step_to_step(
-            executable_step,
-            nested_steps)
         self.__executable_test[result_scope].append(
-            convert_step_to_step_result(
+            convert_step_to_step_result_model(
                 executable_step,
                 nested_step_results))
 
