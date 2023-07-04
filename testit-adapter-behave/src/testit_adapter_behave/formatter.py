@@ -16,7 +16,8 @@ class AdapterFormatter(Formatter):
         option = parse_userdata(config.userdata)
 
         self.__listener = AdapterListener(
-            TmsPluginManager.get_adapter_manager(option))
+            TmsPluginManager.get_adapter_manager(option),
+            TmsPluginManager.get_step_manager())
 
         TmsPluginManager.get_plugin_manager().register(self.__listener)
 

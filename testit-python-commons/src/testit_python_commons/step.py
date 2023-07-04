@@ -6,7 +6,6 @@ from typing import Any, Callable, TypeVar
 from testit_python_commons.models.step_result import StepResult
 from testit_python_commons.services import (
     TmsPluginManager,
-    StepManager,
     Utils
 )
 
@@ -50,7 +49,6 @@ class StepContext:
         self.__title = title
         self.__description = description
         self.__parameters = parameters
-        self.__attachments = []
 
     def __enter__(self):
         self.__start_time = round(datetime.utcnow().timestamp() * 1000)
@@ -59,12 +57,11 @@ class StepContext:
         self.__step_result\
             .set_title(self.__title)\
             .set_description(self.__description)\
-            .set_parameters(self.__parameters)\
-            .set_started_on()
+            .set_parameters(self.__parameters)
 
         logging.debug(f'Step "{self.__title}" was started')
 
-        StepManager.start_step(self.__step_result)
+        TmsPluginManager.get_step_manager().start_step(self.__step_result)
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         outcome = 'Failed' if exc_type \
@@ -75,11 +72,9 @@ class StepContext:
 
         self.__step_result\
             .set_outcome(outcome)\
-            .set_duration(duration)\
-            .set_attachments(self.__attachments)\
-            .set_completed_on()
+            .set_duration(duration)
 
-        StepManager.stop_step()
+        TmsPluginManager.get_step_manager().stop_step()
 
     def __call__(self, function: Func) -> Func:
         @wraps(function)
@@ -93,9 +88,3 @@ class StepContext:
                 return function(*args, **kwargs)
 
         return impl
-
-    def add_attachments(self, attachments_paths):
-        self.__attachments[-1] += TmsPluginManager.get_adapter_manager().load_attachments(attachments_paths)
-
-    def create_attachment(self, body, name):
-        self.__attachments[-1] += TmsPluginManager.get_adapter_manager().create_attachment(body, name)

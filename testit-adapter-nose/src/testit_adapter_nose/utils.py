@@ -316,12 +316,9 @@ def convert_executable_test_to_test_result_model(executable_test: dict) -> TestR
     return TestResult()\
         .set_external_id(executable_test['externalID'])\
         .set_autotest_name(executable_test['autoTestName'])\
-        .set_step_results(
-            step_results_to_autotest_steps_model(executable_test['stepResults']))\
-        .set_setup_results(
-            step_results_to_autotest_steps_model(executable_test['setUpResults']))\
-        .set_teardown_results(
-            step_results_to_autotest_steps_model(executable_test['tearDownResults']))\
+        .set_step_results(executable_test['stepResults'])\
+        .set_setup_results(executable_test['setUpResults'])\
+        .set_teardown_results(executable_test['tearDownResults'])\
         .set_duration(executable_test['duration'])\
         .set_outcome(executable_test['outcome'])\
         .set_traces(executable_test['traces'])\
@@ -337,26 +334,3 @@ def convert_executable_test_to_test_result_model(executable_test: dict) -> TestR
         .set_labels(executable_test['labels'])\
         .set_work_item_ids(executable_test['workItemsID'])\
         .set_message(executable_test['message'])
-
-
-def step_results_to_autotest_steps_model(step_results: dict) -> typing.List[StepResult]:
-    autotest_model_steps = []
-
-    for step_result in step_results:
-        step_result_model = StepResult()\
-            .set_title(step_result['title'])\
-            .set_description(step_result['description'])\
-            .set_outcome(step_result['outcome'])\
-            .set_duration(step_result['duration'])\
-            .set_attachments(step_result['attachments'])
-
-        if 'parameters' in step_result:
-            step_result_model.set_parameters(step_result['parameters'])
-
-        if 'step_results' in step_result:
-            step_result_model.set_step_results(
-                step_results_to_autotest_steps_model(step_result['step_results']))
-
-        autotest_model_steps.append(step_result_model)
-
-    return autotest_model_steps

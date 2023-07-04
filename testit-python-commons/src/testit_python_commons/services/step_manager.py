@@ -1,7 +1,6 @@
 import typing
 
 from testit_python_commons.models.step_result import StepResult
-from testit_python_commons.services.logger import adapter_logger
 from testit_python_commons.services.step_result_storage import StepResultStorage
 
 
@@ -11,7 +10,6 @@ class StepManager:
     def __init__(self):
         self.__storage = StepResultStorage()
 
-    @adapter_logger
     def start_step(self, step: StepResult):
         if self.__storage.get_count():
             parent_step: StepResult = self.__storage.get_last()
@@ -22,15 +20,17 @@ class StepManager:
 
         self.__storage.add(step)
 
-    @adapter_logger
     def stop_step(self):
         if self.__storage.get_count() == 1:
             self.__steps_tree.append(self.__storage.get_last())
 
         self.__storage.remove_last()
 
+    def get_active_step(self) -> StepResult:
+        return self.__storage.get_last()
+
     def get_steps_tree(self) -> typing.List[StepResult]:
-        steps_tree = self.__steps_tree
+        steps_tree = self.__steps_tree.copy()
         self.__steps_tree.clear()
 
         return steps_tree

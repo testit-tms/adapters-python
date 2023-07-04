@@ -1,6 +1,7 @@
 import testit_python_commons.services as adapter
-from testit_python_commons.services import AdapterManager
-from testit_python_commons.step import Step
+from testit_python_commons.services import (
+    AdapterManager,
+    StepManager)
 from .utils import (
     form_test,
     get_outcome,
@@ -11,8 +12,9 @@ from .utils import (
 class AdapterListener(object):
     __executable_test = None
 
-    def __init__(self, adapter_manager: AdapterManager):
+    def __init__(self, adapter_manager: AdapterManager, step_manager: StepManager):
         self.__adapter_manager = adapter_manager
+        self.__step_manager = step_manager
 
     def start_launch(self):
         test_run_id = self.__adapter_manager.get_test_run_id()
@@ -33,9 +35,7 @@ class AdapterListener(object):
         self.__executable_test['traces'] = trace
 
     def stop_test(self):
-        test_steps, test_results_steps = Step.get_steps_data()
-
-        self.__executable_test['steps'] = test_steps
+        test_results_steps = self.__step_manager.get_steps_tree()
         self.__executable_test['stepResults'] = test_results_steps
 
         self.__adapter_manager.write_test(

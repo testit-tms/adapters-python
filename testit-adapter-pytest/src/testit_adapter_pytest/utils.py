@@ -247,10 +247,8 @@ def __get_work_item_ids_from(item):
                 item.name[(item.name.find('[') + 1):(item.name.rfind(']'))].split(
                     '-')[param_id]:
             return result
-        else:
-            return [result]
-    else:
-        return test_workitems_id
+
+    return test_workitems_id
 
 
 def param_attribute_collector(attribute, run_param):
@@ -324,12 +322,9 @@ def convert_executable_test_to_test_result_model(executable_test: dict) -> TestR
     return TestResult()\
         .set_external_id(executable_test['externalID'])\
         .set_autotest_name(executable_test['autoTestName'])\
-        .set_step_results(
-            step_results_to_autotest_steps_model(executable_test['stepResults']))\
-        .set_setup_results(
-            step_results_to_autotest_steps_model(executable_test['setUpResults']))\
-        .set_teardown_results(
-            step_results_to_autotest_steps_model(executable_test['tearDownResults']))\
+        .set_step_results(executable_test['stepResults'])\
+        .set_setup_results(executable_test['setUpResults'])\
+        .set_teardown_results(executable_test['tearDownResults'])\
         .set_duration(executable_test['duration'])\
         .set_outcome(executable_test['outcome'])\
         .set_traces(executable_test['traces'])\

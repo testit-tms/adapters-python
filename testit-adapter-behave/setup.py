@@ -2,7 +2,7 @@ from setuptools import find_packages, setup
 
 setup(
     name='testit-adapter-behave',
-    version='2.1.11',
+    version='2.2.0',
     description='Behave adapter for Test IT',
     long_description=open('README.md', "r").read(),
     long_description_content_type="text/markdown",
@@ -22,6 +22,6 @@ setup(
     package_dir={'': 'src'},
     install_requires=[
         'behave',
-        'testit-python-commons==2.1.11',
+        'testit-python-commons==2.2.0',
         'attrs'],
 )

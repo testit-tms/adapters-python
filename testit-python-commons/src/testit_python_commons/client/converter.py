@@ -206,7 +206,7 @@ class Converter:
         return put_model_links
 
     @classmethod
-    @adapter_logger
+    # @adapter_logger
     def step_results_to_autotest_steps_model(cls, step_results: typing.List[StepResult]):
         autotest_model_steps = []
 
