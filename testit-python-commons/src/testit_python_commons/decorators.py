@@ -2,7 +2,6 @@ import logging
 import types
 from functools import wraps
 
-from testit_python_commons.models.link import Link
 from testit_python_commons.services.logger import adapter_logger
 from testit_python_commons.services.utils import Utils
 
@@ -127,11 +126,11 @@ def link(url: str, title: str = None, type: str = None, description: str = None)
             function.test_links = []
 
         function.test_links.append(
-            Link()
-                .set_url(url)
-                .set_title(title)
-                .set_link_type(type)
-                .set_description(description))
+            Utils.convert_link_dict_to_link_model({
+                "url": url,
+                "title": title,
+                "type": type,
+                "description": description}))
 
         return inner(function)
 
@@ -147,11 +146,11 @@ def links(url: str = None, title: str = None, type: str = None,  # noqa: A002,VN
 
         if url:
             function.test_links.append(
-                Link()
-                    .set_url(url)
-                    .set_title(title)
-                    .set_link_type(type)
-                    .set_description(description))
+                Utils.convert_link_dict_to_link_model({
+                    "url": url,
+                    "title": title,
+                    "type": type,
+                    "description": description}))
         elif links and (isinstance(links, list) or isinstance(links, tuple)):
             for link in links:
                 if isinstance(link, dict) and 'url' in link:

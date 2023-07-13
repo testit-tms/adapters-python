@@ -1,6 +1,5 @@
 import logging
 
-from testit_python_commons.models.link import Link
 from testit_python_commons.services import TmsPluginManager
 from testit_python_commons.services.logger import adapter_logger
 from testit_python_commons.services.utils import Utils
@@ -12,11 +11,11 @@ def addLink(url: str, title: str = None, type: str = None, description: str = No
     if hasattr(TmsPluginManager.get_plugin_manager().hook, 'add_link'):
         TmsPluginManager.get_plugin_manager().hook \
             .add_link(
-            link=Link()
-                .set_url(url)
-                .set_title(title)
-                .set_link_type(type)
-                .set_description(description))
+            link=Utils.convert_link_dict_to_link_model({
+                "url": url,
+                "title": title,
+                "type": type,
+                "description": description}))
 
 
 @adapter_logger
@@ -26,11 +25,11 @@ def addLinks(url: str = None, title: str = None, type: str = None, description: 
         if url:
             TmsPluginManager.get_plugin_manager().hook \
                 .add_link(
-                link=Link()
-                    .set_url(url)
-                    .set_title(title)
-                    .set_link_type(type)
-                    .set_description(description))
+                link=Utils.convert_link_dict_to_link_model({
+                    "url": url,
+                    "title": title,
+                    "type": type,
+                    "description": description}))
         elif links and (isinstance(links, list) or isinstance(links, tuple)):
             for link in links:
                 if isinstance(link, dict) and 'url' in link:
