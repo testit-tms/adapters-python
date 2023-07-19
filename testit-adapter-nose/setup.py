@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='testit-adapter-nose',
-    version='2.2.1',
+    version='2.2.2',
     description='Nose adapter for Test IT',
     long_description=open('README.md', "r").read(),
     long_description_content_type="text/markdown",
