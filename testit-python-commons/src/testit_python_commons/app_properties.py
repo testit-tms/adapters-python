@@ -47,7 +47,7 @@ class AppProperties:
         if os.path.isfile(path):
             parser = configparser.RawConfigParser()
 
-            parser.read(path)
+            parser.read(path, encoding="utf-8")
 
             if parser.has_section('testit'):
                 for key, value in parser.items('testit'):
@@ -178,7 +178,7 @@ class AppProperties:
             raise SystemExit
 
         if properties.get('testrunname'):
-            properties['testrunname'] = properties['testrunname'].encode('cp1251').decode('utf8')
+            properties['testrunname'] = properties['testrunname']
 
         if properties.get('certvalidation'):
             properties['certvalidation'] = properties['certvalidation'].lower()
