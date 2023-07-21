@@ -1,4 +1,6 @@
 import hashlib
+import logging
+import re
 import typing
 
 from testit_python_commons.models.step_result import StepResult
@@ -6,7 +8,7 @@ from testit_python_commons.models.test_result import TestResult
 
 from .models.option import Option
 from .models.tags import TagType
-from .scenario_parser import get_scenario_external_id
+from .scenario_parser import get_scenario_external_id, get_scenario_parameters
 from .tags_parser import parse_tags
 
 
@@ -55,18 +57,64 @@ def parse_userdata(userdata):
 def filter_out_scenarios(tests_for_launch, scenarios):
     if tests_for_launch:
         included_scenarios = []
-
         for i in range(len(scenarios)):
-            tags = parse_tags(scenarios[i].tags + scenarios[i].feature.tags)
-            external_id = tags[TagType.EXTERNAL_ID] if \
-                TagType.EXTERNAL_ID in tags and tags[TagType.EXTERNAL_ID] else get_scenario_external_id(scenarios[i])
+            if scenarios[i].keyword == 'Scenario Outline' and hasattr(scenarios[i], 'scenarios'):
+                scenarios_outline = filter_out_scenarios(tests_for_launch, scenarios[i].scenarios)
 
-            if external_id in tests_for_launch:
-                included_scenarios.append(scenarios[i])
+                if len(scenarios_outline) != 0:
+                    for unmatched_scenario in set(scenarios[i].scenarios).symmetric_difference(set(scenarios_outline)):
+                        scenarios[i].scenarios.remove(unmatched_scenario)
+
+                    included_scenarios.append(scenarios[i])
+            else:
+                if validate_scenario(scenarios[i], tests_for_launch):
+                    included_scenarios.append(scenarios[i])
 
         scenarios = included_scenarios
 
     return scenarios
+
+
+def validate_scenario(scenario, tests_for_launch) -> bool:
+    tags = parse_tags(scenario.tags + scenario.feature.tags)
+    external_id = tags[TagType.EXTERNAL_ID] if \
+        TagType.EXTERNAL_ID in tags and tags[TagType.EXTERNAL_ID] else get_scenario_external_id(scenario)
+
+    if scenario.keyword == 'Scenario Outline':
+        external_id = param_attribute_collector(external_id, get_scenario_parameters(scenario))
+
+    return external_id in tests_for_launch
+
+
+def param_attribute_collector(attribute, run_param):
+    result = attribute
+    param_keys = re.findall(r"\{'<(.*?)>'\}", attribute)
+    if len(param_keys) > 0:
+        for param_key in param_keys:
+            root_key = param_key
+            id_keys = re.findall(r'\[(.*?)\]', param_key)
+            if len(id_keys) == 0:
+                if root_key in run_param:
+                    result = result.replace("{'<" + root_key + ">'}", str(run_param[root_key]))
+                else:
+                    logging.error(f"Parameter {root_key} not found")
+            elif len(id_keys) == 1:
+                base_key = root_key.replace("[" + id_keys[0] + "]", "")
+                id_key = id_keys[0].strip("\'\"")
+                if id_key.isdigit() and int(id_key) in range(len(run_param[base_key])):
+                    val_key = int(id_key)
+                elif id_key.isalnum() and not id_key.isdigit() and id_key in run_param[base_key].keys():
+                    val_key = id_key
+                else:
+                    raise SystemExit(f"Not key: {root_key} in run parameters or other keys problem")
+                result = result.replace("{'<" + root_key + ">'}", str(run_param[base_key][val_key]))
+            else:
+                raise SystemExit("For type tuple, list, dict) support only one level!")
+    elif len(param_keys) == 0:
+        result = attribute
+    else:
+        raise SystemExit("Collecting parameters error!")
+    return result
 
 
 def convert_executable_test_to_test_result_model(executable_test: dict) -> TestResult:
