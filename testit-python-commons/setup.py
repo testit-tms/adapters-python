@@ -2,7 +2,7 @@ from setuptools import find_packages, setup
 
 setup(
     name='testit-python-commons',
-    version='2.2.4',
+    version='2.3.0',
     description='Python commons for Test IT',
     long_description=open('README.md', "r").read(),
     long_description_content_type="text/markdown",
@@ -21,5 +21,5 @@ setup(
     py_modules=['testit', 'testit_python_commons'],
     packages=find_packages(where='src'),
     package_dir={'': 'src'},
-    install_requires=['pluggy', 'testit-api-client==3.0.1']
+    install_requires=['pluggy', 'testit-api-client==3.3.0']
 )

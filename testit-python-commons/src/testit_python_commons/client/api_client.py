@@ -42,7 +42,7 @@ class ApiClientWorker:
             test_run_name
         )
 
-        response = test_run_api.create_empty(test_run_v2_post_short_model=model)
+        response = test_run_api.create_empty(create_empty_request=model)
 
         return Converter.get_id_from_create_test_run_response(response)
 
@@ -65,9 +65,11 @@ class ApiClientWorker:
         test_run_api = TestRunsApi(api_client=self.__api_client)
         autotest_api = AutoTestsApi(api_client=self.__api_client)
 
-        autotest = autotest_api.get_all_auto_tests(project_id=self.__config.get_project_id(),
-                                                   external_id=test_result.get_external_id(),
-                                                  deleted=False)
+        model = Converter.project_id_and_external_id_to_auto_tests_search_post_request(
+            self.__config.get_project_id(),
+            test_result.get_external_id())
+
+        autotest = autotest_api.api_v2_auto_tests_search_post(api_v2_auto_tests_search_post_request=model)
 
         if autotest:
             logging.debug(f'Autotest "{test_result.get_autotest_name()}" was found')
@@ -77,7 +79,7 @@ class ApiClientWorker:
                 self.__config.get_project_id())
             model.is_flaky = autotest[0]['is_flaky']
 
-            autotest_api.update_auto_test(auto_test_put_model=model)
+            autotest_api.update_auto_test(update_auto_test_request=model)
             autotest_global_id = autotest[0]['id']
 
             logging.debug(f'Autotest "{test_result.get_autotest_name()}" was updated')
@@ -88,7 +90,7 @@ class ApiClientWorker:
                 test_result,
                 self.__config.get_project_id())
 
-            autotest_response = autotest_api.create_auto_test(auto_test_post_model=model)
+            autotest_response = autotest_api.create_auto_test(create_auto_test_request=model)
             autotest_global_id = autotest_response['id']
 
             logging.debug(f'Autotest "{test_result.get_autotest_name()}" was created')
@@ -102,7 +104,7 @@ class ApiClientWorker:
 
                     logging.debug(f'Autotest "{test_result.get_autotest_name()}" was linked with workItem "{work_item_id}"')
                 except Exception as exc:
-                    logging.error(f'Link with workItem "{work_item_id}" status: {exc.status}\n{exc.body}')
+                    logging.error(f'Link with workItem "{work_item_id}" status: {exc}')
 
         model = Converter.test_result_to_testrun_result_post_model(
             test_result,
@@ -129,7 +131,7 @@ class ApiClientWorker:
 
                     logging.debug(f'Attachment "{path}" was uploaded')
                 except Exception as exc:
-                    logging.error(f'Upload attachment "{path}" status: {exc.status}\n{exc.body}')
+                    logging.error(f'Upload attachment "{path}" status: {exc}')
             else:
                 logging.error(f'File "{path}" was not found!')
         return attachments

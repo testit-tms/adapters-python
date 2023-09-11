@@ -2,15 +2,17 @@ import typing
 
 from testit_api_client.models import (
     AttachmentPutModelAutoTestStepResultsModel,
-    AutoTestPostModel,
-    AutoTestPutModel,
+    CreateAutoTestRequest,
+    UpdateAutoTestRequest,
     AutoTestResultsForTestRunModel,
     AutoTestStepModel,
     AvailableTestResultOutcome,
     LinkPostModel,
     LinkPutModel,
     LinkType,
-    TestRunV2PostShortModel
+    CreateEmptyRequest,
+    AutotestsSelectModelFilter,
+    ApiV2AutoTestsSearchPostRequest
 )
 
 from testit_python_commons.models.link import Link
@@ -23,7 +25,7 @@ class Converter:
     @classmethod
     @adapter_logger
     def test_run_to_test_run_short_model(cls, project_id, name):
-        return TestRunV2PostShortModel(
+        return CreateEmptyRequest(
             project_id=project_id,
             name=name
         )
@@ -39,6 +41,16 @@ class Converter:
         autotests = response['_data_store']['test_results']
 
         return cls.__get_resolved_autotests(autotests, configuration)
+
+    @classmethod
+    @adapter_logger
+    def project_id_and_external_id_to_auto_tests_search_post_request(cls, project_id: str, external_id: str):
+        autotests_filter = AutotestsSelectModelFilter(
+            project_ids=[project_id],
+            external_ids=[external_id],
+            is_deleted=False)
+
+        return ApiV2AutoTestsSearchPostRequest(filter=autotests_filter)
 
     @staticmethod
     @adapter_logger
@@ -57,10 +69,10 @@ class Converter:
             cls,
             test_result: TestResult,
             project_id: str):
-        return AutoTestPostModel(
-            test_result.get_external_id(),
-            project_id,
-            test_result.get_autotest_name(),
+        return CreateAutoTestRequest(
+            external_id=test_result.get_external_id(),
+            project_id=project_id,
+            name=test_result.get_autotest_name(),
             steps=cls.step_results_to_autotest_steps_model(
                 test_result.get_step_results()),
             setup=cls.step_results_to_autotest_steps_model(
@@ -83,10 +95,10 @@ class Converter:
             test_result: TestResult,
             project_id: str):
         if test_result.get_outcome() == 'Passed':
-            return AutoTestPutModel(
-                test_result.get_external_id(),
-                project_id,
-                test_result.get_autotest_name(),
+            return UpdateAutoTestRequest(
+                external_id=test_result.get_external_id(),
+                project_id=project_id,
+                name=test_result.get_autotest_name(),
                 steps=cls.step_results_to_autotest_steps_model(
                     test_result.get_step_results()),
                 setup=cls.step_results_to_autotest_steps_model(
@@ -101,10 +113,10 @@ class Converter:
                 labels=test_result.get_labels()
             )
         else:
-            return AutoTestPutModel(
-                test_result.get_external_id(),
-                project_id,
-                test_result.get_autotest_name(),
+            return UpdateAutoTestRequest(
+                external_id=test_result.get_external_id(),
+                project_id=project_id,
+                name=test_result.get_autotest_name(),
                 steps=cls.step_results_to_autotest_steps_model(
                     test_result.get_step_results()),
                 setup=cls.step_results_to_autotest_steps_model(
@@ -126,9 +138,9 @@ class Converter:
             test_result: TestResult,
             configuration_id: str):
         return AutoTestResultsForTestRunModel(
-            configuration_id,
-            test_result.get_external_id(),
-            AvailableTestResultOutcome(test_result.get_outcome()),
+            configuration_id=configuration_id,
+            auto_test_external_id=test_result.get_external_id(),
+            outcome=AvailableTestResultOutcome(test_result.get_outcome()),
             step_results=cls.step_results_to_attachment_put_model_autotest_step_results_model(
                 test_result.get_step_results()),
             setup_results=cls.step_results_to_attachment_put_model_autotest_step_results_model(
