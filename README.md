@@ -5,7 +5,7 @@ The repository contains new versions of adapters for python test frameworks.
 
 | Test IT | Behave | Nose | Pytest | RobotFramework |
 |---------|--------|------|--------|----------------|
-| 3.5     | 2.0    | 2.0  | 2.0    | 2.0            |
+| 3.5+    | 2.0    | 2.0  | 2.0    | 2.0            |
 | 4.0     | 2.1    | 2.1  | 2.1    | 2.1            |
 
 Supported test frameworks :
