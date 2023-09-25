@@ -6,7 +6,7 @@ from testit_api_client import ApiClient, Configuration
 from testit_api_client.apis import AttachmentsApi, AutoTestsApi, TestRunsApi
 from testit_api_client.models import (
     AttachmentPutModel,
-    WorkItemIdModel
+    LinkAutoTestToWorkItemRequest
 )
 
 from testit_python_commons.client.client_configuration import ClientConfiguration
@@ -100,7 +100,7 @@ class ApiClientWorker:
                 try:
                     autotest_api.link_auto_test_to_work_item(
                         autotest_global_id,
-                        work_item_id_model=WorkItemIdModel(id=work_item_id))
+                        link_auto_test_to_work_item_request=LinkAutoTestToWorkItemRequest(id=work_item_id))
 
                     logging.debug(f'Autotest "{test_result.get_autotest_name()}" was linked with workItem "{work_item_id}"')
                 except Exception as exc:
