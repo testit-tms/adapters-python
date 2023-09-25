@@ -8,6 +8,7 @@ import testit_python_commons.services as adapter
 from testit_python_commons.models.outcome_type import OutcomeType
 from testit_python_commons.services import AdapterManager
 from testit_python_commons.services import StepManager
+from testit_python_commons.services.logger import adapter_logger
 
 import testit_adapter_pytest.utils as utils
 
@@ -58,17 +59,31 @@ class TmsListener(object):
 
     @pytest.hookimpl
     def pytest_collection_modifyitems(self, config, items):
-        index = 0
-        selected_items = []
-        deselected_items = []
-        plugin_info = config.pluginmanager.list_plugin_distinfo()
+        self.__add_pytest_check_info(config.pluginmanager.list_plugin_distinfo())
 
+        deselected_items = []
+        resolved_autotests = self.__adapter_manager.get_autotests_for_launch()
+        selected_items = self.__get_selected_items(items, resolved_autotests)
+
+        if resolved_autotests:
+            if not selected_items:
+                print('The specified tests were not found!')
+                raise SystemExit
+
+            config.hook.pytest_deselected(items=deselected_items)
+            items[:] = selected_items
+
+    def __add_pytest_check_info(self, plugin_info):
         for plugin, dist in plugin_info:
             if 'pytest-check' == dist.project_name:
                 self.__pytest_check_info = dist
-                break
+                return
 
-        resolved_autotests = self.__adapter_manager.get_autotests_for_launch()
+    @classmethod
+    @adapter_logger
+    def __get_selected_items(cls, items, resolved_autotests) -> list:
+        selected_items = []
+        index = 0
 
         for item in items:
             if hasattr(item.function, 'test_external_id'):
@@ -94,16 +109,15 @@ class TmsListener(object):
             index = index + 1 if len(items) > item_id + 1 and items[item_id + 1].originalname == item.originalname \
                 else 0
 
-            if resolved_autotests \
-                    and item.test_external_id in resolved_autotests:
+            if cls.__check_external_id_in_resolved_autotests(item.test_external_id, resolved_autotests):
                 selected_items.append(item)
-        if resolved_autotests:
-            if not selected_items:
-                print('The specified tests were not found!')
-                raise SystemExit
 
-            config.hook.pytest_deselected(items=deselected_items)
-            items[:] = selected_items
+        return selected_items
+
+    @staticmethod
+    @adapter_logger
+    def __check_external_id_in_resolved_autotests(external_id: str, resolved_autotests: dict) -> bool:
+        return resolved_autotests is not None and external_id in resolved_autotests
 
     @pytest.hookimpl
     def pytest_runtest_protocol(self, item):

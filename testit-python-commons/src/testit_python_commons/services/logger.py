@@ -23,7 +23,7 @@ def adapter_logger(function):
 
         message = f'Method "{function.__name__}" finished'
 
-        if result:
+        if result is not None:
             message += f' with result: {result}'
 
         logger.debug(message)
