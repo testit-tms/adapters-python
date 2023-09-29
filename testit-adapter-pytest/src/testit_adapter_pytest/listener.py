@@ -1,4 +1,5 @@
 import pickle
+from uuid import uuid4
 
 from packaging import version
 
@@ -11,6 +12,9 @@ from testit_python_commons.services import StepManager
 from testit_python_commons.services.logger import adapter_logger
 
 import testit_adapter_pytest.utils as utils
+from testit_adapter_pytest.fixture_context import FixtureContext
+from testit_adapter_pytest.fixture_manager import FixtureManager
+from testit_adapter_pytest.models.fixture import FixtureResult, FixturesContainer
 
 STATUS = {
     'passed': OutcomeType.PASSED,
@@ -27,6 +31,9 @@ class TmsListener(object):
     def __init__(self, adapter_manager: AdapterManager, step_manager: StepManager):
         self.__adapter_manager = adapter_manager
         self.__step_manager = step_manager
+        self.fixture_manager = FixtureManager()
+        self._cache = ItemCache()
+        self.__test_result_ids = {}
 
     @pytest.hookimpl
     def pytest_configure(self, config):
@@ -119,7 +126,7 @@ class TmsListener(object):
     def __check_external_id_in_resolved_autotests(external_id: str, resolved_autotests: dict) -> bool:
         return resolved_autotests is not None and external_id in resolved_autotests
 
-    @pytest.hookimpl
+    @pytest.hookimpl(tryfirst=True)
     def pytest_runtest_protocol(self, item):
         if not hasattr(item.function, 'test_external_id'):
             item.test_external_id = utils.get_hash(item.nodeid + item.function.__name__)
@@ -137,8 +144,45 @@ class TmsListener(object):
         self.__executable_test = utils.form_test(item)
 
     @pytest.hookimpl(hookwrapper=True)
-    def pytest_fixture_setup(self, fixturedef):
+    def pytest_runtest_setup(self, item):
+        if not self.__executable_test:
+            return
+
         yield
+
+        self._update_fixtures_external_ids(item)
+
+    @pytest.hookimpl(hookwrapper=True)
+    def pytest_fixture_setup(self, fixturedef):
+        fixture_name = getattr(fixturedef.func, '__allure_display_name__', fixturedef.argname)
+
+        container_uuid = self._cache.get(fixturedef)
+
+        if not container_uuid:
+            container_uuid = self._cache.push(fixturedef)
+            container = FixturesContainer(uuid=container_uuid)
+            self.fixture_manager.start_group(container_uuid, container)
+
+        self.fixture_manager.update_group(container_uuid)
+
+        before_fixture_uuid = uuid4()
+        before_fixture = FixtureResult(title=fixture_name)
+
+        self.fixture_manager.start_before_fixture(container_uuid, before_fixture_uuid, before_fixture)
+
+        outcome = yield
+
+        results_steps_data = self.__step_manager.get_steps_tree()
+
+        self.fixture_manager.stop_before_fixture(before_fixture_uuid,
+                                                 outcome=utils.get_outcome_status(outcome), steps=results_steps_data)
+
+        finalizers = getattr(fixturedef, '_finalizers', [])
+        for index, finalizer in enumerate(finalizers):
+            finalizer_name = getattr(finalizer, "__name__", index)
+            name = f'{fixture_name}::{finalizer_name}'
+            finalizers[index] = FixtureContext(finalizer, parent_uuid=container_uuid, name=name)
+
         if self.__executable_test:
             results_steps_data = self.__step_manager.get_steps_tree()
 
@@ -190,8 +234,19 @@ class TmsListener(object):
         if not self.__executable_test:
             return
 
-        self.__adapter_manager.write_test(
+        self.__test_result_ids[self.__executable_test['externalID']] = self.__adapter_manager.write_test(
             utils.convert_executable_test_to_test_result_model(self.__executable_test))
+
+    @pytest.hookimpl
+    def pytest_sessionfinish(self, session):
+        if not self.__test_result_ids:
+            return
+
+        self.__adapter_manager.load_setup_and_teardown_step_results(
+            utils.fixtures_containers_to_test_results_with_all_fixture_step_results(
+                self.fixture_manager.get_all_items(),
+                self.__test_result_ids
+            ))
 
     @adapter.hookimpl
     def add_link(self, link):
@@ -212,3 +267,57 @@ class TmsListener(object):
     def create_attachment(self, body, name: str):
         if self.__executable_test:
             self.__executable_test['attachments'] += self.__adapter_manager.create_attachment(body, name)
+
+    @adapter.hookimpl
+    def start_fixture(self, parent_uuid, uuid, title):
+        after_fixture = FixtureResult(title=title)
+        self.fixture_manager.start_after_fixture(parent_uuid, uuid, after_fixture)
+
+    @adapter.hookimpl
+    def stop_fixture(self, uuid, exc_type, exc_val, exc_tb):
+        results_steps_data = self.__step_manager.get_steps_tree()
+
+        self.fixture_manager.stop_after_fixture(uuid,
+                                                outcome=utils.get_status(exc_val),
+                                                steps=results_steps_data,
+                                                message=utils.get_message(exc_type, exc_val),
+                                                stacktrace=utils.get_traceback(exc_tb))
+
+    def _update_fixtures_external_ids(self, item):
+        for fixturedef in _test_fixtures(item):
+            group_uuid = self._cache.get(fixturedef)
+            if group_uuid:
+                group = self.fixture_manager.get_item(group_uuid)
+            else:
+                group_uuid = self._cache.push(fixturedef)
+                group = FixturesContainer(uuid=group_uuid)
+                self.fixture_manager.start_group(group_uuid, group)
+            if item.test_external_id not in group.external_ids:
+                self.fixture_manager.update_group(group_uuid, external_ids=item.test_external_id)
+
+
+class ItemCache:
+    def __init__(self):
+        self._items = dict()
+
+    def get(self, _id):
+        return self._items.get(id(_id))
+
+    def push(self, _id):
+        return self._items.setdefault(id(_id), uuid4())
+
+    def pop(self, _id):
+        return self._items.pop(id(_id), None)
+
+
+def _test_fixtures(item):
+    fixturemanager = item.session._fixturemanager
+    fixturedefs = []
+
+    if hasattr(item, "_request") and hasattr(item._request, "fixturenames"):
+        for name in item._request.fixturenames:
+            fixturedefs_pytest = fixturemanager.getfixturedefs(name, item.nodeid)
+            if fixturedefs_pytest:
+                fixturedefs.extend(fixturedefs_pytest)
+
+    return fixturedefs

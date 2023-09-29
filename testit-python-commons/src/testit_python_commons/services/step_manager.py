@@ -5,7 +5,7 @@ from testit_python_commons.services.step_result_storage import StepResultStorage
 
 
 class StepManager:
-    __steps_tree:typing.List[StepResult] = []
+    __steps_tree: typing.List[StepResult] = []
 
     def __init__(self):
         self.__storage = StepResultStorage()

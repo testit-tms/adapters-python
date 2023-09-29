@@ -34,6 +34,7 @@ def get_title(args: tuple, kwargs: dict):
 
         logging.error(f'Cannot to get step title: {args[1]}. The title must be of string type.')
 
+
 def get_description(args: tuple, kwargs: dict):
     if 'description' in kwargs:
         return kwargs['description']
@@ -43,8 +44,8 @@ def get_description(args: tuple, kwargs: dict):
             return args[1]
         logging.error(f'Cannot to get step description: {args[1]}. The description must be of string type.')
 
-class StepContext:
 
+class StepContext:
     def __init__(self, title, description, parameters):
         self.__title = title
         self.__description = description

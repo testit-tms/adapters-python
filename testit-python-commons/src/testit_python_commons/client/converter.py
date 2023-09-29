@@ -12,12 +12,14 @@ from testit_api_client.models import (
     LinkType,
     CreateEmptyRequest,
     AutotestsSelectModelFilter,
-    ApiV2AutoTestsSearchPostRequest
+    ApiV2AutoTestsSearchPostRequest,
+    ApiV2TestResultsIdPutRequest
 )
 
 from testit_python_commons.models.link import Link
 from testit_python_commons.models.step_result import StepResult
 from testit_python_commons.models.test_result import TestResult
+from testit_python_commons.models.test_result_with_all_fixture_step_results_model import TestResultWithAllFixtureStepResults
 from testit_python_commons.services.logger import adapter_logger
 
 
@@ -158,6 +160,23 @@ class Converter:
             started_on=test_result.get_started_on(),
             completed_on=test_result.get_completed_on()
         )
+
+    @classmethod
+    @adapter_logger
+    def convert_test_result_with_all_setup_and_teardown_steps_to_test_results_id_put_request(
+            cls,
+            test_result: TestResultWithAllFixtureStepResults) -> ApiV2TestResultsIdPutRequest:
+        return ApiV2TestResultsIdPutRequest(
+            setup_results=cls.step_results_to_attachment_put_model_autotest_step_results_model(
+                test_result.get_setup_results()),
+            teardown_results=cls.step_results_to_attachment_put_model_autotest_step_results_model(
+                test_result.get_teardown_results()))
+
+    @classmethod
+    @adapter_logger
+    def get_test_result_id_from_testrun_result_post_response(cls, response) -> str:
+        return response[0]
+
 
     @staticmethod
     @adapter_logger
