@@ -1,10 +1,12 @@
 import os
+import typing
 import uuid
 
 from testit_python_commons.client.api_client import ApiClientWorker
 from testit_python_commons.client.client_configuration import ClientConfiguration
 from testit_python_commons.models.adapter_mode import AdapterMode
 from testit_python_commons.models.test_result import TestResult
+from testit_python_commons.models.test_result_with_all_fixture_step_results_model import TestResultWithAllFixtureStepResults
 from testit_python_commons.services.adapter_manager_configuration import AdapterManagerConfiguration
 from testit_python_commons.services.logger import adapter_logger
 
@@ -37,10 +39,15 @@ class AdapterManager:
         return
 
     @adapter_logger
-    def write_test(self, test_result: TestResult):
+    def write_test(self, test_result: TestResult) -> str:
         test_result.set_automatic_creation_test_cases(
             self.__config.should_automatic_creation_test_cases())
-        self.__api_client.write_test(test_result)
+
+        return self.__api_client.write_test(test_result)
+
+    @adapter_logger
+    def load_setup_and_teardown_step_results(self, test_results: typing.List[TestResultWithAllFixtureStepResults]):
+        self.__api_client.update_test_results(test_results)
 
     @adapter_logger
     def load_attachments(self, attach_paths: list or tuple):

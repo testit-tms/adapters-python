@@ -1,11 +1,15 @@
 import hashlib
 import logging
 import re
+import traceback
 import typing
+import pytest
+
+from traceback import format_exception_only
 
 from testit_python_commons.models.link import Link
-from testit_python_commons.models.step_result import StepResult
 from testit_python_commons.models.test_result import TestResult
+from testit_python_commons.models.test_result_with_all_fixture_step_results_model import TestResultWithAllFixtureStepResults
 
 
 def form_test(item):
@@ -314,9 +318,11 @@ def __search_attribute(item, attribute):
 
     return
 
+
 def get_hash(value: str):
     md = hashlib.sha256(bytes(value, encoding='utf-8'))
     return md.hexdigest()
+
 
 def convert_executable_test_to_test_result_model(executable_test: dict) -> TestResult:
     return TestResult()\
@@ -341,24 +347,45 @@ def convert_executable_test_to_test_result_model(executable_test: dict) -> TestR
         .set_work_item_ids(executable_test['workItemsID'])\
         .set_message(executable_test['message'])
 
-def step_results_to_autotest_steps_model(step_results: dict) -> typing.List[StepResult]:
-    autotest_model_steps = []
 
-    for step_result in step_results:
-        step_result_model = StepResult()\
-            .set_title(step_result['title'])\
-            .set_description(step_result['description'])\
-            .set_outcome(step_result['outcome'])\
-            .set_duration(step_result['duration'])\
-            .set_attachments(step_result['attachments'])
+def fixtures_containers_to_test_results_with_all_fixture_step_results(
+        fixtures_containers: dict,
+        test_result_ids: dict) -> typing.List[TestResultWithAllFixtureStepResults]:
+    test_results_with_all_fixture_step_results = []
 
-        if 'parameters' in step_result:
-            step_result_model.set_parameters(step_result['parameters'])
+    for external_id, test_result_id in test_result_ids.items():
+        test_result_with_all_fixture_step_results = TestResultWithAllFixtureStepResults(test_result_id)
 
-        if 'step_results' in step_result:
-            step_result_model.set_step_results(
-                step_results_to_autotest_steps_model(step_result['step_results']))
+        for uuid, fixtures_container in fixtures_containers.items():
+            if external_id in fixtures_container.external_ids:
+                if fixtures_container.befores:
+                    test_result_with_all_fixture_step_results.set_setup_results(fixtures_container.befores[0].steps)
 
-        autotest_model_steps.append(step_result_model)
+                if fixtures_container.afters:
+                    test_result_with_all_fixture_step_results.set_teardown_results(fixtures_container.afters[0].steps)
 
-    return autotest_model_steps
+        test_results_with_all_fixture_step_results.append(test_result_with_all_fixture_step_results)
+
+    return test_results_with_all_fixture_step_results
+
+
+def get_status(exception):
+    if exception:
+        if isinstance(exception, pytest.skip.Exception):
+            return "Skipped"
+        return "Failed"
+    else:
+        return "Passed"
+
+
+def get_outcome_status(outcome):
+    _, exception, _ = outcome.excinfo or (None, None, None)
+    return get_status(exception)
+
+
+def get_traceback(exc_traceback):
+    return ''.join(traceback.format_tb(exc_traceback)) if exc_traceback else None
+
+
+def get_message(etype, value):
+    return '\n'.join(format_exception_only(etype, value)) if etype or value else None
