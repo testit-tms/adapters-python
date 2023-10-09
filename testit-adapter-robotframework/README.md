@@ -67,13 +67,13 @@ If you want to enable debug mode then see [How to enable debug logging?](https:/
 Tags can be used to specify information about autotest. Tags are space sensitive, use only one space between words.
 
 Description of tags:
-- `testit.workItemsId` - linking an autotest to a test case
-- `testit.displayName` - name of the autotest in the TMS system (default - name of test)
-- `testit.externalId` - ID of the autotest within the project in the TMS system
-- `testit.title` - title in the autotest card (default - name of test)
-- `testit.description` - description in the autotest card (default - documentation of test)
-- `testit.links` - links in the autotest card
-- `testit.labels` - labels in the autotest card
+- `testit.workItemsId` - a method that links autotests with manual tests. Receives the array of manual tests' IDs
+- `testit.displayName` - internal autotest name (used in Test IT)
+- `testit.externalId` - unique internal autotest ID (used in Test IT)
+- `testit.title` - autotest name specified in the autotest card. If not specified, the name from the displayName method is used
+- `testit.description` - autotest description specified in the autotest card
+- `testit.links` - links listed in the autotest card
+- `testit.labels` - tags listed in the autotest card
 - `testit.nameSpace` - directory in the TMS system (default - file's name of test)
 - `testit.className` - subdirectory in the TMS system (default - class's name of test)
 
