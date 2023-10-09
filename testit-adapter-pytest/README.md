@@ -71,13 +71,13 @@ Decorators can be used to specify information about autotest.
 
 Description of decorators:
 
-- `testit.workItemIds` - linking an autotest to a test case
-- `testit.displayName` - name of the autotest in the TMS system (can be replaced with documentation strings)
-- `testit.externalId` - ID of the autotest within the project in the TMS system
-- `testit.title` - title in the autotest card
-- `testit.description` - description in the autotest card
-- `testit.labels` - tags in the work item
-- `testit.link` - links in the autotest card
+- `testit.workItemIds` - a method that links autotests with manual tests. Receives the array of manual tests' IDs
+- `testit.displayName` - internal autotest name (used in Test IT)
+- `testit.externalId` - unique internal autotest ID (used in Test IT)
+- `testit.title` - autotest name specified in the autotest card. If not specified, the name from the displayName method is used
+- `testit.description` - autotest description specified in the autotest card
+- `testit.labels` - tags listed in the autotest card
+- `testit.link` - links listed in the autotest card
 - `testit.step` - the designation of the step called in the body of the test or other step
 - `testit.nameSpace` - directory in the TMS system (default - file's name of test)
 - `testit.className` - subdirectory in the TMS system (default - class's name of test)
