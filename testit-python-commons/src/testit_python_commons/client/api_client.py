@@ -7,7 +7,7 @@ from testit_api_client import ApiClient, Configuration
 from testit_api_client.apis import AttachmentsApi, AutoTestsApi, TestRunsApi, TestResultsApi
 from testit_api_client.models import (
     AttachmentPutModel,
-    ApiV2TestResultsIdPutRequest,
+    TestResultModel,
     LinkAutoTestToWorkItemRequest
 )
 
@@ -121,14 +121,14 @@ class ApiClientWorker:
         return Converter.get_test_result_id_from_testrun_result_post_response(response)
 
     @adapter_logger
-    def get_test_result_by_id(self, test_result_id: str) -> ApiV2TestResultsIdPutRequest:
-        return Converter.convert_test_result_model_to_test_results_id_put_request(
-            self.__test_results_api.api_v2_test_results_id_get(id=test_result_id))
+    def get_test_result_by_id(self, test_result_id: str) -> TestResultModel:
+        return self.__test_results_api.api_v2_test_results_id_get(id=test_result_id)
 
     @adapter_logger
     def update_test_results(self, test_results: typing.List[TestResultWithAllFixtureStepResults]):
         for test_result in test_results:
-            model = self.get_test_result_by_id(test_result.get_test_result_id())
+            model = Converter.convert_test_result_model_to_test_results_id_put_request(
+                self.get_test_result_by_id(test_result.get_test_result_id()))
 
             model.set_attribute(
                 "setup_results",
