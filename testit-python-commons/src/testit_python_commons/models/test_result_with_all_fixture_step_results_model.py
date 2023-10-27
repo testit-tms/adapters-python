@@ -5,12 +5,12 @@ from testit_python_commons.models.step_result import StepResult
 
 class TestResultWithAllFixtureStepResults:
     def __init__(self, test_result_id: str):
-        self.test_result_id = test_result_id
+        self.__test_result_id = test_result_id
         self.__setup_results = []
         self.__teardown_results = []
 
     def get_test_result_id(self) -> str:
-        return self.test_result_id
+        return self.__test_result_id
 
     def set_setup_results(self, setup_results: typing.List[StepResult]):
         self.__setup_results += setup_results

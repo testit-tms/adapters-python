@@ -13,7 +13,10 @@ from testit_api_client.models import (
     CreateEmptyRequest,
     AutotestsSelectModelFilter,
     ApiV2AutoTestsSearchPostRequest,
-    ApiV2TestResultsIdPutRequest
+    ApiV2TestResultsIdPutRequest,
+    TestResultModel,
+    AttachmentModel,
+    AttachmentPutModel
 )
 
 from testit_python_commons.models.link import Link
@@ -163,6 +166,25 @@ class Converter:
 
     @classmethod
     @adapter_logger
+    def convert_test_result_model_to_test_results_id_put_request(
+            cls,
+            test_result: TestResultModel) -> ApiV2TestResultsIdPutRequest:
+        return ApiV2TestResultsIdPutRequest(
+            failure_class_ids=test_result.failure_class_ids,
+            outcome=test_result.outcome,
+            comment=test_result.comment,
+            links=test_result.links,
+            step_results=test_result.step_results,
+            attachments=cls.attachment_models_to_attachment_put_models(test_result.attachments),
+            duration_in_ms=test_result.duration_in_ms,
+            step_comments=test_result.step_comments,
+            setup_results=test_result.setup_results,
+            teardown_results=test_result.teardown_results,
+            message=test_result.message,
+            trace=test_result.traces)
+
+    @classmethod
+    @adapter_logger
     def convert_test_result_with_all_setup_and_teardown_steps_to_test_results_id_put_request(
             cls,
             test_result: TestResultWithAllFixtureStepResults) -> ApiV2TestResultsIdPutRequest:
@@ -176,7 +198,6 @@ class Converter:
     @adapter_logger
     def get_test_result_id_from_testrun_result_post_response(cls, response) -> str:
         return response[0]
-
 
     @staticmethod
     @adapter_logger
@@ -214,7 +235,7 @@ class Converter:
 
     @classmethod
     @adapter_logger
-    def links_to_links_post_model(cls, links: typing.List[Link]):
+    def links_to_links_post_model(cls, links: typing.List[Link]) -> typing.List[LinkPostModel]:
         post_model_links = []
 
         for link in links:
@@ -226,7 +247,7 @@ class Converter:
 
     @classmethod
     @adapter_logger
-    def links_to_links_put_model(cls, links: typing.List[Link]):
+    def links_to_links_put_model(cls, links: typing.List[Link]) -> typing.List[LinkPutModel]:
         put_model_links = []
 
         for link in links:
@@ -237,8 +258,27 @@ class Converter:
         return put_model_links
 
     @classmethod
+    @adapter_logger
+    def attachment_models_to_attachment_put_models(
+            cls, attachments: typing.List[AttachmentModel]) -> typing.List[AttachmentPutModel]:
+        put_model_attachments = []
+
+        for attachment in attachments:
+            put_model_attachments.append(
+                cls.attachment_model_to_attachment_put_model(attachment)
+            )
+
+        return put_model_attachments
+
+    @staticmethod
+    @adapter_logger
+    def attachment_model_to_attachment_put_model(attachment: AttachmentModel) -> AttachmentPutModel:
+        return AttachmentPutModel(id=attachment.id)
+
+    @classmethod
     # @adapter_logger
-    def step_results_to_autotest_steps_model(cls, step_results: typing.List[StepResult]):
+    def step_results_to_autotest_steps_model(
+            cls, step_results: typing.List[StepResult]) -> typing.List[AutoTestStepModel]:
         autotest_model_steps = []
 
         for step_result in step_results:
@@ -254,7 +294,8 @@ class Converter:
 
     @classmethod
     @adapter_logger
-    def step_results_to_attachment_put_model_autotest_step_results_model(cls, step_results: typing.List[StepResult]):
+    def step_results_to_attachment_put_model_autotest_step_results_model(
+            cls, step_results: typing.List[StepResult]) -> typing.List[AttachmentPutModelAutoTestStepResultsModel]:
         autotest_model_step_results = []
 
         for step_result in step_results:
