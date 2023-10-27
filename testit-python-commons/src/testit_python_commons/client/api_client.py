@@ -7,6 +7,7 @@ from testit_api_client import ApiClient, Configuration
 from testit_api_client.apis import AttachmentsApi, AutoTestsApi, TestRunsApi, TestResultsApi
 from testit_api_client.models import (
     AttachmentPutModel,
+    TestResultModel,
     LinkAutoTestToWorkItemRequest
 )
 
@@ -120,10 +121,23 @@ class ApiClientWorker:
         return Converter.get_test_result_id_from_testrun_result_post_response(response)
 
     @adapter_logger
+    def get_test_result_by_id(self, test_result_id: str) -> TestResultModel:
+        return self.__test_results_api.api_v2_test_results_id_get(id=test_result_id)
+
+    @adapter_logger
     def update_test_results(self, test_results: typing.List[TestResultWithAllFixtureStepResults]):
         for test_result in test_results:
-            model = Converter.convert_test_result_with_all_setup_and_teardown_steps_to_test_results_id_put_request(
-                test_result)
+            model = Converter.convert_test_result_model_to_test_results_id_put_request(
+                self.get_test_result_by_id(test_result.get_test_result_id()))
+
+            model.set_attribute(
+                "setup_results",
+                Converter.step_results_to_attachment_put_model_autotest_step_results_model(
+                    test_result.get_setup_results()))
+            model.set_attribute(
+                "teardown_results",
+                Converter.step_results_to_attachment_put_model_autotest_step_results_model(
+                    test_result.get_teardown_results()))
 
             try:
                 self.__test_results_api.api_v2_test_results_id_put(
