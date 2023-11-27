@@ -12,6 +12,7 @@ from testit_api_client.models import (
     LinkType,
     CreateEmptyRequest,
     AutotestsSelectModelFilter,
+    AutotestsSelectModelIncludes,
     ApiV2AutoTestsSearchPostRequest,
     ApiV2TestResultsIdPutRequest,
     TestResultModel,
@@ -54,8 +55,12 @@ class Converter:
             project_ids=[project_id],
             external_ids=[external_id],
             is_deleted=False)
+        autotests_includes = AutotestsSelectModelIncludes(
+            include_steps=False,
+            include_links=False,
+            include_labels=False)
 
-        return ApiV2AutoTestsSearchPostRequest(filter=autotests_filter)
+        return ApiV2AutoTestsSearchPostRequest(filter=autotests_filter, includes=autotests_includes)
 
     @staticmethod
     @adapter_logger
@@ -207,13 +212,15 @@ class Converter:
                 url=link.get_url(),
                 title=link.get_title(),
                 type=LinkType(link.get_link_type()),
-                description=link.get_description()
+                description=link.get_description(),
+                has_info=True,
             )
         else:
             return LinkPostModel(
                 url=link.get_url(),
                 title=link.get_title(),
-                description=link.get_description()
+                description=link.get_description(),
+                has_info=True,
             )
 
     @staticmethod
@@ -224,13 +231,15 @@ class Converter:
                 url=link.get_url(),
                 title=link.get_title(),
                 type=LinkType(link.get_link_type()),
-                description=link.get_description()
+                description=link.get_description(),
+                has_info=True,
             )
         else:
             return LinkPutModel(
                 url=link.get_url(),
                 title=link.get_title(),
-                description=link.get_description()
+                description=link.get_description(),
+                has_info=True,
             )
 
     @classmethod
