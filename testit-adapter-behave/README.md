@@ -2,6 +2,11 @@
 
 ![Test IT](https://raw.githubusercontent.com/testit-tms/adapters-python/master/images/banner.png)
 
+[![Release
+Status](https://img.shields.io/pypi/v/testit-adapter-behave?style=plastic)](https://pypi.python.org/pypi/testit-adapter-behave)
+[![Downloads](https://img.shields.io/pypi/dm/testit-adapter-behave?style=plastic)](https://pypi.python.org/pypi/testit-adapter-behave)
+[![GitHub contributors](https://img.shields.io/github/contributors/testit-tms/adapters-python?style=plastic)](https://github.com/testit-tms/adapters-python)
+
 ## Getting Started
 
 ### Installation
