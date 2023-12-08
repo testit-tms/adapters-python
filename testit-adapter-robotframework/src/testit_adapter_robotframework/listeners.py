@@ -51,7 +51,8 @@ class AutotestAdapter:
             end = convert_time(attributes['endtime'])
             duration = attributes['elapsedtime']
             outcome = STATUSES[attributes['status']]
-            self.active_test.add_step_result(title, start, end, duration, outcome)
+            self.active_test.add_step_result(title, start, end, duration, outcome, self.active_test.attachments)
+            self.active_test.attachments = []
 
     def end_test(self, name, attributes):
         if self.active_test:
