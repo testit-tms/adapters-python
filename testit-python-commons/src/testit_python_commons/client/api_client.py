@@ -73,40 +73,60 @@ class ApiClientWorker:
         autotest = self.__autotest_api.api_v2_auto_tests_search_post(api_v2_auto_tests_search_post_request=model)
 
         if autotest:
-            logging.debug(f'Autotest "{test_result.get_autotest_name()}" was found')
+            self.__update_test(test_result, autotest[0]['is_flaky'])
 
-            model = Converter.test_result_to_autotest_put_model(
-                test_result,
-                self.__config.get_project_id())
-            model.is_flaky = autotest[0]['is_flaky']
-
-            self.__autotest_api.update_auto_test(update_auto_test_request=model)
             autotest_global_id = autotest[0]['id']
 
-            logging.debug(f'Autotest "{test_result.get_autotest_name()}" was updated')
+            self.__autotest_api.delete_auto_test_link_from_work_item(id=autotest_global_id)
         else:
-            logging.debug(f'Autotest "{test_result.get_autotest_name()}" was not found')
-
-            model = Converter.test_result_to_autotest_post_model(
-                test_result,
-                self.__config.get_project_id())
-
-            autotest_response = self.__autotest_api.create_auto_test(create_auto_test_request=model)
-            autotest_global_id = autotest_response['id']
-
-            logging.debug(f'Autotest "{test_result.get_autotest_name()}" was created')
+            autotest_global_id = self.__create_test(test_result)
 
         if autotest_global_id:
-            for work_item_id in test_result.get_work_item_ids():
-                try:
-                    self.__autotest_api.link_auto_test_to_work_item(
-                        autotest_global_id,
-                        link_auto_test_to_work_item_request=LinkAutoTestToWorkItemRequest(id=work_item_id))
+            self.__link_test_to_work_item(autotest_global_id, test_result.get_work_item_ids())
 
-                    logging.debug(f'Autotest "{test_result.get_autotest_name()}" was linked with workItem "{work_item_id}"')
-                except Exception as exc:
-                    logging.error(f'Link with workItem "{work_item_id}" status: {exc}')
+        return self.__load_test_result(test_result)
 
+    @adapter_logger
+    def __create_test(self, test_result: TestResult) -> str:
+        logging.debug(f'Autotest "{test_result.get_autotest_name()}" was not found')
+
+        model = Converter.test_result_to_autotest_post_model(
+            test_result,
+            self.__config.get_project_id())
+
+        autotest_response = self.__autotest_api.create_auto_test(create_auto_test_request=model)
+
+        logging.debug(f'Autotest "{test_result.get_autotest_name()}" was created')
+
+        return autotest_response['id']
+
+    @adapter_logger
+    def __update_test(self, test_result: TestResult, is_flaky: bool):
+        logging.debug(f'Autotest "{test_result.get_autotest_name()}" was found')
+
+        model = Converter.test_result_to_autotest_put_model(
+            test_result,
+            self.__config.get_project_id())
+        model.is_flaky = is_flaky
+
+        self.__autotest_api.update_auto_test(update_auto_test_request=model)
+
+        logging.debug(f'Autotest "{test_result.get_autotest_name()}" was updated')
+
+    @adapter_logger
+    def __link_test_to_work_item(self, autotest_global_id: str, work_item_ids: list):
+        for work_item_id in work_item_ids:
+            try:
+                self.__autotest_api.link_auto_test_to_work_item(
+                    autotest_global_id,
+                    link_auto_test_to_work_item_request=LinkAutoTestToWorkItemRequest(id=work_item_id))
+
+                logging.debug(f'Autotest was linked with workItem "{work_item_id}" by global id "{autotest_global_id}')
+            except Exception as exc:
+                logging.error(f'Link with workItem "{work_item_id}" by global id "{autotest_global_id}" status: {exc}')
+
+    @adapter_logger
+    def __load_test_result(self, test_result: TestResult) -> str:
         model = Converter.test_result_to_testrun_result_post_model(
             test_result,
             self.__config.get_configuration_id())
