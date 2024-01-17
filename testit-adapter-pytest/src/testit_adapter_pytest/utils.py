@@ -37,7 +37,8 @@ def form_test(item):
         'links': __get_links_from(item),
         'labels': __get_labels_from(item),
         'workItemsID': __get_work_item_ids_from(item),
-        'message': None
+        'message': None,
+        'externalKey': item.nodeid,
     }
 
     if item.own_markers:
@@ -345,7 +346,8 @@ def convert_executable_test_to_test_result_model(executable_test: dict) -> TestR
         .set_result_links(executable_test['resultLinks'])\
         .set_labels(executable_test['labels'])\
         .set_work_item_ids(executable_test['workItemsID'])\
-        .set_message(executable_test['message'])
+        .set_message(executable_test['message'])\
+        .set_external_key(executable_test['externalKey'])
 
 
 def fixtures_containers_to_test_results_with_all_fixture_step_results(
