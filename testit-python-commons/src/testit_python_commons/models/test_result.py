@@ -29,6 +29,7 @@ class TestResult:
     __parameters: dict = {}
     __properties: dict = {}
     __automatic_creation_test_cases: bool = False
+    __external_key: str = None
 
     @adapter_logger
     def set_external_id(self, external_id: str):
@@ -259,3 +260,13 @@ class TestResult:
     @adapter_logger
     def get_automatic_creation_test_cases(self) -> bool:
         return self.__automatic_creation_test_cases
+
+    @adapter_logger
+    def set_external_key(self, external_key: str):
+        self.__external_key = external_key
+
+        return self
+
+    @adapter_logger
+    def get_external_key(self) -> str:
+        return self.__external_key
