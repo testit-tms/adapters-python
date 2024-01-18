@@ -13,6 +13,7 @@ def parse_tags(tags):
     for tag in tags:
         if TagType.EXTERNAL_ID in tag:
             parsed_tags[TagType.EXTERNAL_ID] = tag[len(TagType.EXTERNAL_ID):]
+            parsed_tags['externalKey'] = tag
 
         elif TagType.DISPLAY_NAME in tag:
             parsed_tags[TagType.DISPLAY_NAME] = tag[len(TagType.DISPLAY_NAME):]

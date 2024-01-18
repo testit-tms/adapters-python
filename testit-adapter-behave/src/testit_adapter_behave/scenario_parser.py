@@ -46,6 +46,7 @@ def parse_scenario(scenario):
         'links': [],
         'labels': [],
         'workItemsID': [],
+        'externalKey': None,
         # TODO: Add to python-commons
         # 'started_on': '',
         # 'completed_on': None
@@ -72,6 +73,9 @@ def parse_scenario(scenario):
     if TagType.WORK_ITEM_IDS in tags:
         # TODO: Fix in python-commons to "workItemIds"
         executable_test['workItemsID'] = tags[TagType.WORK_ITEM_IDS]
+
+    if 'externalKey' in tags:
+        executable_test['externalKey'] = tags['externalKey']
 
     return executable_test
 
