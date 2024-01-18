@@ -87,6 +87,7 @@ class Autotest(Default):
     message = attrib(default="")
     started_on = attrib(default=None)
     completed_on = attrib(default=None)
+    externalKey = attrib(default=None)
 
     step_depth = attrib(default=Factory(list))
     result_depth = attrib(default=Factory(list))
@@ -103,6 +104,7 @@ class Autotest(Default):
                 value = tag.split(':', 1)[-1].strip()
                 if attr == 'externalid':
                     self.externalID = str(value).replace("'", "").replace('"', '')
+                    self.externalKey = tag
                 elif attr == 'displayname':
                     self.autoTestName = str(value).replace("'", "").replace('"', '')
                 elif attr == 'title':
