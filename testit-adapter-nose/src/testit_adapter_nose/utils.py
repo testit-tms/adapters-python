@@ -1,5 +1,6 @@
 import hashlib
 import logging
+import os
 import re
 import typing
 from traceback import format_exception_only
@@ -57,16 +58,21 @@ def get_outcome(event):
         outcome = OutcomeType.SKIPPED
         message, trace = status_details(event)
 
-    print(outcome, message, trace)
-
     return outcome, message, trace
 
 
-def form_test(test):
+def form_test(test, top_level_directory: str):
     data = {}
 
     if hasattr(test, "_testFunc"):
         item = test._testFunc
+
+        if not __import__(item.__module__).__file__:
+            external_key = ".".join([item.__module__, item.__qualname__])
+        else:
+            abs_module_path = os.path.dirname(__import__(item.__module__).__file__)
+            module_path = abs_module_path.replace(top_level_directory + os.sep, '').replace(os.sep, '.')
+            external_key = ".".join([module_path, item.__module__, item.__qualname__])
 
         if not hasattr(item, 'test_external_id'):
             item.test_external_id = get_hash(item.__name__)
@@ -103,7 +109,8 @@ def form_test(test):
             'links': [],
             'labels': [],
             'workItemsID': [],
-            'message': None
+            'message': None,
+            'externalKey': external_key
         }
 
         if hasattr(item, 'test_links'):
@@ -333,4 +340,5 @@ def convert_executable_test_to_test_result_model(executable_test: dict) -> TestR
         .set_result_links(executable_test['resultLinks'])\
         .set_labels(executable_test['labels'])\
         .set_work_item_ids(executable_test['workItemsID'])\
-        .set_message(executable_test['message'])
+        .set_message(executable_test['message'])\
+        .set_external_key(executable_test['externalKey'])

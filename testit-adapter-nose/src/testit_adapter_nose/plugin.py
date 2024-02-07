@@ -10,14 +10,20 @@ class TmsPlugin(Plugin):
     commandLineSwitch = (None, 'testit', 'TMS adapter for Nose')
     __listener = None
     __tests_for_launch = None
+    __top_level_directory = None
 
     def __init__(self, *args, **kwargs):
         super(TmsPlugin, self).__init__(*args, **kwargs)
 
+    def handleDir(self, event):
+        if not self.__top_level_directory:
+            self.__top_level_directory = event.topLevelDirectory
+
     def startTestRun(self, event):
         self.__listener = AdapterListener(
             TmsPluginManager.get_adapter_manager(),
-            TmsPluginManager.get_step_manager())
+            TmsPluginManager.get_step_manager(),
+            self.__top_level_directory)
 
         TmsPluginManager.get_plugin_manager().register(self.__listener)
 

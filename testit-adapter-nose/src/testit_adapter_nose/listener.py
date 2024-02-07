@@ -12,9 +12,10 @@ from .utils import (
 class AdapterListener(object):
     __executable_test = None
 
-    def __init__(self, adapter_manager: AdapterManager, step_manager: StepManager):
+    def __init__(self, adapter_manager: AdapterManager, step_manager: StepManager, top_level_directory: str):
         self.__adapter_manager = adapter_manager
         self.__step_manager = step_manager
+        self.__top_level_directory = top_level_directory
 
     def start_launch(self):
         test_run_id = self.__adapter_manager.get_test_run_id()
@@ -25,7 +26,7 @@ class AdapterListener(object):
         return self.__adapter_manager.get_autotests_for_launch()
 
     def start_test(self, test):
-        self.__executable_test = form_test(test)
+        self.__executable_test = form_test(test, self.__top_level_directory)
 
     def set_outcome(self, event):
         outcome, message, trace = get_outcome(event)
