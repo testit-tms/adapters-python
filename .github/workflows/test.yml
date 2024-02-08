@@ -1,0 +1,91 @@
+name: Test
+run-name: "#${{ github.run_number }} test by ${{ github.triggering_actor }}"
+on:
+  pull_request:
+    paths:
+      - "testit-adapter-behave/**"
+      - "testit-adapter-nose/**"
+      - "testit-adapter-pytest/**"
+      - "testit-adapter-robotframework/**"
+      - "testit-python-commons/**"
+      - "requirements.txt"
+  workflow_dispatch:
+env:
+  DOTNET_VERSION: 8
+  GITHUB_PAT: ${{ secrets.SERVICE_ACCOUNT_TOKEN }}
+  PYTHON_VERSION: 3.12
+  TEMP_FILE: tmp/output.txt
+  TMS_ADAPTER_MODE: 1
+  TMS_CERT_VALIDATION: false
+  TMS_PRIVATE_TOKEN: ${{ secrets.TESTIT_PRIVATE_TOKEN }}
+  TMS_URL: ${{ secrets.TESTIT_URL }}
+jobs:
+  test:
+    name: ${{ matrix.project_name }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - adapter_name: testit-adapter-behave
+            configuration_id: BEHAVE_CONFIGURATION_ID
+            project_id: BEHAVE_PROJECT_ID
+            project_name: behave
+            test_command: 'behave -f testit_adapter_behave.formatter:AdapterFormatter'
+          - adapter_name: testit-adapter-nose
+            configuration_id: NOSE_CONFIGURATION_ID
+            project_id: NOSE_PROJECT_ID
+            project_name: nose
+            test_command: 'nose2 --testit'
+          - adapter_name: testit-adapter-pytest
+            configuration_id: PYTEST_CONFIGURATION_ID
+            project_id: PYTEST_PROJECT_ID
+            project_name: pytest
+            test_command: 'pytest --testit'
+          - adapter_name: testit-adapter-robotframework
+            configuration_id: ROBOT_FRAMEWORK_CONFIGURATION_ID
+            project_id: ROBOT_FRAMEWORK_PROJECT_ID
+            project_name: robotFramework
+            test_command: 'robot -v testit tests'
+    env:
+      TMS_CONFIGURATION_ID: ${{ secrets[matrix.configuration_id] }}
+      TMS_PROJECT_ID: ${{ secrets[matrix.project_id] }}
+      TMS_TEST_RUN_NAME: ${{ matrix.project_name }} TestRun
+    steps:
+      - name: Checkout adapters-python
+        uses: actions/checkout@v4
+      - name: Checkout api-validator-dotnet
+        uses: actions/checkout@v4
+        with:
+          repository: testit-tms/api-validator-dotnet
+          token: ${{ env.GITHUB_PAT }}
+          path: api-validator-dotnet
+      - name: Checkout python-examples
+        uses: actions/checkout@v4
+        with:
+          repository: testit-tms/python-examples
+          path: python-examples
+      - name: Setup dotnet
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+      - name: Setup python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: Setup environment
+        run: |
+          pip install testit-cli
+          pip install -r python-examples/${{ matrix.project_name }}/requirements_ci.txt
+          pip install ${{ matrix.adapter_name }}
+      - name: Create TestRun
+        run: |
+          testit testrun create --token ${{ env.TMS_PRIVATE_TOKEN }} --output ${{ env.TEMP_FILE }}
+          echo "TMS_TEST_RUN_ID=$(<${{ env.TEMP_FILE }})" >> $GITHUB_ENV
+      - name: Test
+        run: |
+          cd python-examples/${{ matrix.project_name }}
+          eval "$${{ matrix.test_command }}" || exit 0
+      - name: Validate
+        run: |
+          dotnet test --configuration Release --no-build --logger:"console;verbosity=detailed" api-validator-dotnet

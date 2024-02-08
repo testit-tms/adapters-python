@@ -34,6 +34,7 @@ issue/
 env/
 .env/
 .venv/
+venv/
 /pythonenv*/
 3rdparty/
 .tox
@@ -56,3 +57,5 @@ pip-wheel-metadata/
 
 # pytest debug logs generated via --debug
 pytestdebug.log
+
+.vs/
