@@ -73,20 +73,20 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-      - name: Setup environment
-        run: |
-          dotnet build --configuration Release --property WarningLevel=0 api-validator-dotnet
-          pip install -r python-examples/${{ matrix.project_name }}/requirements_ci.txt
-          pip install ${{ matrix.adapter_name }}
       - name: Create TestRun
         run: |
           pip install testit-cli
           testit testrun create --token ${{ env.TMS_PRIVATE_TOKEN }} --output ${{ env.TEMP_FILE }}
           echo "TMS_TEST_RUN_ID=$(<${{ env.TEMP_FILE }})" >> $GITHUB_ENV
+      - name: Setup environment
+        run: |
+          dotnet build --configuration Release --property WarningLevel=0 api-validator-dotnet
+          pip install -r --force-reinstall python-examples/${{ matrix.project_name }}/requirements_ci.txt
+          pip install --force-reinstall ${{ matrix.adapter_name }}
       - name: Test
         run: |
           cd python-examples/${{ matrix.project_name }}
           eval "${{ matrix.test_command }}" || exit 0
       - name: Validate
         run: |
-          dotnet test --configuration Release --no-build --logger:"console;verbosity=detailed" ../api-validator-dotnet
+          dotnet test --configuration Release --no-build --logger:"console;verbosity=detailed" api-validator-dotnet
