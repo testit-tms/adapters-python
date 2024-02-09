@@ -81,7 +81,7 @@ jobs:
       - name: Setup environment
         run: |
           dotnet build --configuration Release --property WarningLevel=0 api-validator-dotnet
-          pip install -r --force-reinstall python-examples/${{ matrix.project_name }}/requirements_ci.txt
+          pip install -r python-examples/${{ matrix.project_name }}/requirements_ci.txt
           pip install --force-reinstall ${{ matrix.adapter_name }}
       - name: Test
         run: |
