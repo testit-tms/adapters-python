@@ -12,6 +12,9 @@ from testit_python_commons.models.test_result import TestResult
 from testit_python_commons.models.test_result_with_all_fixture_step_results_model import TestResultWithAllFixtureStepResults
 
 
+__ARRAY_TYPES = (frozenset, list, set, tuple,)
+
+
 def form_test(item):
     data = {
         'externalID': __get_external_id_from(item),
@@ -65,11 +68,7 @@ def __get_display_name_from(item):
         return item.function.__doc__ if \
             item.function.__doc__ else item.function.__name__
 
-    params = get_params(item)
-
-    return param_attribute_collector(
-        display_name,
-        params)
+    return collect_parameters_in_string_attribute(display_name, get_all_parameters(item))
 
 
 def __get_external_id_from(item):
@@ -78,11 +77,7 @@ def __get_external_id_from(item):
     if not external_id:
         return get_hash(item.nodeid + item.function.__name__)
 
-    params = get_params(item)
-
-    return param_attribute_collector(
-        external_id,
-        params)
+    return collect_parameters_in_string_attribute(external_id, get_all_parameters(item))
 
 
 def __get_title_from(item):
@@ -91,11 +86,7 @@ def __get_title_from(item):
     if not title:
         return None
 
-    params = get_params(item)
-
-    return param_attribute_collector(
-        title,
-        params)
+    return collect_parameters_in_string_attribute(title, get_all_parameters(item))
 
 
 def __get_description_from(item):
@@ -104,11 +95,7 @@ def __get_description_from(item):
     if not description:
         return None
 
-    params = get_params(item)
-
-    return param_attribute_collector(
-        description,
-        params)
+    return collect_parameters_in_string_attribute(description, get_all_parameters(item))
 
 
 def __get_namespace_from(item):
@@ -117,11 +104,7 @@ def __get_namespace_from(item):
     if not namespace:
         return item.function.__module__
 
-    params = get_params(item)
-
-    return param_attribute_collector(
-        namespace,
-        params)
+    return collect_parameters_in_string_attribute(namespace, get_all_parameters(item))
 
 
 def __get_class_name_from(item):
@@ -135,11 +118,7 @@ def __get_class_name_from(item):
 
         return None
 
-    params = get_params(item)
-
-    return param_attribute_collector(
-        class_name,
-        params)
+    return collect_parameters_in_string_attribute(class_name, get_all_parameters(item))
 
 
 def __get_links_from(item):
@@ -148,11 +127,7 @@ def __get_links_from(item):
     if not links:
         return []
 
-    params = get_params(item)
-
-    return __set_params_in_links(
-        links,
-        params)
+    return __set_parameters_to_links(links, get_all_parameters(item))
 
 
 def __get_parameters_from(item):
@@ -170,37 +145,35 @@ def __get_properties_from(item):
     return None
 
 
-def __set_params_in_links(links, params):
-    if not params:
+def __set_parameters_to_links(links, all_parameters):
+    if not all_parameters:
         return links
 
-    links_with_params = []
+    links_with_parameters = []
 
     for link in links:
-        link_with_params = Link()\
+        links_with_parameters.append(
+            Link()
             .set_url(
-                param_attribute_collector(
+                collect_parameters_in_string_attribute(
                     link.get_url(),
-                    params))\
+                    all_parameters))
             .set_title(
-                param_attribute_collector(
+                collect_parameters_in_string_attribute(
                     link.get_title(),
-                    params) if link.get_title() else None)\
+                    all_parameters) if link.get_title() else None)
             .set_link_type(
-                param_attribute_collector(
+                collect_parameters_in_string_attribute(
                     link.get_link_type(),
-                    params) if link.get_link_type() else None)\
+                    all_parameters) if link.get_link_type() else None)
             .set_description(
-                param_attribute_collector(
+                collect_parameters_in_string_attribute(
                     link.get_description(),
-                    params) if link.get_description() else None)
+                    all_parameters) if link.get_description() else None))
 
-        links_with_params.append(link_with_params)
-
-    return links_with_params
+    return links_with_parameters
 
 
-# TODO: Need refactor
 def __get_labels_from(item):
     test_labels = __search_attribute(item, 'test_labels')
 
@@ -209,95 +182,97 @@ def __get_labels_from(item):
 
     labels = []
 
-    if hasattr(item, 'array_parametrize_mark_id'):
-        for one_label in test_labels:
-            result, param_id = mass_param_attribute_collector(
-                one_label,
-                item.own_markers,
-                item.array_parametrize_mark_id,
-                item.index)
-            if param_id is not None and one_label[1:-1] in \
-                    item.name[(item.name.find('[') + 1):(item.name.rfind(']'))].split(
-                        '-')[param_id]:
-                for label in result:
-                    labels.append({
-                        'name': label
-                    })
-            else:
+    for label in test_labels:
+        result = collect_parameters_in_mass_attribute(
+            label,
+            get_all_parameters(item))
+
+        if isinstance(result, __ARRAY_TYPES):
+            for label in result:
                 labels.append({
-                    'name': result
+                    'name': str(label)
                 })
-    else:
-        for label in test_labels:
+        else:
             labels.append({
-                'name': label
+                'name': str(result)
             })
 
     return labels
 
 
-# TODO: Need refactor
 def __get_work_item_ids_from(item):
     test_workitems_id = __search_attribute(item, 'test_workitems_id')
 
     if not test_workitems_id:
         return []
 
-    if hasattr(item, 'array_parametrize_mark_id'):
-        result, param_id = mass_param_attribute_collector(
-            test_workitems_id[0], item.own_markers,
-            item.array_parametrize_mark_id, item.index)
-        params = get_params(item)
+    all_parameters = get_all_parameters(item)
 
-        if param_id is not None and test_workitems_id[0][1:-1] in params:
-            return map(str, result) if isinstance(result, list) else [str(result)]
+    if not all_parameters:
+        return test_workitems_id
 
-    return test_workitems_id
+    result = collect_parameters_in_mass_attribute(test_workitems_id[0], all_parameters)
+
+    return map(str, result) if isinstance(result, __ARRAY_TYPES) else [str(result)]
 
 
-def param_attribute_collector(attribute, run_param):
-    result = attribute
+def collect_parameters_in_string_attribute(attribute, all_parameters):
     param_keys = re.findall(r"\{(.*?)\}", attribute)
+
     if len(param_keys) > 0:
         for param_key in param_keys:
-            root_key = param_key
-            id_keys = re.findall(r'\[(.*?)\]', param_key)
-            if len(id_keys) == 0:
-                if root_key in run_param:
-                    result = result.replace("{" + root_key + "}", str(run_param[root_key]))
-                else:
-                    logging.error(f"Parameter {root_key} not found")
-            elif len(id_keys) == 1:
-                base_key = root_key.replace("[" + id_keys[0] + "]", "")
-                id_key = id_keys[0].strip("\'\"")
-                if id_key.isdigit() and int(id_key) in range(len(run_param[base_key])):
-                    val_key = int(id_key)
-                elif id_key.isalnum() and not id_key.isdigit() and id_key in run_param[base_key].keys():
-                    val_key = id_key
-                else:
-                    raise SystemExit(f"Not key: {root_key} in run parameters or other keys problem")
-                result = result.replace("{" + root_key + "}", str(run_param[base_key][val_key]))
-            else:
-                raise SystemExit("For type tuple, list, dict) support only one level!")
-    elif len(param_keys) == 0:
-        result = attribute
-    else:
-        raise SystemExit("Collecting parameters error!")
-    return result
+            parameter = get_parameter(param_key, all_parameters)
+
+            if parameter is not None:
+                attribute = attribute.replace("{" + param_key + "}", str(parameter))
+
+    return attribute
 
 
-def mass_param_attribute_collector(attribute, marks, parametrize_id, index):
-    for param_index in parametrize_id:
-        param_names = []
-        for param_name in marks[param_index].args[0].split(','):
-            param_names.append(param_name.strip())
-        if attribute[1:-1] != '' and attribute[1:-1] in param_names:
-            param_id = marks[param_index].args[0].split(', ').index(attribute[1:-1])
-            return marks[param_index].args[1][index][param_id], param_id
-    return attribute, None
+def collect_parameters_in_mass_attribute(attribute, all_parameters):
+    param_keys = re.findall(r"\{(.*?)\}", attribute)
+
+    if len(param_keys) == 1:
+        parameter = get_parameter(param_keys[0], all_parameters)
+
+        if parameter is not None:
+            return parameter
+
+    if len(param_keys) > 1:
+        logging.error(f'(For type tuple, list, set) support only one key!')
+
+    return attribute
 
 
-def get_params(item):
+def get_parameter(key_for_parameter, all_parameters):
+    id_keys_in_parameter = re.findall(r'\[(.*?)\]', key_for_parameter)
+
+    if len(id_keys_in_parameter) > 1:
+        logging.error("(For type tuple, list, set, dict) support only one level!")
+
+        return
+
+    if len(id_keys_in_parameter) == 0:
+        if key_for_parameter not in all_parameters:
+            logging.error(f"Key for parameter {key_for_parameter} not found")
+
+            return
+
+        return all_parameters[key_for_parameter]
+
+    parameter_key = key_for_parameter.replace("[" + id_keys_in_parameter[0] + "]", "")
+    id_key_in_parameter = id_keys_in_parameter[0].strip("\'\"")
+
+    if id_key_in_parameter.isdigit() and int(id_key_in_parameter) in range(len(all_parameters[parameter_key])):
+        return all_parameters[parameter_key][int(id_key_in_parameter)]
+
+    if id_key_in_parameter.isalnum() and id_key_in_parameter in all_parameters[parameter_key].keys():
+        return all_parameters[parameter_key][id_key_in_parameter]
+
+    logging.error(f"Not key: {key_for_parameter} in run parameters or other keys problem")
+
+
+def get_all_parameters(item):
     params = {}
 
     if hasattr(item, 'test_properties'):
