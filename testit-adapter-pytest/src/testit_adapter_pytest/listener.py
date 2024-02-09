@@ -106,8 +106,8 @@ class TmsListener(object):
                         item.array_parametrize_mark_id.append(
                             item.own_markers.index(mark))
 
-            params = utils.get_params(item)
-            item.test_external_id = utils.param_attribute_collector(
+            params = utils.get_all_parameters(item)
+            item.test_external_id = utils.collect_parameters_in_string_attribute(
                 item.test_external_id,
                 params)
 
@@ -135,9 +135,9 @@ class TmsListener(object):
             item.test_displayname = item.function.__doc__ if \
                 item.function.__doc__ else item.function.__name__
         else:
-            params = utils.get_params(item)
+            params = utils.get_all_parameters(item)
 
-            item.test_displayname = utils.param_attribute_collector(
+            item.test_displayname = utils.collect_parameters_in_string_attribute(
                 item.function.test_displayname,
                 params)
 
