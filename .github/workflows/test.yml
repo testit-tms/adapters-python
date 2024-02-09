@@ -75,6 +75,7 @@ jobs:
           python-version: ${{ env.PYTHON_VERSION }}
       - name: Setup environment
         run: |
+          dotnet build --configuration Release --property WarningLevel=0 api-validator-dotnet
           pip install -r python-examples/${{ matrix.project_name }}/requirements_ci.txt
           pip install ${{ matrix.adapter_name }}
       - name: Create TestRun
