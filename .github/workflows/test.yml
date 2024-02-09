@@ -88,4 +88,4 @@ jobs:
           eval "${{ matrix.test_command }}" || exit 0
       - name: Validate
         run: |
-          dotnet test --configuration Release --no-build --logger:"console;verbosity=detailed" api-validator-dotnet
+          dotnet test --configuration Release --no-build --logger:"console;verbosity=detailed" ../api-validator-dotnet
