@@ -25,6 +25,7 @@ class TmsPlugin(Plugin):
         self.__tests_for_launch = self.__listener.get_tests_for_launch()
 
     def startTest(self, event):
+        assert True == False
         self.__listener.start_test(event.test)
 
     def stopTest(self, event):
