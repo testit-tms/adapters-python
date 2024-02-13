@@ -76,10 +76,9 @@ jobs:
       - name: Create TestRun
         run: |
           pip3 install testit-cli
-          pip3 freeze --> uninstall-dependencies.txt
           testit testrun create --token ${{ env.TMS_PRIVATE_TOKEN }} --output ${{ env.TEMP_FILE }}
           echo "TMS_TEST_RUN_ID=$(<${{ env.TEMP_FILE }})" >> $GITHUB_ENV
-          pip3 uninstall -y -r uninstall-dependencies.txt
+          pip3 uninstall -y -r <(pip freeze)
       - name: Setup environment
         run: |
           dotnet build --configuration Release --property WarningLevel=0 api-validator-dotnet
