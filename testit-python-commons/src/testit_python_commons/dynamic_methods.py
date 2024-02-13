@@ -21,6 +21,7 @@ def addLink(url: str, title: str = None, type: str = None, description: str = No
 @adapter_logger
 def addLinks(url: str = None, title: str = None, type: str = None, description: str = None,  # noqa: A002,VNE003,N802
              links: list or tuple = None):
+    logging.warning("LALALALA")
     if hasattr(TmsPluginManager.get_plugin_manager().hook, 'add_link'):
         if url:
             TmsPluginManager.get_plugin_manager().hook \
