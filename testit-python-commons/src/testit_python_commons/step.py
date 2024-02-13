@@ -25,8 +25,6 @@ def step(*args, **kwargs):
 
 
 def get_title(args: tuple, kwargs: dict):
-    logging.error('lalalalalala')
-
     if 'title' in kwargs:
         return kwargs['title']
 
@@ -54,6 +52,7 @@ class StepContext:
         self.__parameters = parameters
 
     def __enter__(self):
+        assert False == True
         self.__start_time = round(datetime.utcnow().timestamp() * 1000)
         self.__step_result = StepResult()
 
