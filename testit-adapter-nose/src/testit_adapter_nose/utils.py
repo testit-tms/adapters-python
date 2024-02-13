@@ -326,6 +326,7 @@ def collect_parameters_in_mass_attribute(attribute, all_parameters):
 
 
 def get_parameter(key_for_parameter, all_parameters):
+    logging.error("LALALALALA")
     id_keys_in_parameter = re.findall(r'\[(.*?)\]', key_for_parameter)
 
     if len(id_keys_in_parameter) > 1:
