@@ -25,6 +25,8 @@ def step(*args, **kwargs):
 
 
 def get_title(args: tuple, kwargs: dict):
+    logging.error('lalalalalala')
+
     if 'title' in kwargs:
         return kwargs['title']
 
