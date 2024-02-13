@@ -85,7 +85,7 @@ jobs:
           dotnet build --configuration Release --property WarningLevel=0 api-validator-dotnet
           pip3 install -r python-examples/${{ matrix.project_name }}/requirements_ci.txt
           pip3 install --force-reinstall ./${{ matrix.adapter_name }}
-          pip3 uninstall testit-python-commons
+          pip3 uninstall testit-python-commons -y
           pip3 install --force-reinstall ./testit-python-commons
       - name: Test
         run: |
