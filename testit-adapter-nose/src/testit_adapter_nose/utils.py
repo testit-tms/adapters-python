@@ -1,7 +1,6 @@
 import hashlib
 import logging
 import re
-import typing
 from traceback import format_exception_only
 from nose2 import (
     util,
@@ -9,9 +8,12 @@ from nose2 import (
 )
 import inspect
 
-from testit_python_commons.models.step_result import StepResult
+from testit_python_commons.models.link import Link
 from testit_python_commons.models.test_result import TestResult
 from testit_python_commons.models.outcome_type import OutcomeType
+
+
+__ARRAY_TYPES = (frozenset, list, set, tuple,)
 
 
 def status_details(event):
@@ -57,31 +59,16 @@ def get_outcome(event):
         outcome = OutcomeType.SKIPPED
         message, trace = status_details(event)
 
-    print(outcome, message, trace)
-
     return outcome, message, trace
 
 
-def form_test(test):
+def form_test(item):
     data = {}
 
-    if hasattr(test, "_testFunc"):
-        item = test._testFunc
-
-        if not hasattr(item, 'test_external_id'):
-            item.test_external_id = get_hash(item.__name__)
-
-        if not hasattr(item, 'test_displayname'):
-            item.test_displayname = item.__doc__ if \
-                item.__doc__ else item.__name__
-        else:
-            item.test_displayname = param_attribute_collector(
-                item.test_displayname,
-                get_params(test))
-
+    if hasattr(item, "_testFunc"):
         data = {
-            'externalID': item.test_external_id,
-            'autoTestName': item.test_displayname,
+            'externalID': __get_external_id_from(item),
+            'autoTestName': __get_display_name_from(item),
             'steps': [],
             'stepResults': [],
             'setUp': [],
@@ -93,143 +80,182 @@ def form_test(test):
             'outcome': None,
             'failureReasonName': None,
             'traces': None,
-            'namespace': item.__module__,
             'attachments': [],
-            'parameters': get_params(test),
-            'properties': get_properties_from(test),
-            'classname': get_classname_from(item),
-            'title': get_title_from(test),
-            'description': get_description_from(test),
-            'links': [],
-            'labels': [],
-            'workItemsID': [],
+            'parameters': get_all_parameters(item),
+            'properties': __get_properties_from(item),
+            'namespace': __get_namespace_from(item),
+            'classname': __get_class_name_from(item),
+            'title': __get_title_from(item),
+            'description': __get_description_from(item),
+            'links': __get_links_from(item),
+            'labels': __get_labels_from(item),
+            'workItemsID': __get_work_item_ids_from(item),
             'message': None
         }
 
-        if hasattr(item, 'test_links'):
-            set_links(test, data)
-
-        if hasattr(item, 'test_labels'):
-            set_labels(item, data)
-
-        if hasattr(item, 'test_workitems_id'):
-            data['workItemsID'] = item.test_workitems_id
-    elif hasattr(test, "_testMethodName"):
+    elif hasattr(item, "_testMethodName"):
         data = {
-            'externalID': get_hash(test._testMethodName),
-            'autoTestName': test.__doc__ if \
-                test.__doc__ else test._testMethodName,
-            'parameters': get_params(test)
+            'externalID': get_hash(item._testMethodName),
+            'autoTestName': item.__doc__ if item.__doc__ else item._testMethodName,
+            'parameters': get_all_parameters(item)
         }
 
     return data
 
 
-def get_properties_from(item):
+def __get_display_name_from(item):
+    display_name = __search_attribute(item, 'test_displayname')
+
+    if not display_name:
+        return item._testFunc.__doc__ if \
+            item._testFunc.__doc__ else item._testFunc.__name__
+
+    return collect_parameters_in_string_attribute(display_name, get_all_parameters(item))
+
+
+def __get_external_id_from(item):
+    external_id = __search_attribute(item, 'test_external_id')
+
+    if not external_id:
+        return get_hash(item._testFunc.__name__)
+
+    return collect_parameters_in_string_attribute(external_id, get_all_parameters(item))
+
+
+def __get_title_from(item):
+    title = __search_attribute(item, 'test_title')
+
+    if not title:
+        return None
+
+    return collect_parameters_in_string_attribute(title, get_all_parameters(item))
+
+
+def __get_description_from(item):
+    description = __search_attribute(item, 'test_description')
+
+    if not description:
+        return None
+
+    return collect_parameters_in_string_attribute(description, get_all_parameters(item))
+
+
+def __get_namespace_from(item):
+    namespace = __search_attribute(item, 'test_namespace')
+
+    if not namespace:
+        return item._testFunc.__module__
+
+    return collect_parameters_in_string_attribute(namespace, get_all_parameters(item))
+
+
+def __get_class_name_from(item):
+    class_name = __search_attribute(item, 'test_classname')
+
+    if not class_name:
+        i = item._testFunc.__qualname__.find('.')
+
+        if i != -1:
+            return item._testFunc.__qualname__[:i]
+
+        return None
+
+    return collect_parameters_in_string_attribute(class_name, get_all_parameters(item))
+
+
+def __get_links_from(item):
+    links = __search_attribute(item, 'test_links')
+
+    if not links:
+        return []
+
+    return __set_parameters_to_links(links, get_all_parameters(item))
+
+
+def __get_parameters_from(item):
+    if hasattr(item, 'array_parametrize_mark_id'):
+        test_parameters = {}
+        for key, parameter in item.callspec.params.items():
+            test_parameters[key] = str(parameter)
+        return test_parameters
+    return None
+
+
+def __get_properties_from(item):
     if hasattr(item, 'test_properties'):
         return item.test_properties
     return None
 
 
-def get_classname_from(item):
-    i = item.__qualname__.find('.')
-    if i != -1:
-        return item.__qualname__[:i]
-    return None
+def __set_parameters_to_links(links, all_parameters):
+    if not all_parameters:
+        return links
+
+    links_with_parameters = []
+
+    for link in links:
+        links_with_parameters.append(
+            Link()
+            .set_url(
+                collect_parameters_in_string_attribute(
+                    link.get_url(),
+                    all_parameters))
+            .set_title(
+                collect_parameters_in_string_attribute(
+                    link.get_title(),
+                    all_parameters) if link.get_title() else None)
+            .set_link_type(
+                collect_parameters_in_string_attribute(
+                    link.get_link_type(),
+                    all_parameters) if link.get_link_type() else None)
+            .set_description(
+                collect_parameters_in_string_attribute(
+                    link.get_description(),
+                    all_parameters) if link.get_description() else None))
+
+    return links_with_parameters
 
 
-def set_links(test, data):
-    item = test._testFunc
-    params = get_params(test)
+def __get_labels_from(item):
+    test_labels = __search_attribute(item, 'test_labels')
 
-    if params:
-        for link in item.test_links:
-            data['links'].append({})
-            data['links'][-1]['url'] = param_attribute_collector(
-                link['url'],
-                params)
-            data['links'][-1]['title'] = param_attribute_collector(
-                link['title'],
-                params) if link['title'] else None
-            data['links'][-1]['type'] = param_attribute_collector(
-                link['type'],
-                params) if link['type'] else None
-            data['links'][-1]['description'] = param_attribute_collector(
-                link['description'],
-                params) if link['description'] else None
-    else:
-        data['links'] = item.test_links
+    if not test_labels:
+        return []
 
+    labels = []
 
-def get_title_from(test):
-    item = test._testFunc
+    for label in test_labels:
+        result = collect_parameters_in_mass_attribute(
+            label,
+            get_all_parameters(item))
 
-    if not hasattr(item, 'test_title'):
-        return None
-
-    params = get_params(test)
-
-    if params:
-        return param_attribute_collector(
-            item.test_title,
-            params)
-    return item.test_title
-
-
-def get_description_from(test):
-    item = test._testFunc
-
-    if not hasattr(item, 'test_description'):
-        return None
-
-    params = get_params(test)
-
-    if params:
-        return param_attribute_collector(
-            item.test_description,
-            params)
-    return item.test_description
-
-
-def set_labels(item, data):
-    if hasattr(item, 'array_parametrize_mark_id'):
-        for one_label in item.test_labels:
-            result, param_id = mass_param_attribute_collector(
-                one_label,
-                item.own_markers,
-                item.array_parametrize_mark_id,
-                item.index)
-            if param_id is not None and one_label[1:-1] in \
-                    item.name[(item.name.find('[') + 1):(item.name.rfind(']'))].split(
-                        '-')[param_id]:
-                for label in result:
-                    data['labels'].append({
-                        'name': label
-                    })
-            else:
-                data['labels'].append({
-                    'name': result
+        if isinstance(result, __ARRAY_TYPES):
+            for label in result:
+                labels.append({
+                    'name': str(label)
                 })
-    else:
-        for label in item.test_labels:
-            data['labels'].append({
-                'name': label
+        else:
+            labels.append({
+                'name': str(result)
             })
 
+    return labels
 
-def set_workitems_id(item, data):
-    if hasattr(item, 'array_parametrize_mark_id'):
-        result, param_id = mass_param_attribute_collector(
-            item.test_workitems_id[0], item.own_markers,
-            item.array_parametrize_mark_id, item.index)
-        if param_id is not None and item.test_workitems_id[0][1:-1] in \
-                item.name[(item.name.find('[') + 1):(item.name.rfind(']'))].split(
-                    '-')[param_id]:
-            data['workItemsID'] = result
-        else:
-            data['workItemsID'] = [result]
-    else:
-        data['workItemsID'] = item.test_workitems_id
+
+def __get_work_item_ids_from(item):
+    test_workitems_id = __search_attribute(item, 'test_workitems_id')
+
+    if not test_workitems_id:
+        return []
+
+    all_parameters = get_all_parameters(item)
+
+    if not all_parameters:
+        return test_workitems_id
+
+    result = collect_parameters_in_mass_attribute(test_workitems_id[0], all_parameters)
+
+    return map(str, result) if isinstance(result, __ARRAY_TYPES) else [str(result)]
 
 
 def fullname(event):
@@ -241,22 +267,28 @@ def fullname(event):
     return test_id.split(":")[0]
 
 
-def get_params(test):
-    def _params(names, values):
-        return {name if name else f"param{values.index(value)}": value for name, value in zip(names, values)}
+def __search_attribute(item, attribute):
+    if hasattr(item._testFunc, attribute):
+        return getattr(item._testFunc, attribute)
 
-    test_id = test.id()
+    return
+
+
+def get_all_parameters(item):
+    def _params(names, values):
+        return {name: str(value) for name, value in zip(names, values)}
+
+    test_id = item.id()
 
     if len(test_id.split("\n")) > 1:
-        if hasattr(test, "_testFunc"):
-            wrapper_arg_spec = inspect.getfullargspec(test._testFunc)
+        if hasattr(item, "_testFunc"):
+            wrapper_arg_spec = inspect.getfullargspec(item._testFunc)
             arg_set, obj = wrapper_arg_spec.defaults
-            test_arg_spec = inspect.getfullargspec(obj)
-            args = test_arg_spec.args
+            args = inspect.signature(obj).parameters.keys()
 
             return _params(args, arg_set)
-        elif hasattr(test, "_testMethodName"):
-            method = getattr(test, test._testMethodName)
+        elif hasattr(item, "_testMethodName"):
+            method = getattr(item, item._testMethodName)
             wrapper_arg_spec = inspect.getfullargspec(method)
             obj, arg_set = wrapper_arg_spec.defaults
             test_arg_spec = inspect.getfullargspec(obj)
@@ -265,46 +297,60 @@ def get_params(test):
             return _params(args[1:], arg_set)
 
 
-def param_attribute_collector(attribute, run_param):
-    result = attribute
+def collect_parameters_in_string_attribute(attribute, all_parameters):
     param_keys = re.findall(r"\{(.*?)\}", attribute)
+
     if len(param_keys) > 0:
         for param_key in param_keys:
-            root_key = param_key
-            id_keys = re.findall(r'\[(.*?)\]', param_key)
-            if len(id_keys) == 0:
-                if root_key in run_param:
-                    result = result.replace("{" + root_key + "}", str(run_param[root_key]))
-                else:
-                    logging.error(f"Parameter {root_key} not found")
-            elif len(id_keys) == 1:
-                base_key = root_key.replace("[" + id_keys[0] + "]", "")
-                id_key = id_keys[0].strip("\'\"")
-                if id_key.isdigit() and int(id_key) in range(len(run_param[base_key])):
-                    val_key = int(id_key)
-                elif id_key.isalnum() and not id_key.isdigit() and id_key in run_param[base_key].keys():
-                    val_key = id_key
-                else:
-                    raise SystemExit(f"Not key: {root_key} in run parameters or other keys problem")
-                result = result.replace("{" + root_key + "}", str(run_param[base_key][val_key]))
-            else:
-                raise SystemExit("For type tuple, list, dict) support only one level!")
-    elif len(param_keys) == 0:
-        result = attribute
-    else:
-        raise SystemExit("Collecting parameters error!")
-    return result
+            parameter = get_parameter(param_key, all_parameters)
+
+            if parameter is not None:
+                attribute = attribute.replace("{" + param_key + "}", str(parameter))
+
+    return attribute
 
 
-def mass_param_attribute_collector(attribute, marks, parametrize_id, index):
-    for param_index in parametrize_id:
-        param_names = []
-        for param_name in marks[param_index].args[0].split(','):
-            param_names.append(param_name.strip())
-        if attribute[1:-1] != '' and attribute[1:-1] in param_names:
-            param_id = marks[param_index].args[0].split(', ').index(attribute[1:-1])
-            return marks[param_index].args[1][index][param_id], param_id
-    return attribute, None
+def collect_parameters_in_mass_attribute(attribute, all_parameters):
+    param_keys = re.findall(r"\{(.*?)\}", attribute)
+
+    if len(param_keys) == 1:
+        parameter = get_parameter(param_keys[0], all_parameters)
+
+        if parameter is not None:
+            return parameter
+
+    if len(param_keys) > 1:
+        logging.error(f'(For type tuple, list, set) support only one key!')
+
+    return attribute
+
+
+def get_parameter(key_for_parameter, all_parameters):
+    id_keys_in_parameter = re.findall(r'\[(.*?)\]', key_for_parameter)
+
+    if len(id_keys_in_parameter) > 1:
+        logging.error("(For type tuple, list, set, dict) support only one level!")
+
+        return
+
+    if len(id_keys_in_parameter) == 0:
+        if key_for_parameter not in all_parameters:
+            logging.error(f"Key for parameter {key_for_parameter} not found")
+
+            return
+
+        return all_parameters[key_for_parameter]
+
+    parameter_key = key_for_parameter.replace("[" + id_keys_in_parameter[0] + "]", "")
+    id_key_in_parameter = id_keys_in_parameter[0].strip("\'\"")
+
+    if id_key_in_parameter.isdigit() and int(id_key_in_parameter) in range(len(all_parameters[parameter_key])):
+        return all_parameters[parameter_key][int(id_key_in_parameter)]
+
+    if id_key_in_parameter.isalnum() and id_key_in_parameter in all_parameters[parameter_key].keys():
+        return all_parameters[parameter_key][id_key_in_parameter]
+
+    logging.error(f"Not key: {key_for_parameter} in run parameters or other keys problem")
 
 
 def get_hash(value: str):

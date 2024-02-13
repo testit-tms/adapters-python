@@ -15,7 +15,7 @@ Status](https://img.shields.io/pypi/v/testit-adapter-pytest?style=plastic)](http
 pip install testit-adapter-pytest
 ```
 
-##
+## Usage
 
 ### Configuration
 

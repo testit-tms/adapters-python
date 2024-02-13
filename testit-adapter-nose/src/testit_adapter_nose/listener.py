@@ -31,8 +31,10 @@ class AdapterListener(object):
         outcome, message, trace = get_outcome(event)
 
         self.__executable_test['outcome'] = outcome
-        self.__executable_test['message'] = message
         self.__executable_test['traces'] = trace
+
+        if not self.__executable_test['message']:
+            self.__executable_test['message'] = message
 
     def stop_test(self):
         test_results_steps = self.__step_manager.get_steps_tree()
