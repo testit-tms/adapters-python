@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import types
 from functools import wraps
@@ -7,8 +8,7 @@ from testit_python_commons.services.utils import Utils
 
 
 def inner(function):
-    @wraps(function)
-    def wrapper(*args, **kwargs):
+    def set_properties(kwargs):
         if not hasattr(function, 'test_properties') and kwargs:
             function.test_properties = {}
 
@@ -16,10 +16,22 @@ def inner(function):
                 if hasattr(function,
                            'callspec') and key not in function.callspec.params:
                     function.test_properties[key] = str(value)
+
+    @wraps(function)
+    def sync_wrapper(*args, **kwargs):
+        set_properties(kwargs)
         function(*args, **kwargs)
 
+    @wraps(function)
+    async def async_wrapper(*args, **kwargs):
+        set_properties(kwargs)
+        await function(*args, **kwargs)
+
     if isinstance(function, types.FunctionType):
-        return wrapper
+        if asyncio.iscoroutinefunction(function):
+            return async_wrapper
+
+        return sync_wrapper
 
     return function
 
