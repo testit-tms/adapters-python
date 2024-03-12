@@ -72,38 +72,38 @@ class AppProperties:
 
         return properties
 
-    @staticmethod
-    def load_cli_properties(option):
+    @classmethod
+    def load_cli_properties(cls, option):
         cli_properties = {}
 
-        if hasattr(option, 'set_url') and option.__check_property_value(option.set_url):
+        if hasattr(option, 'set_url') and cls.__check_property_value(option.set_url):
             cli_properties['url'] = option.set_url
 
-        if hasattr(option, 'set_private_token') and option.__check_property_value(option.set_private_token):
+        if hasattr(option, 'set_private_token') and cls.__check_property_value(option.set_private_token):
             cli_properties['privatetoken'] = option.set_private_token
 
-        if hasattr(option, 'set_project_id') and option.__check_property_value(option.set_project_id):
+        if hasattr(option, 'set_project_id') and cls.__check_property_value(option.set_project_id):
             cli_properties['projectid'] = option.set_project_id
 
-        if hasattr(option, 'set_configuration_id') and option.__check_property_value(option.set_configuration_id):
+        if hasattr(option, 'set_configuration_id') and cls.__check_property_value(option.set_configuration_id):
             cli_properties['configurationid'] = option.set_configuration_id
 
-        if hasattr(option, 'set_test_run_id') and option.__check_property_value(option.set_test_run_id):
+        if hasattr(option, 'set_test_run_id') and cls.__check_property_value(option.set_test_run_id):
             cli_properties['testrunid'] = option.set_test_run_id
 
-        if hasattr(option, 'set_test_run_name') and option.__check_property_value(option.set_test_run_name):
+        if hasattr(option, 'set_test_run_name') and cls.__check_property_value(option.set_test_run_name):
             cli_properties['testrunname'] = option.set_test_run_name
 
-        if hasattr(option, 'set_tms_proxy') and option.__check_property_value(option.set_tms_proxy):
+        if hasattr(option, 'set_tms_proxy') and cls.__check_property_value(option.set_tms_proxy):
             cli_properties['tmsproxy'] = option.set_tms_proxy
 
-        if hasattr(option, 'set_adapter_mode') and option.__check_property_value(option.set_adapter_mode):
+        if hasattr(option, 'set_adapter_mode') and cls.__check_property_value(option.set_adapter_mode):
             cli_properties['adaptermode'] = option.set_adapter_mode
 
-        if hasattr(option, 'set_cert_validation') and option.__check_property_value(option.set_cert_validation):
+        if hasattr(option, 'set_cert_validation') and cls.__check_property_value(option.set_cert_validation):
             cli_properties['certvalidation'] = option.set_cert_validation
 
-        if hasattr(option, 'set_automatic_creation_test_cases') and option.__check_property_value(
+        if hasattr(option, 'set_automatic_creation_test_cases') and cls.__check_property_value(
                 option.set_automatic_creation_test_cases):
             cli_properties['automaticcreationtestcases'] = option.set_automatic_creation_test_cases
 
