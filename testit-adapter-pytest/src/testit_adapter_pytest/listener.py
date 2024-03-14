@@ -199,7 +199,7 @@ class TmsListener(object):
         test_results_steps = self.__step_manager.get_steps_tree()
         self.__executable_test['stepResults'] = test_results_steps
 
-    @pytest.hookimpl
+    @pytest.hookimpl(hookwrapper=True)
     def pytest_fixture_post_finalizer(self, fixturedef):
         if not self.__executable_test:
             return
@@ -208,6 +208,12 @@ class TmsListener(object):
 
         if fixturedef.scope == 'function':
             self.__executable_test['tearDownResults'] += teardown_results_steps
+
+        yield
+
+        if hasattr(fixturedef, 'cached_result') and self._cache.get(fixturedef):
+            group_uuid = self._cache.pop(fixturedef)
+            self.fixture_manager.stop_group(group_uuid)
 
     @pytest.hookimpl
     def pytest_runtest_logreport(self, report):
