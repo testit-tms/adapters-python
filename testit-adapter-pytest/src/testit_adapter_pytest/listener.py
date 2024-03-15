@@ -23,6 +23,42 @@ STATUS = {
 }
 
 
+class ItemCache:
+    def __init__(self):
+        self._items = dict()
+
+    def get(self, _id):
+        return self._items.get(id(_id))
+
+    def push(self, _id):
+        return self._items.setdefault(id(_id), uuid4())
+
+    def pop(self, _id):
+        return self._items.pop(id(_id), None)
+
+
+class SeparationOfTests:
+    def __init__(self):
+        self._selected_items = []
+        self._deselected_items = []
+
+    def add_item_to_selected_items(self, item):
+        self._selected_items.append(item)
+
+        return self
+
+    def add_item_to_deselected_items(self, item):
+        self._deselected_items.append(item)
+
+        return self
+
+    def get_selected_items(self) -> list:
+        return self._selected_items
+
+    def get_deselected_items(self) -> list:
+        return self._deselected_items
+
+
 class TmsListener(object):
     __executable_test = None
     __pytest_check_info = None
@@ -68,17 +104,16 @@ class TmsListener(object):
     def pytest_collection_modifyitems(self, config, items):
         self.__add_pytest_check_info(config.pluginmanager.list_plugin_distinfo())
 
-        deselected_items = []
         resolved_autotests = self.__adapter_manager.get_autotests_for_launch()
-        selected_items = self.__get_selected_items(items, resolved_autotests)
+        separation_of_tests = self.__get_separation_of_tests(items, resolved_autotests)
 
         if resolved_autotests:
-            if not selected_items:
+            if not separation_of_tests.get_selected_items():
                 print('The specified tests were not found!')
                 raise SystemExit
 
-            config.hook.pytest_deselected(items=deselected_items)
-            items[:] = selected_items
+            config.hook.pytest_deselected(items=separation_of_tests.get_deselected_items())
+            items[:] = separation_of_tests.get_selected_items()
 
     def __add_pytest_check_info(self, plugin_info):
         for plugin, dist in plugin_info:
@@ -88,8 +123,8 @@ class TmsListener(object):
 
     @classmethod
     @adapter_logger
-    def __get_selected_items(cls, items, resolved_autotests) -> list:
-        selected_items = []
+    def __get_separation_of_tests(cls, items, resolved_autotests) -> SeparationOfTests:
+        separation_of_tests = SeparationOfTests()
         index = 0
 
         for item in items:
@@ -117,9 +152,11 @@ class TmsListener(object):
                 else 0
 
             if cls.__check_external_id_in_resolved_autotests(item.test_external_id, resolved_autotests):
-                selected_items.append(item)
+                separation_of_tests.add_item_to_selected_items(item)
+            else:
+                separation_of_tests.add_item_to_deselected_items(item)
 
-        return selected_items
+        return separation_of_tests
 
     @staticmethod
     @adapter_logger
@@ -300,20 +337,6 @@ class TmsListener(object):
                 self.fixture_manager.start_group(group_uuid, group)
             if item.test_external_id not in group.external_ids:
                 self.fixture_manager.update_group(group_uuid, external_ids=item.test_external_id)
-
-
-class ItemCache:
-    def __init__(self):
-        self._items = dict()
-
-    def get(self, _id):
-        return self._items.get(id(_id))
-
-    def push(self, _id):
-        return self._items.setdefault(id(_id), uuid4())
-
-    def pop(self, _id):
-        return self._items.pop(id(_id), None)
 
 
 def _test_fixtures(item):
