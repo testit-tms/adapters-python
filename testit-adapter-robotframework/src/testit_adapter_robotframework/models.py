@@ -147,7 +147,7 @@ class Autotest(Default):
                 else:
                     logger.error(f"[TestIt] Unknown attribute: {attr}")
         if not self.externalID:
-            self.externalID = get_hash(attrs['longname'].split('.', 1)[-1])
+            self.externalID = get_hash(attrs['longname'])
 
     def add_step(self, step_type, title, description, parameters):
         if len(self.step_depth) == 0:

@@ -128,10 +128,8 @@ class TmsListener(object):
         index = 0
 
         for item in items:
-            if hasattr(item.function, 'test_external_id'):
-                item.test_external_id = item.function.test_external_id
-            else:
-                item.test_external_id = utils.get_hash(item.nodeid + item.function.__name__)
+            if not hasattr(item.function, 'test_external_id'):
+                item.function.test_external_id = utils.get_hash(item.parent.nodeid + item.function.__name__)
 
             if item.own_markers:
                 for mark in item.own_markers:
@@ -142,8 +140,8 @@ class TmsListener(object):
                             item.own_markers.index(mark))
 
             params = utils.get_all_parameters(item)
-            item.test_external_id = utils.collect_parameters_in_string_attribute(
-                item.test_external_id,
+            item.function.test_external_id = utils.collect_parameters_in_string_attribute(
+                item.function.test_external_id,
                 params)
 
             item.index = index
@@ -151,7 +149,7 @@ class TmsListener(object):
             index = index + 1 if len(items) > item_id + 1 and items[item_id + 1].originalname == item.originalname \
                 else 0
 
-            if cls.__check_external_id_in_resolved_autotests(item.test_external_id, resolved_autotests):
+            if cls.__check_external_id_in_resolved_autotests(item.function.test_external_id, resolved_autotests):
                 separation_of_tests.add_item_to_selected_items(item)
             else:
                 separation_of_tests.add_item_to_deselected_items(item)
@@ -165,19 +163,6 @@ class TmsListener(object):
 
     @pytest.hookimpl(tryfirst=True)
     def pytest_runtest_protocol(self, item):
-        if not hasattr(item.function, 'test_external_id'):
-            item.test_external_id = utils.get_hash(item.nodeid + item.function.__name__)
-
-        if not hasattr(item.function, 'test_displayname'):
-            item.test_displayname = item.function.__doc__ if \
-                item.function.__doc__ else item.function.__name__
-        else:
-            params = utils.get_all_parameters(item)
-
-            item.test_displayname = utils.collect_parameters_in_string_attribute(
-                item.function.test_displayname,
-                params)
-
         self.__executable_test = utils.form_test(item)
 
     @pytest.hookimpl(hookwrapper=True)
@@ -335,8 +320,8 @@ class TmsListener(object):
                 group_uuid = self._cache.push(fixturedef)
                 group = FixturesContainer(uuid=group_uuid)
                 self.fixture_manager.start_group(group_uuid, group)
-            if item.test_external_id not in group.external_ids:
-                self.fixture_manager.update_group(group_uuid, external_ids=item.test_external_id)
+            if item.function.test_external_id not in group.external_ids:
+                self.fixture_manager.update_group(group_uuid, external_ids=item.function.test_external_id)
 
 
 def _test_fixtures(item):
