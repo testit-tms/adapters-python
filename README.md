@@ -18,4 +18,4 @@ Supported test frameworks :
 
 # 🚀 Warning
 Since 3.0.0 version:
-- If the externalId annotation is not specified, then its contents will be a hash of the file name, the name of the test class and the name of the test method.
+- If the externalId annotation is not specified, then its contents will be a hash of a fully qualified method name.
