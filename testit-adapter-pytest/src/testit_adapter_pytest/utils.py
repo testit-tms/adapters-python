@@ -75,7 +75,7 @@ def __get_external_id_from(item):
     external_id = __search_attribute(item, 'test_external_id')
 
     if not external_id:
-        return get_hash(item.nodeid + item.function.__name__)
+        return get_hash(item.parent.nodeid + item.function.__name__)
 
     return collect_parameters_in_string_attribute(external_id, get_all_parameters(item))
 
