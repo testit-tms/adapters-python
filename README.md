@@ -15,3 +15,7 @@ Supported test frameworks :
  2. [Behave](https://github.com/testit-tms/adapters-python/tree/main/testit-adapter-behave)
  3. [RobotFramework](https://github.com/testit-tms/adapters-python/tree/main/testit-adapter-robotframework)
  4. [Nose](https://github.com/testit-tms/adapters-python/tree/main/testit-adapter-nose) 
+
+# 🚀 Warning
+Since 3.0.0 version:
+- If the externalId annotation is not specified, then its contents will be a hash of the file name, the name of the test class and the name of the test method.
