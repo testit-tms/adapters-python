@@ -11,54 +11,44 @@ from testit_python_commons.models.link import Link
 from testit_python_commons.models.test_result import TestResult
 from testit_python_commons.models.test_result_with_all_fixture_step_results_model import TestResultWithAllFixtureStepResults
 
+from testit_adapter_pytest.models.executable_test import ExecutableTest
+
 
 __ARRAY_TYPES = (frozenset, list, set, tuple,)
 
 
-def form_test(item):
-    data = {
-        'externalID': __get_external_id_from(item),
-        'autoTestName': __get_display_name_from(item),
-        'steps': [],
-        'stepResults': [],
-        'setUp': [],
-        'setUpResults': [],
-        'tearDown': [],
-        'tearDownResults': [],
-        'resultLinks': [],
-        'duration': 0,
-        'outcome': None,
-        'failureReasonName': None,
-        'traces': None,
-        'attachments': [],
-        'parameters': __get_parameters_from(item),
-        'properties': __get_properties_from(item),
-        'namespace': __get_namespace_from(item),
-        'classname': __get_class_name_from(item),
-        'title': __get_title_from(item),
-        'description': __get_description_from(item),
-        'links': __get_links_from(item),
-        'labels': __get_labels_from(item),
-        'workItemsID': __get_work_item_ids_from(item),
-        'message': None
-    }
+def form_test(item) -> ExecutableTest:
+    executable_test = ExecutableTest(
+        external_id=__get_external_id_from(item),
+        name=__get_display_name_from(item),
+        duration=0,
+        parameters=__get_parameters_from(item),
+        properties=__get_properties_from(item),
+        namespace=__get_namespace_from(item),
+        classname=__get_class_name_from(item),
+        title=__get_title_from(item),
+        description=__get_description_from(item),
+        links=__get_links_from(item),
+        labels=__get_labels_from(item),
+        work_item_ids=__get_work_item_ids_from(item),
+        node_id=item.nodeid
+    )
 
     if item.own_markers:
         for mark in item.own_markers:
             if mark.name == 'skip' or mark.name == 'skipif':
-                data['outcome'] = 'Skipped'
-                data['failureReasonName'] = None
+                executable_test.outcome = 'Skipped'
                 if mark.args:
-                    data['message'] = mark.args[0]
+                    executable_test.message = mark.args[0]
                 if mark.kwargs and 'reason' in mark.kwargs:
-                    data['message'] = mark.kwargs['reason']
+                    executable_test.message = mark.kwargs['reason']
             if mark.name == 'xfail':
                 if mark.args:
-                    data['message'] = mark.args[0]
+                    executable_test.message = mark.args[0]
                 if mark.kwargs and 'reason' in mark.kwargs:
-                    data['message'] = mark.kwargs['reason']
+                    executable_test.message = mark.kwargs['reason']
 
-    return data
+    return executable_test
 
 
 def __get_display_name_from(item):
@@ -131,7 +121,7 @@ def __get_links_from(item):
 
 
 def __get_parameters_from(item):
-    if hasattr(item, 'array_parametrize_mark_id'):
+    if hasattr(item, 'callspec'):
         test_parameters = {}
         for key, parameter in item.callspec.params.items():
             test_parameters[key] = str(parameter)
@@ -299,28 +289,28 @@ def get_hash(value: str):
     return md.hexdigest()
 
 
-def convert_executable_test_to_test_result_model(executable_test: dict) -> TestResult:
+def convert_executable_test_to_test_result_model(executable_test: ExecutableTest) -> TestResult:
     return TestResult()\
-        .set_external_id(executable_test['externalID'])\
-        .set_autotest_name(executable_test['autoTestName'])\
-        .set_step_results(executable_test['stepResults'])\
-        .set_setup_results(executable_test['setUpResults'])\
-        .set_teardown_results(executable_test['tearDownResults'])\
-        .set_duration(executable_test['duration'])\
-        .set_outcome(executable_test['outcome'])\
-        .set_traces(executable_test['traces'])\
-        .set_attachments(executable_test['attachments'])\
-        .set_parameters(executable_test['parameters'])\
-        .set_properties(executable_test['properties'])\
-        .set_namespace(executable_test['namespace'])\
-        .set_classname(executable_test['classname'])\
-        .set_title(executable_test['title'])\
-        .set_description(executable_test['description'])\
-        .set_links(executable_test['links'])\
-        .set_result_links(executable_test['resultLinks'])\
-        .set_labels(executable_test['labels'])\
-        .set_work_item_ids(executable_test['workItemsID'])\
-        .set_message(executable_test['message'])
+        .set_external_id(executable_test.external_id)\
+        .set_autotest_name(executable_test.name)\
+        .set_step_results(executable_test.step_results)\
+        .set_setup_results(executable_test.setup_step_results)\
+        .set_teardown_results(executable_test.teardown_step_results)\
+        .set_duration(executable_test.duration)\
+        .set_outcome(executable_test.outcome)\
+        .set_traces(executable_test.traces)\
+        .set_attachments(executable_test.attachments)\
+        .set_parameters(executable_test.parameters)\
+        .set_properties(executable_test.properties)\
+        .set_namespace(executable_test.namespace)\
+        .set_classname(executable_test.classname)\
+        .set_title(executable_test.title)\
+        .set_description(executable_test.description)\
+        .set_links(executable_test.links)\
+        .set_result_links(executable_test.result_links)\
+        .set_labels(executable_test.labels)\
+        .set_work_item_ids(executable_test.work_item_ids)\
+        .set_message(executable_test.message)
 
 
 def fixtures_containers_to_test_results_with_all_fixture_step_results(
@@ -328,11 +318,11 @@ def fixtures_containers_to_test_results_with_all_fixture_step_results(
         test_result_ids: dict) -> typing.List[TestResultWithAllFixtureStepResults]:
     test_results_with_all_fixture_step_results = []
 
-    for external_id, test_result_id in test_result_ids.items():
+    for node_id, test_result_id in test_result_ids.items():
         test_result_with_all_fixture_step_results = TestResultWithAllFixtureStepResults(test_result_id)
 
         for uuid, fixtures_container in fixtures_containers.items():
-            if external_id in fixtures_container.external_ids:
+            if node_id in fixtures_container.node_ids:
                 if fixtures_container.befores:
                     test_result_with_all_fixture_step_results.set_setup_results(fixtures_container.befores[0].steps)
 
