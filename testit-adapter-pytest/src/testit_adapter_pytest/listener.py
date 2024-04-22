@@ -207,12 +207,6 @@ class TmsListener(object):
             name = f'{fixture_name}::{finalizer_name}'
             finalizers[index] = FixtureContext(finalizer, parent_uuid=container_uuid, name=name)
 
-        if self.__executable_test:
-            results_steps_data = self.__step_manager.get_steps_tree()
-
-            if fixturedef.scope == 'function':
-                self.__executable_test['setUpResults'] += results_steps_data
-
     @pytest.hookimpl(hookwrapper=True, trylast=True)
     def pytest_runtest_call(self):
         yield
@@ -221,17 +215,12 @@ class TmsListener(object):
             return
 
         test_results_steps = self.__step_manager.get_steps_tree()
-        self.__executable_test['stepResults'] = test_results_steps
+        self.__executable_test.step_results = test_results_steps
 
     @pytest.hookimpl(hookwrapper=True)
     def pytest_fixture_post_finalizer(self, fixturedef):
         if not self.__executable_test:
             return
-
-        teardown_results_steps = self.__step_manager.get_steps_tree()
-
-        if fixturedef.scope == 'function':
-            self.__executable_test['tearDownResults'] += teardown_results_steps
 
         yield
 
@@ -243,28 +232,28 @@ class TmsListener(object):
     def pytest_runtest_logreport(self, report):
         if self.__executable_test:
             if report.when == 'setup':
-                self.__executable_test['outcome'] = STATUS.get(report.outcome, None)
+                self.__executable_test.outcome = STATUS.get(report.outcome, None)
                 if report.longreprtext:
-                    self.__executable_test['message'] = report.longreprtext
+                    self.__executable_test.message = report.longreprtext
 
             if report.when == 'call':
-                self.__executable_test['outcome'] = STATUS.get(report.outcome, None)
+                self.__executable_test.outcome = STATUS.get(report.outcome, None)
 
             if report.failed or hasattr(report, 'wasxfail') \
                     and not report.passed or report.outcome == 'rerun':
-                self.__executable_test['outcome'] = STATUS.get('failed', None)
+                self.__executable_test.outcome = STATUS.get('failed', None)
 
                 if report.longreprtext:
-                    self.__executable_test['traces'] = report.longreprtext
+                    self.__executable_test.traces = report.longreprtext
 
-            self.__executable_test['duration'] += report.duration * 1000
+            self.__executable_test.duration += report.duration * 1000
 
     @pytest.hookimpl
     def pytest_runtest_logfinish(self):
         if not self.__executable_test:
             return
 
-        self.__test_result_ids[self.__executable_test['externalID']] = self.__adapter_manager.write_test(
+        self.__test_result_ids[self.__executable_test.node_id] = self.__adapter_manager.write_test(
             utils.convert_executable_test_to_test_result_model(self.__executable_test))
 
     @pytest.hookimpl
@@ -281,22 +270,22 @@ class TmsListener(object):
     @adapter.hookimpl
     def add_link(self, link):
         if self.__executable_test:
-            self.__executable_test['resultLinks'].append(link)
+            self.__executable_test.result_links.append(link)
 
     @adapter.hookimpl
     def add_message(self, test_message):
         if self.__executable_test:
-            self.__executable_test['message'] = str(test_message)
+            self.__executable_test.message = str(test_message)
 
     @adapter.hookimpl
     def add_attachments(self, attach_paths: list or tuple):
         if self.__executable_test:
-            self.__executable_test['attachments'] += self.__adapter_manager.load_attachments(attach_paths)
+            self.__executable_test.attachments += self.__adapter_manager.load_attachments(attach_paths)
 
     @adapter.hookimpl
     def create_attachment(self, body, name: str):
         if self.__executable_test:
-            self.__executable_test['attachments'] += self.__adapter_manager.create_attachment(body, name)
+            self.__executable_test.attachments += self.__adapter_manager.create_attachment(body, name)
 
     @adapter.hookimpl
     def start_fixture(self, parent_uuid, uuid, title):
@@ -322,8 +311,8 @@ class TmsListener(object):
                 group_uuid = self._cache.push(fixturedef)
                 group = FixturesContainer(uuid=group_uuid)
                 self.fixture_manager.start_group(group_uuid, group)
-            if item.test_external_id not in group.external_ids:
-                self.fixture_manager.update_group(group_uuid, external_ids=item.test_external_id)
+            if item.nodeid not in group.node_ids:
+                self.fixture_manager.update_group(group_uuid, node_ids=item.nodeid)
 
 
 def _test_fixtures(item):
