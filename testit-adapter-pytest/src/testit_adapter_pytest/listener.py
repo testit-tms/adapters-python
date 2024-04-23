@@ -1,4 +1,5 @@
 import pickle
+from importlib.metadata import metadata
 from uuid import uuid4
 
 from packaging import version
@@ -61,6 +62,7 @@ class SeparationOfTests:
 
 class TmsListener(object):
     __executable_test = None
+    __pytest_info = None
     __pytest_check_info = None
     __failures = None
 
@@ -73,6 +75,8 @@ class TmsListener(object):
 
     @pytest.hookimpl
     def pytest_configure(self, config):
+        self.__pytest_info = metadata("pytest")
+
         if not hasattr(config, "workerinput") and not hasattr(self, "test_run_id"):
             config.test_run_id = self.__adapter_manager.get_test_run_id()
         else:
@@ -303,7 +307,7 @@ class TmsListener(object):
                                                 stacktrace=utils.get_traceback(exc_tb))
 
     def _update_fixtures_external_ids(self, item):
-        for fixturedef in _test_fixtures(item):
+        for fixturedef in self._test_fixtures(item):
             group_uuid = self._cache.get(fixturedef)
             if group_uuid:
                 group = self.fixture_manager.get_item(group_uuid)
@@ -314,15 +318,18 @@ class TmsListener(object):
             if item.nodeid not in group.node_ids:
                 self.fixture_manager.update_group(group_uuid, node_ids=item.nodeid)
 
+    def _test_fixtures(self, item):
+        fixturemanager = item.session._fixturemanager
+        fixturedefs = []
 
-def _test_fixtures(item):
-    fixturemanager = item.session._fixturemanager
-    fixturedefs = []
+        if hasattr(item, "_request") and hasattr(item._request, "fixturenames"):
+            for name in item._request.fixturenames:
+                if self.__pytest_info and version.parse(self.__pytest_info["version"]) >= version.parse("8.1.0"):
+                    fixturedefs_pytest = fixturemanager.getfixturedefs(name, item)
+                else:
+                    fixturedefs_pytest = fixturemanager.getfixturedefs(name, item.nodeid)
 
-    if hasattr(item, "_request") and hasattr(item._request, "fixturenames"):
-        for name in item._request.fixturenames:
-            fixturedefs_pytest = fixturemanager.getfixturedefs(name, item.nodeid)
-            if fixturedefs_pytest:
-                fixturedefs.extend(fixturedefs_pytest)
+                if fixturedefs_pytest:
+                    fixturedefs.extend(fixturedefs_pytest)
 
-    return fixturedefs
+        return fixturedefs
