@@ -3,6 +3,8 @@ import logging
 import os
 import re
 import warnings
+import uuid
+from urllib.parse import urlparse
 
 from testit_python_commons.models.adapter_mode import AdapterMode
 
@@ -156,19 +158,25 @@ class AppProperties:
 
         return env_properties
 
-    @staticmethod
-    def __check_properties(properties: dict):
+    @classmethod
+    def __check_properties(cls, properties: dict):
         adapter_mode = properties.get('adaptermode')
 
         if adapter_mode == AdapterMode.NEW_TEST_RUN:
-            if properties.get('projectid') is None:
-                logging.error('Adapter mode "2" is enabled. The project ID is needed, but it was not found!')
+            try:
+                uuid.UUID(str(properties.get('testrunid')))
+                logging.error('Adapter mode "2" is enabled. Config should not contains test run id!')
                 raise SystemExit
+            except ValueError:
+                pass
+
         elif adapter_mode in (
                 AdapterMode.RUN_ALL_TESTS,
                 AdapterMode.USE_FILTER,
                 None):
-            if properties.get('testrunid') is None:
+            try:
+                uuid.UUID(str(properties.get('testrunid')))
+            except ValueError:
                 logging.error(f'Adapter mode "{adapter_mode if adapter_mode else "0"}" is enabled. '
                               f'The test run ID is needed, but it was not found!')
                 raise SystemExit
@@ -176,26 +184,35 @@ class AppProperties:
             logging.error(f'Unknown adapter mode "{adapter_mode}"!')
             raise SystemExit
 
-        if properties.get('url') is None:
-            logging.error('URL was not found!')
+        try:
+            uuid.UUID(str(properties.get('projectid')))
+        except ValueError:
+            logging.error('Project ID was not found!')
             raise SystemExit
 
-        if properties.get('privatetoken') is None:
+        try:
+            url = urlparse(properties.get('url'))
+            if not all([url.scheme, url.netloc]):
+                raise AttributeError
+        except AttributeError:
+            logging.error('URL is invalid!')
+            raise SystemExit
+
+        if not cls.__check_property_value(properties.get('privatetoken')):
             logging.error('Private token was not found!')
             raise SystemExit
 
-        if properties.get('configurationid') is None:
+        try:
+            uuid.UUID(str(properties.get('configurationid')))
+        except ValueError:
             logging.error('Configuration ID was not found!')
             raise SystemExit
 
-        if properties.get('testrunname'):
-            properties['testrunname'] = properties['testrunname']
+        if not cls.__check_property_value(properties.get('certvalidation')):
+            properties['certvalidation'] = 'true'
 
-        if properties.get('certvalidation'):
-            properties['certvalidation'] = properties['certvalidation'].lower()
-
-        if properties.get('automaticcreationtestcases'):
-            properties['automaticcreationtestcases'] = properties['automaticcreationtestcases'].lower()
+        if not cls.__check_property_value(properties.get('automaticcreationtestcases')):
+            properties['automaticcreationtestcases'] = 'false'
 
     @staticmethod
     def __search_in_environ(var_name: str):
