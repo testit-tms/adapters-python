@@ -187,7 +187,7 @@ class AppProperties:
         try:
             uuid.UUID(str(properties.get('projectid')))
         except ValueError:
-            logging.error('Project ID ID was not found!')
+            logging.error('Project ID was not found!')
             raise SystemExit
 
         try:
