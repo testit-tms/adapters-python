@@ -14,30 +14,42 @@ from testit_api_client.models import (
 from testit_python_commons.client.client_configuration import ClientConfiguration
 from testit_python_commons.client.converter import Converter
 from testit_python_commons.models.test_result import TestResult
-from testit_python_commons.models.test_result_with_all_fixture_step_results_model import TestResultWithAllFixtureStepResults
+from testit_python_commons.models.test_result_with_all_fixture_step_results_model import \
+    TestResultWithAllFixtureStepResults
 from testit_python_commons.services.logger import adapter_logger
+from testit_python_commons.services.retry import retry
 
 
 class ApiClientWorker:
     def __init__(self, config: ClientConfiguration):
-        client_config = Configuration(host=config.get_url())
-
-        if config.get_cert_validation() == 'false':
-            client_config.verify_ssl = False
-
-        client_config.proxy = config.get_proxy()
-
-        api_client = ApiClient(
-            configuration=client_config,
-            header_name='Authorization',
-            header_value='PrivateToken ' + config.get_private_token()
-        )
-        self.__config = config
+        api_client_config = self.__get_api_client_configuration(
+            url=config.get_url(),
+            verify_ssl=config.get_cert_validation() != 'false',
+            proxy=config.get_proxy())
+        api_client = self.__get_api_client(api_client_config, config.get_private_token())
 
         self.__test_run_api = TestRunsApi(api_client=api_client)
         self.__autotest_api = AutoTestsApi(api_client=api_client)
         self.__attachments_api = AttachmentsApi(api_client=api_client)
         self.__test_results_api = TestResultsApi(api_client=api_client)
+        self.__config = config
+
+    @staticmethod
+    @adapter_logger
+    def __get_api_client_configuration(url: str, verify_ssl: bool = True, proxy: str = None) -> Configuration:
+        api_client_configuration = Configuration(host=url)
+        api_client_configuration.verify_ssl = verify_ssl
+        api_client_configuration.proxy = proxy
+
+        return api_client_configuration
+
+    @staticmethod
+    @adapter_logger
+    def __get_api_client(api_client_config: Configuration, token: str) -> ApiClient:
+        return ApiClient(
+            configuration=api_client_config,
+            header_name='Authorization',
+            header_value='PrivateToken ' + token)
 
     @adapter_logger
     def create_test_run(self):
@@ -76,15 +88,34 @@ class ApiClientWorker:
             self.__update_test(test_result, autotest[0]['is_flaky'])
 
             autotest_global_id = autotest[0]['id']
-
-            self.__autotest_api.delete_auto_test_link_from_work_item(id=autotest_global_id)
         else:
             autotest_global_id = self.__create_test(test_result)
 
         if autotest_global_id:
-            self.__link_test_to_work_item(autotest_global_id, test_result.get_work_item_ids())
+            self.__update_autotest_link_from_work_items(autotest_global_id, test_result.get_work_item_ids())
 
         return self.__load_test_result(test_result)
+
+    @adapter_logger
+    def __get_work_items_linked_to_autotest(self, autotest_global_id: str) -> list:
+        return self.__autotest_api.get_work_items_linked_to_auto_test(id=autotest_global_id)
+
+    @adapter_logger
+    def __update_autotest_link_from_work_items(self, autotest_global_id: str, work_item_ids: list):
+        linked_work_items = self.__get_work_items_linked_to_autotest(autotest_global_id)
+
+        for linked_work_item in linked_work_items:
+            linked_work_item_id = str(linked_work_item['global_id'])
+
+            if linked_work_item_id in work_item_ids:
+                work_item_ids.remove(linked_work_item_id)
+
+                continue
+
+            self.__unlink_test_to_work_item(autotest_global_id, linked_work_item_id)
+
+        for work_item_id in work_item_ids:
+            self.__link_test_to_work_item(autotest_global_id, work_item_id)
 
     @adapter_logger
     def __create_test(self, test_result: TestResult) -> str:
@@ -114,16 +145,22 @@ class ApiClientWorker:
         logging.debug(f'Autotest "{test_result.get_autotest_name()}" was updated')
 
     @adapter_logger
-    def __link_test_to_work_item(self, autotest_global_id: str, work_item_ids: list):
-        for work_item_id in work_item_ids:
-            try:
-                self.__autotest_api.link_auto_test_to_work_item(
-                    autotest_global_id,
-                    link_auto_test_to_work_item_request=LinkAutoTestToWorkItemRequest(id=work_item_id))
+    @retry
+    def __unlink_test_to_work_item(self, autotest_global_id: str, work_item_id: str):
+        self.__autotest_api.delete_auto_test_link_from_work_item(
+            id=autotest_global_id,
+            work_item_id=work_item_id)
 
-                logging.debug(f'Autotest was linked with workItem "{work_item_id}" by global id "{autotest_global_id}')
-            except Exception as exc:
-                logging.error(f'Link with workItem "{work_item_id}" by global id "{autotest_global_id}" status: {exc}')
+        logging.debug(f'Autotest was unlinked with workItem "{work_item_id}" by global id "{autotest_global_id}')
+
+    @adapter_logger
+    @retry
+    def __link_test_to_work_item(self, autotest_global_id: str, work_item_id: str):
+        self.__autotest_api.link_auto_test_to_work_item(
+            autotest_global_id,
+            link_auto_test_to_work_item_request=LinkAutoTestToWorkItemRequest(id=work_item_id))
+
+        logging.debug(f'Autotest was linked with workItem "{work_item_id}" by global id "{autotest_global_id}')
 
     @adapter_logger
     def __load_test_result(self, test_result: TestResult) -> str:
