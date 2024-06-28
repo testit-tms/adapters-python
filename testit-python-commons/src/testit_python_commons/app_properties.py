@@ -109,6 +109,10 @@ class AppProperties:
                 option.set_automatic_creation_test_cases):
             cli_properties['automaticcreationtestcases'] = option.set_automatic_creation_test_cases
 
+        if hasattr(option, 'set_automatic_updation_links_to_test_cases') and cls.__check_property_value(
+                option.set_automatic_updation_links_to_test_cases):
+            cli_properties['automaticupdationlinkstotestcases'] = option.set_automatic_updation_links_to_test_cases
+
         return cli_properties
 
     @classmethod
@@ -155,6 +159,11 @@ class AppProperties:
                 os.environ.get(f'{cls.__env_prefix}_AUTOMATIC_CREATION_TEST_CASES')):
             env_properties['automaticcreationtestcases'] = os.environ.get(
                 f'{cls.__env_prefix}_AUTOMATIC_CREATION_TEST_CASES')
+
+        if f'{cls.__env_prefix}_AUTOMATIC_UPDATION_LINKS_TO_TEST_CASES' in os.environ.keys() and cls.__check_property_value(
+                os.environ.get(f'{cls.__env_prefix}_AUTOMATIC_UPDATION_LINKS_TO_TEST_CASES')):
+            env_properties['automaticupdationlinkstotestcases'] = os.environ.get(
+                f'{cls.__env_prefix}_AUTOMATIC_UPDATION_LINKS_TO_TEST_CASES')
 
         return env_properties
 
@@ -213,6 +222,9 @@ class AppProperties:
 
         if not cls.__check_property_value(properties.get('automaticcreationtestcases')):
             properties['automaticcreationtestcases'] = 'false'
+
+        if not cls.__check_property_value(properties.get('automaticupdationlinkstotestcases')):
+            properties['automaticupdationlinkstotestcases'] = 'false'
 
     @staticmethod
     def __search_in_environ(var_name: str):
