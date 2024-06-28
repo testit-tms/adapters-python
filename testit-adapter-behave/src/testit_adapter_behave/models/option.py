@@ -13,3 +13,6 @@ class Option(object):
     set_tms_proxy = attrib(default=None)
     set_adapter_mode = attrib(default=None)
     set_config_file = attrib(default=None)
+    set_cert_validation = attrib(default=None)
+    set_automatic_creation_test_cases = attrib(default=None)
+    set_automatic_updation_links_to_test_cases = attrib(default=None)

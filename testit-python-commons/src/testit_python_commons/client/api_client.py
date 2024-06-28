@@ -102,6 +102,7 @@ class ApiClientWorker:
 
     @adapter_logger
     def __update_autotest_link_from_work_items(self, autotest_global_id: str, work_item_ids: list):
+
         linked_work_items = self.__get_work_items_linked_to_autotest(autotest_global_id)
 
         for linked_work_item in linked_work_items:
@@ -112,7 +113,8 @@ class ApiClientWorker:
 
                 continue
 
-            self.__unlink_test_to_work_item(autotest_global_id, linked_work_item_id)
+            if self.__config.get_automatic_updation_links_to_test_cases() != 'false':
+                self.__unlink_test_to_work_item(autotest_global_id, linked_work_item_id)
 
         for work_item_id in work_item_ids:
             self.__link_test_to_work_item(autotest_global_id, work_item_id)

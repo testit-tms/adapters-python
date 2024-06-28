@@ -98,6 +98,17 @@ def pytest_addoption(parser):
         false - not create a test case (Default)
         """
     )
+    parser.getgroup('testit').addoption(
+        '--tmsAutomaticUpdationLinksToTestCases',
+        action="store",
+        dest="set_automatic_updation_links_to_test_cases",
+        metavar="false",
+        help="""
+        Set mode of automatic updation links to test cases (optional):
+        true - update links to test cases
+        false - not update links to test cases (Default)
+        """
+    )
 
 
 @pytest.mark.tryfirst

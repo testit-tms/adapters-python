@@ -211,3 +211,5 @@ class Option:
             self.set_cert_validation = kwargs.get('tmsCertValidation', None)
         if kwargs.get('tmsAutomaticCreationTestCases', None):
             self.set_automatic_creation_test_cases = kwargs.get('tmsAutomaticCreationTestCases', None)
+        if kwargs.get('tmsAutomaticUpdationLinksToTestCases', None):
+            self.set_automatic_updation_links_to_test_cases = kwargs.get('tmsAutomaticUpdationLinksToTestCases', None)
