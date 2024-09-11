@@ -199,8 +199,8 @@ class Option:
             self.set_configuration_id = kwargs.get('tmsConfigurationId', None)
         if kwargs.get('tmsTestRunId', None):
             self.set_test_run_id = kwargs.get('tmsTestRunId', None)
-        if kwargs.get('tmsTestRunId', None):
-            self.set_tms_proxy = kwargs.get('tmsTestRunId', None)
+        if kwargs.get('tmsProxy', None):
+            self.set_tms_proxy = kwargs.get('tmsProxy', None)
         if kwargs.get('tmsTestRunName', None):
             self.set_test_run_name = kwargs.get('tmsTestRunName', None)
         if kwargs.get('tmsAdapterMode', None):
