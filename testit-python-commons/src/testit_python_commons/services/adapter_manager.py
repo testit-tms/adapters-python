@@ -54,14 +54,14 @@ class AdapterManager:
         return self.__api_client.load_attachments(attach_paths)
 
     @adapter_logger
-    def create_attachment(self, body: str, name: str):
+    def create_attachment(self, body: str | bytes, name: str):
         if name is None:
             name = str(uuid.uuid4()) + '-attachment.txt'
 
         path = os.path.join(os.path.abspath(''), name)
 
         with open(path, 'wb') as attached_file:
-            attached_file.write(body.encode('utf-8'))
+            attached_file.write(body.encode('utf-8') if isinstance(body, str) else body)
 
         attachment_id = self.__api_client.load_attachments((path,))
 
