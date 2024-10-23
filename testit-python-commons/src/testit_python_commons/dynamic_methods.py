@@ -84,7 +84,7 @@ def addAttachments(data, is_text: bool = False, name: str = None):   # noqa: N80
 @adapter_logger
 def add_attachments_to_step(step, data, is_text: bool = False, name: str = None):
     if is_text:
-        attachment_ids = TmsPluginManager.get_adapter_manager().create_attachment(str(data), name)
+        attachment_ids = TmsPluginManager.get_adapter_manager().create_attachment(data, name)
     else:
         if isinstance(data, str):
             attachment_ids = TmsPluginManager.get_adapter_manager().load_attachments([data])
@@ -102,7 +102,7 @@ def add_attachments_to_test(data, is_text: bool = False, name: str = None):
     if is_text and hasattr(TmsPluginManager.get_plugin_manager().hook, 'create_attachment'):
         TmsPluginManager.get_plugin_manager().hook \
             .create_attachment(
-            body=str(data),
+            body=data,
             name=name)
     elif hasattr(TmsPluginManager.get_plugin_manager().hook, 'add_attachments'):
         if isinstance(data, str):
