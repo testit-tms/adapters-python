@@ -55,6 +55,9 @@ class StepContext:
         self.__start_time = round(datetime.utcnow().timestamp() * 1000)
         self.__step_result = StepResult()
 
+        self.__title = Utils.collect_parameters_in_string_attribute(self.__title, self.__parameters)
+        self.__description = Utils.collect_parameters_in_string_attribute(self.__description, self.__parameters)
+
         self.__step_result\
             .set_title(self.__title)\
             .set_description(self.__description)\
