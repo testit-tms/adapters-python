@@ -2,7 +2,7 @@ from setuptools import find_packages, setup
 
 setup(
     name='testit-adapter-pytest',
-    version='3.2.3',
+    version='3.2.4',
     description='Pytest adapter for Test IT',
     long_description=open('README.md', "r").read(),
     long_description_content_type="text/markdown",
@@ -21,6 +21,6 @@ setup(
     py_modules=['testit_adapter_pytest'],
     packages=find_packages(where='src'),
     package_dir={'': 'src'},
-    install_requires=['pytest', 'pytest-xdist', 'attrs', 'testit-python-commons==3.2.3'],
+    install_requires=['pytest', 'pytest-xdist', 'attrs', 'testit-python-commons==3.2.4'],
     entry_points={'pytest11': ['testit_adapter_pytest = testit_adapter_pytest.plugin']}
 )

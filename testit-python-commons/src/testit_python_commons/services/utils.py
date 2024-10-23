@@ -70,6 +70,22 @@ class Utils:
         return parameters
 
     @staticmethod
+    def collect_parameters_in_string_attribute(attribute: str, all_parameters: dict) -> str:
+        param_keys = []
+
+        if attribute:
+            param_keys = re.findall(r"\{(.*?)\}", attribute)
+
+        if len(param_keys) > 0:
+            for param_key in param_keys:
+                parameter = all_parameters.get(param_key)
+
+                if parameter is not None:
+                    attribute = attribute.replace("{" + param_key + "}", str(parameter))
+
+        return attribute
+
+    @staticmethod
     @adapter_logger
     def convert_link_dict_to_link_model(link_dict: dict) -> Link:
         link_model = Link()
