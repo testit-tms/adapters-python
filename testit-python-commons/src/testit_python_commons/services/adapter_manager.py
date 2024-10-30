@@ -9,6 +9,7 @@ from testit_python_commons.models.test_result import TestResult
 from testit_python_commons.models.test_result_with_all_fixture_step_results_model import TestResultWithAllFixtureStepResults
 from testit_python_commons.services.adapter_manager_configuration import AdapterManagerConfiguration
 from testit_python_commons.services.logger import adapter_logger
+from testit_python_commons.services.utils import Utils
 
 
 class AdapterManager:
@@ -54,14 +55,15 @@ class AdapterManager:
         return self.__api_client.load_attachments(attach_paths)
 
     @adapter_logger
-    def create_attachment(self, body: str | bytes, name: str):
+    def create_attachment(self, body, name: str):
         if name is None:
             name = str(uuid.uuid4()) + '-attachment.txt'
 
         path = os.path.join(os.path.abspath(''), name)
 
         with open(path, 'wb') as attached_file:
-            attached_file.write(body.encode('utf-8') if isinstance(body, str) else body)
+            attached_file.write(
+                Utils.convert_body_of_attachment(body))
 
         attachment_id = self.__api_client.load_attachments((path,))
 
