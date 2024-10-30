@@ -101,3 +101,11 @@ class Utils:
             link_model.set_description(link_dict['description'])
 
         return link_model
+
+    @staticmethod
+    @adapter_logger
+    def convert_body_of_attachment(body):
+        if isinstance(body, bytes):
+            return body
+
+        return str(body).encode('utf-8')
