@@ -70,6 +70,12 @@ class Utils:
         return parameters
 
     @staticmethod
+    def exclude_self_parameter(all_parameters: dict) -> dict:
+        if all_parameters.get('self') is not None:
+            all_parameters.pop('self')
+        return all_parameters
+
+    @staticmethod
     def collect_parameters_in_string_attribute(attribute: str, all_parameters: dict) -> str:
         param_keys = []
 
