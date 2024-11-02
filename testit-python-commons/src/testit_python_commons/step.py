@@ -61,7 +61,9 @@ class StepContext:
         self.__step_result\
             .set_title(self.__title)\
             .set_description(self.__description)\
-            .set_parameters(self.__parameters)
+            .set_parameters(
+                Utils.exclude_self_parameter(self.__parameters)
+            )
 
         logging.debug(f'Step "{self.__title}" was started')
 
