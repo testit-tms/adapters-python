@@ -178,9 +178,9 @@ def __get_labels_from(item):
             get_all_parameters(item))
 
         if isinstance(result, __ARRAY_TYPES):
-            for label in result:
+            for l in result:
                 labels.append({
-                    'name': str(label)
+                    'name': str(l)
                 })
         else:
             labels.append({
@@ -191,19 +191,24 @@ def __get_labels_from(item):
 
 
 def __get_work_item_ids_from(item):
-    test_workitems_id = __search_attribute(item, 'test_workitems_id')
+    test_workitem_ids = __search_attribute(item, 'test_workitems_id')
 
-    if not test_workitems_id:
+    if not test_workitem_ids:
         return []
 
-    all_parameters = get_all_parameters(item)
+    workitem_ids = []
 
-    if not all_parameters:
-        return test_workitems_id
+    for workitem_id in test_workitem_ids:
+        result = collect_parameters_in_mass_attribute(
+            workitem_id,
+            get_all_parameters(item))
 
-    result = collect_parameters_in_mass_attribute(test_workitems_id[0], all_parameters)
+        if isinstance(result, __ARRAY_TYPES):
+            workitem_ids += list(map(str, result))
+        else:
+            workitem_ids.append(str(result))
 
-    return map(str, result) if isinstance(result, __ARRAY_TYPES) else [str(result)]
+    return workitem_ids
 
 
 def collect_parameters_in_string_attribute(attribute, all_parameters):
