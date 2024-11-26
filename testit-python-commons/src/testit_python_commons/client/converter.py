@@ -2,22 +2,22 @@ import typing
 
 from testit_api_client.models import (
     AttachmentPutModelAutoTestStepResultsModel,
-    CreateAutoTestRequest,
-    UpdateAutoTestRequest,
+    AutoTestPostModel,
+    AutoTestPutModel,
     AutoTestResultsForTestRunModel,
     AutoTestStepModel,
     AvailableTestResultOutcome,
     LinkPostModel,
     LinkPutModel,
     LinkType,
-    CreateEmptyRequest,
+    TestRunV2PostShortModel,
     AutotestsSelectModelFilter,
     AutotestsSelectModelIncludes,
     ApiV2AutoTestsSearchPostRequest,
-    ApiV2TestResultsIdPutRequest,
+    TestResultUpdateV2Request,
     TestResultModel,
     AttachmentModel,
-    AttachmentPutModel
+    AttachmentUpdateRequest
 )
 
 from testit_python_commons.models.link import Link
@@ -31,7 +31,7 @@ class Converter:
     @classmethod
     @adapter_logger
     def test_run_to_test_run_short_model(cls, project_id, name):
-        return CreateEmptyRequest(
+        return TestRunV2PostShortModel(
             project_id=project_id,
             name=name
         )
@@ -79,7 +79,7 @@ class Converter:
             cls,
             test_result: TestResult,
             project_id: str):
-        return CreateAutoTestRequest(
+        return AutoTestPostModel(
             external_id=test_result.get_external_id(),
             project_id=project_id,
             name=test_result.get_autotest_name(),
@@ -105,7 +105,7 @@ class Converter:
             test_result: TestResult,
             project_id: str):
         if test_result.get_outcome() == 'Passed':
-            return UpdateAutoTestRequest(
+            return AutoTestPutModel(
                 external_id=test_result.get_external_id(),
                 project_id=project_id,
                 name=test_result.get_autotest_name(),
@@ -123,7 +123,7 @@ class Converter:
                 labels=test_result.get_labels()
             )
         else:
-            return UpdateAutoTestRequest(
+            return AutoTestPutModel(
                 external_id=test_result.get_external_id(),
                 project_id=project_id,
                 name=test_result.get_autotest_name(),
@@ -173,8 +173,8 @@ class Converter:
     @adapter_logger
     def convert_test_result_model_to_test_results_id_put_request(
             cls,
-            test_result: TestResultModel) -> ApiV2TestResultsIdPutRequest:
-        return ApiV2TestResultsIdPutRequest(
+            test_result: TestResultModel) -> TestResultUpdateV2Request:
+        return TestResultUpdateV2Request(
             failure_class_ids=test_result.failure_class_ids,
             outcome=test_result.outcome,
             comment=test_result.comment,
@@ -192,8 +192,8 @@ class Converter:
     @adapter_logger
     def convert_test_result_with_all_setup_and_teardown_steps_to_test_results_id_put_request(
             cls,
-            test_result: TestResultWithAllFixtureStepResults) -> ApiV2TestResultsIdPutRequest:
-        return ApiV2TestResultsIdPutRequest(
+            test_result: TestResultWithAllFixtureStepResults) -> TestResultUpdateV2Request:
+        return TestResultUpdateV2Request(
             setup_results=cls.step_results_to_attachment_put_model_autotest_step_results_model(
                 test_result.get_setup_results()),
             teardown_results=cls.step_results_to_attachment_put_model_autotest_step_results_model(
@@ -269,7 +269,7 @@ class Converter:
     @classmethod
     @adapter_logger
     def attachment_models_to_attachment_put_models(
-            cls, attachments: typing.List[AttachmentModel]) -> typing.List[AttachmentPutModel]:
+            cls, attachments: typing.List[AttachmentModel]) -> typing.List[AttachmentUpdateRequest]:
         put_model_attachments = []
 
         for attachment in attachments:
@@ -281,8 +281,8 @@ class Converter:
 
     @staticmethod
     @adapter_logger
-    def attachment_model_to_attachment_put_model(attachment: AttachmentModel) -> AttachmentPutModel:
-        return AttachmentPutModel(id=attachment.id)
+    def attachment_model_to_attachment_put_model(attachment: AttachmentModel) -> AttachmentUpdateRequest:
+        return AttachmentUpdateRequest(id=attachment.id)
 
     @classmethod
     # @adapter_logger

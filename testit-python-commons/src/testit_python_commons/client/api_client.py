@@ -8,7 +8,7 @@ from testit_api_client.apis import AttachmentsApi, AutoTestsApi, TestRunsApi, Te
 from testit_api_client.models import (
     AttachmentPutModel,
     TestResultModel,
-    LinkAutoTestToWorkItemRequest
+    WorkItemIdModel
 )
 
 from testit_python_commons.client.client_configuration import ClientConfiguration
@@ -60,7 +60,7 @@ class ApiClientWorker:
             test_run_name
         )
 
-        response = self.__test_run_api.create_empty(create_empty_request=model)
+        response = self.__test_run_api.create_empty(test_run_v2_post_short_model=model)
 
         return Converter.get_id_from_create_test_run_response(response)
 
@@ -127,7 +127,7 @@ class ApiClientWorker:
             test_result,
             self.__config.get_project_id())
 
-        autotest_response = self.__autotest_api.create_auto_test(create_auto_test_request=model)
+        autotest_response = self.__autotest_api.create_auto_test(auto_test_post_model=model)
 
         logging.debug(f'Autotest "{test_result.get_autotest_name()}" was created')
 
@@ -142,7 +142,7 @@ class ApiClientWorker:
             self.__config.get_project_id())
         model.is_flaky = is_flaky
 
-        self.__autotest_api.update_auto_test(update_auto_test_request=model)
+        self.__autotest_api.update_auto_test(auto_test_put_model=model)
 
         logging.debug(f'Autotest "{test_result.get_autotest_name()}" was updated')
 
@@ -160,7 +160,7 @@ class ApiClientWorker:
     def __link_test_to_work_item(self, autotest_global_id: str, work_item_id: str):
         self.__autotest_api.link_auto_test_to_work_item(
             autotest_global_id,
-            link_auto_test_to_work_item_request=LinkAutoTestToWorkItemRequest(id=work_item_id))
+            work_item_id_model=WorkItemIdModel(id=work_item_id))
 
         logging.debug(f'Autotest was linked with workItem "{work_item_id}" by global id "{autotest_global_id}')
 
@@ -201,7 +201,7 @@ class ApiClientWorker:
             try:
                 self.__test_results_api.api_v2_test_results_id_put(
                     id=test_result.get_test_result_id(),
-                    api_v2_test_results_id_put_request=model)
+                    test_result_update_v2_request=model)
             except Exception as exc:
                 logging.error(f'Cannot update test result with id "{test_result.get_test_result_id()}" status: {exc}')
 
