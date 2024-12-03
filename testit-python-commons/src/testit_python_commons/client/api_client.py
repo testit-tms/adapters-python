@@ -4,11 +4,12 @@ import typing
 from datetime import datetime
 
 from testit_api_client import ApiClient, Configuration
-from testit_api_client.apis import AttachmentsApi, AutoTestsApi, TestRunsApi, TestResultsApi
+from testit_api_client.api import AttachmentsApi, AutoTestsApi, TestRunsApi, TestResultsApi
 from testit_api_client.models import (
     AttachmentPutModel,
     TestResultModel,
-    WorkItemIdModel
+    WorkItemIdModel,
+    WorkItemIdentifierModel
 )
 
 from testit_python_commons.client.client_configuration import ClientConfiguration
@@ -82,12 +83,12 @@ class ApiClientWorker:
             self.__config.get_project_id(),
             test_result.get_external_id())
 
-        autotest = self.__autotest_api.api_v2_auto_tests_search_post(api_v2_auto_tests_search_post_request=model)
+        autotests = self.__autotest_api.api_v2_auto_tests_search_post(autotests_select_model=model)
 
-        if autotest:
-            self.__update_test(test_result, autotest[0]['is_flaky'])
+        if autotests:
+            self.__update_test(test_result, autotests[0].is_flaky)
 
-            autotest_global_id = autotest[0]['id']
+            autotest_global_id = autotests[0].id
         else:
             autotest_global_id = self.__create_test(test_result)
 
@@ -97,16 +98,15 @@ class ApiClientWorker:
         return self.__load_test_result(test_result)
 
     @adapter_logger
-    def __get_work_items_linked_to_autotest(self, autotest_global_id: str) -> list:
+    def __get_work_items_linked_to_autotest(self, autotest_global_id: str) -> typing.List[WorkItemIdentifierModel]:
         return self.__autotest_api.get_work_items_linked_to_auto_test(id=autotest_global_id)
 
     @adapter_logger
     def __update_autotest_link_from_work_items(self, autotest_global_id: str, work_item_ids: list):
-
         linked_work_items = self.__get_work_items_linked_to_autotest(autotest_global_id)
 
         for linked_work_item in linked_work_items:
-            linked_work_item_id = str(linked_work_item['global_id'])
+            linked_work_item_id = str(linked_work_item.global_id)
 
             if linked_work_item_id in work_item_ids:
                 work_item_ids.remove(linked_work_item_id)
@@ -131,7 +131,7 @@ class ApiClientWorker:
 
         logging.debug(f'Autotest "{test_result.get_autotest_name()}" was created')
 
-        return autotest_response['id']
+        return autotest_response.id
 
     @adapter_logger
     def __update_test(self, test_result: TestResult, is_flaky: bool):
@@ -189,14 +189,10 @@ class ApiClientWorker:
             model = Converter.convert_test_result_model_to_test_results_id_put_request(
                 self.get_test_result_by_id(test_result.get_test_result_id()))
 
-            model.set_attribute(
-                "setup_results",
-                Converter.step_results_to_attachment_put_model_autotest_step_results_model(
-                    test_result.get_setup_results()))
-            model.set_attribute(
-                "teardown_results",
-                Converter.step_results_to_attachment_put_model_autotest_step_results_model(
-                    test_result.get_teardown_results()))
+            model.setup_results = Converter.step_results_to_auto_test_step_result_update_request(
+                    test_result.get_setup_results())
+            model.teardown_results = Converter.step_results_to_auto_test_step_result_update_request(
+                    test_result.get_teardown_results())
 
             try:
                 self.__test_results_api.api_v2_test_results_id_put(
@@ -211,14 +207,16 @@ class ApiClientWorker:
 
         for path in attach_paths:
             if os.path.isfile(path):
-                try:
-                    attachment_response = self.__attachments_api.api_v2_attachments_post(file=open(path, "rb"))
+                with open(path, "rb+") as file:
+                    try:
+                        attachment_response = self.__attachments_api.api_v2_attachments_post(
+                            file=(file.name, file.read()))
 
-                    attachments.append(AttachmentPutModel(attachment_response['id']))
+                        attachments.append(AttachmentPutModel(id=attachment_response.id))
 
-                    logging.debug(f'Attachment "{path}" was uploaded')
-                except Exception as exc:
-                    logging.error(f'Upload attachment "{path}" status: {exc}')
+                        logging.debug(f'Attachment "{path}" was uploaded')
+                    except Exception as exc:
+                        logging.error(f'Upload attachment "{path}" status: {exc}')
             else:
                 logging.error(f'File "{path}" was not found!')
         return attachments
