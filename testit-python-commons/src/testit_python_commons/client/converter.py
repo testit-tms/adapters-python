@@ -2,6 +2,7 @@ import typing
 
 from testit_api_client.models import (
     AttachmentPutModelAutoTestStepResultsModel,
+    AutoTestStepResultUpdateRequest,
     AutoTestPostModel,
     AutoTestPutModel,
     AutoTestResultsForTestRunModel,
@@ -11,11 +12,13 @@ from testit_api_client.models import (
     LinkPutModel,
     LinkType,
     TestRunV2PostShortModel,
-    AutotestsSelectModelFilter,
-    AutotestsSelectModelIncludes,
-    ApiV2AutoTestsSearchPostRequest,
+    TestRunV2GetModel,
+    AutotestFilterModel,
+    SearchAutoTestsQueryIncludesModel,
+    AutotestsSelectModel,
     TestResultUpdateV2Request,
     TestResultModel,
+    TestResultV2GetModel,
     AttachmentModel,
     AttachmentUpdateRequest
 )
@@ -38,38 +41,38 @@ class Converter:
 
     @classmethod
     @adapter_logger
-    def get_id_from_create_test_run_response(cls, response):
-        return response['id']
+    def get_id_from_create_test_run_response(cls, response: TestRunV2GetModel):
+        return response.id
 
     @classmethod
     @adapter_logger
-    def get_resolved_autotests_from_get_test_run_response(cls, response, configuration: str):
-        autotests = response['_data_store']['test_results']
+    def get_resolved_autotests_from_get_test_run_response(cls, response: TestRunV2GetModel, configuration: str):
+        autotests = response.test_results
 
         return cls.__get_resolved_autotests(autotests, configuration)
 
     @classmethod
     @adapter_logger
     def project_id_and_external_id_to_auto_tests_search_post_request(cls, project_id: str, external_id: str):
-        autotests_filter = AutotestsSelectModelFilter(
+        autotests_filter = AutotestFilterModel(
             project_ids=[project_id],
             external_ids=[external_id],
             is_deleted=False)
-        autotests_includes = AutotestsSelectModelIncludes(
+        autotests_includes = SearchAutoTestsQueryIncludesModel(
             include_steps=False,
             include_links=False,
             include_labels=False)
 
-        return ApiV2AutoTestsSearchPostRequest(filter=autotests_filter, includes=autotests_includes)
+        return AutotestsSelectModel(filter=autotests_filter, includes=autotests_includes)
 
     @staticmethod
     @adapter_logger
-    def __get_resolved_autotests(autotests: list, configuration: str):
+    def __get_resolved_autotests(autotests: typing.List[TestResultV2GetModel], configuration: str):
         resolved_autotests = []
 
         for autotest in autotests:
-            if configuration == autotest['_data_store']['configuration_id']:
-                resolved_autotests.append(autotest._data_store['auto_test']._data_store['external_id'])
+            if configuration == autotest.configuration_id:
+                resolved_autotests.append(autotest.auto_test.external_id)
 
         return resolved_autotests
 
@@ -319,6 +322,30 @@ class Converter:
                     started_on=step_result.get_started_on(),
                     completed_on=step_result.get_completed_on(),
                     step_results=cls.step_results_to_attachment_put_model_autotest_step_results_model(
+                        step_result.get_step_results())
+                )
+            )
+
+        return autotest_model_step_results
+
+    @classmethod
+    @adapter_logger
+    def step_results_to_auto_test_step_result_update_request(
+            cls, step_results: typing.List[StepResult]) -> typing.List[AutoTestStepResultUpdateRequest]:
+        autotest_model_step_results = []
+
+        for step_result in step_results:
+            autotest_model_step_results.append(
+                AutoTestStepResultUpdateRequest(
+                    title=step_result.get_title(),
+                    outcome=AvailableTestResultOutcome(step_result.get_outcome()),
+                    description=step_result.get_description(),
+                    duration=step_result.get_duration(),
+                    parameters=step_result.get_parameters(),
+                    attachments=step_result.get_attachments(),
+                    started_on=step_result.get_started_on(),
+                    completed_on=step_result.get_completed_on(),
+                    step_results=cls.step_results_to_auto_test_step_result_update_request(
                         step_result.get_step_results())
                 )
             )
