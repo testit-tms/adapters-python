@@ -1,6 +1,7 @@
 import hashlib
 import logging
 import re
+import os
 from traceback import format_exception_only
 from nose2 import (
     util,
@@ -62,7 +63,7 @@ def get_outcome(event):
     return outcome, message, trace
 
 
-def form_test(item):
+def form_test(item, top_level_directory):
     data = {}
 
     if hasattr(item, "_testFunc"):
@@ -90,7 +91,8 @@ def form_test(item):
             'links': __get_links_from(item),
             'labels': __get_labels_from(item),
             'workItemsID': __get_work_item_ids_from(item),
-            'message': None
+            'message': None,
+            'externalKey': __get_fullname(item, top_level_directory)
         }
 
     elif hasattr(item, "_testMethodName"):
@@ -258,6 +260,18 @@ def __get_work_item_ids_from(item):
     return map(str, result) if isinstance(result, __ARRAY_TYPES) else [str(result)]
 
 
+def __get_fullname(item, top_level_directory):
+    test = item._testFunc
+
+    if not __import__(test.__module__).__file__:
+        return ".".join([test.__module__, test.__qualname__])
+
+    abs_module_path = os.path.dirname(__import__(test.__module__).__file__)
+    module_path = abs_module_path.replace(top_level_directory + os.sep, '').replace(os.sep, '.')
+
+    return ".".join([module_path, test.__module__, test.__qualname__])
+
+
 def fullname(event):
     if hasattr(event.test, "_testFunc"):
         test_module = event.test._testFunc.__module__
@@ -379,4 +393,5 @@ def convert_executable_test_to_test_result_model(executable_test: dict) -> TestR
         .set_result_links(executable_test['resultLinks'])\
         .set_labels(executable_test['labels'])\
         .set_work_item_ids(executable_test['workItemsID'])\
-        .set_message(executable_test['message'])
+        .set_message(executable_test['message'])\
+        .set_external_key(executable_test['externalKey'])

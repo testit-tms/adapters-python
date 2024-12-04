@@ -69,6 +69,21 @@ $ robot -v testit -v tmsUrl:URL -v tmsPrivateToken:USER_PRIVATE_TOKEN -v tmsProj
 
 If you want to enable debug mode then see [How to enable debug logging?](https://github.com/testit-tms/adapters-python/tree/main/testit-python-commons)
 
+#### Run with filter
+To create filter by autotests you can use the Test IT CLI (use adapterMode 1 for run with filter):
+
+```
+$ export TMS_TOKEN=<YOUR_TOKEN>
+$ testit autotests_filter 
+  --url https://tms.testit.software \
+  --configuration-id 5236eb3f-7c05-46f9-a609-dc0278896464 \
+  --testrun-id 6d4ac4b7-dd67-4805-b879-18da0b89d4a8 \
+  --framework robotframework \
+  --output tmp/filter.txt
+
+$ robot -v testit -v tmsTestRunId:6d4ac4b7-dd67-4805-b879-18da0b89d4a8 -v tmsAdapterMode:1 "$(cat tmp/filter.txt)" TEST_DIRECTORY
+```
+
 ### Tags
 
 Tags can be used to specify information about autotest. Tags are space sensitive, use only one space between words.

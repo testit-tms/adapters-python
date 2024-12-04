@@ -295,6 +295,8 @@ def get_hash(value: str):
 
 
 def convert_executable_test_to_test_result_model(executable_test: ExecutableTest) -> TestResult:
+    pytest_autotest_keys = convert_node_id_to_pytest_autotest_keys(executable_test.node_id)
+
     return TestResult()\
         .set_external_id(executable_test.external_id)\
         .set_autotest_name(executable_test.name)\
@@ -314,8 +316,23 @@ def convert_executable_test_to_test_result_model(executable_test: ExecutableTest
         .set_links(executable_test.links)\
         .set_result_links(executable_test.result_links)\
         .set_labels(executable_test.labels)\
-        .set_work_item_ids(executable_test.work_item_ids)\
-        .set_message(executable_test.message)
+        .set_work_item_ids(executable_test.work_item_ids) \
+        .set_message(executable_test.message) \
+        .set_external_key(pytest_autotest_keys)
+
+
+def convert_node_id_to_pytest_autotest_keys(node_id: str) -> str:
+    pytest_autotest_keys = ''
+    split_path = node_id.split('/')
+    directories = split_path[:-1]
+    split_node = split_path[-1].split('::')
+
+    for directory in directories:
+        pytest_autotest_keys += directory + ' and '
+
+    pytest_autotest_keys += ' and '.join(split_node)
+
+    return pytest_autotest_keys
 
 
 def fixtures_containers_to_test_results_with_all_fixture_step_results(

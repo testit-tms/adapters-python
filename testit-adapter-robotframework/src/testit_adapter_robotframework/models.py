@@ -87,6 +87,7 @@ class Autotest(Default):
     message = attrib(default="")
     started_on = attrib(default=None)
     completed_on = attrib(default=None)
+    externalKey = attrib(default=None)
 
     step_depth = attrib(default=Factory(list))
     result_depth = attrib(default=Factory(list))
@@ -94,6 +95,7 @@ class Autotest(Default):
     def add_attributes(self, attrs):
         self.title = attrs['originalname']
         self.autoTestName = attrs['originalname']
+        self.externalKey = attrs['originalname']
         self.description = attrs['doc']
         self.template = attrs['template']
         self.classname = attrs['longname'].split('.')[-2]
