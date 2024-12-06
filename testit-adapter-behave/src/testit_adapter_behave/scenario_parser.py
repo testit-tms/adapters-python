@@ -46,6 +46,7 @@ def parse_scenario(scenario):
         'links': [],
         'labels': [],
         'workItemsID': [],
+        "externalKey": get_scenario_name(scenario)
         # TODO: Add to python-commons
         # 'started_on': '',
         # 'completed_on': None

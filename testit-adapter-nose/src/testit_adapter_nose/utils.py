@@ -1,6 +1,8 @@
 import hashlib
 import logging
 import re
+import os
+import typing
 from traceback import format_exception_only
 from nose2 import (
     util,
@@ -62,7 +64,7 @@ def get_outcome(event):
     return outcome, message, trace
 
 
-def form_test(item):
+def form_test(item, top_level_directory):
     data = {}
 
     if hasattr(item, "_testFunc"):
@@ -90,7 +92,8 @@ def form_test(item):
             'links': __get_links_from(item),
             'labels': __get_labels_from(item),
             'workItemsID': __get_work_item_ids_from(item),
-            'message': None
+            'message': None,
+            'externalKey': __get_fullname(item, top_level_directory)
         }
 
     elif hasattr(item, "_testMethodName"):
@@ -258,6 +261,37 @@ def __get_work_item_ids_from(item):
     return map(str, result) if isinstance(result, __ARRAY_TYPES) else [str(result)]
 
 
+def __get_fullname(item, top_level_directory: str):
+    test_function = item._testFunc
+    module_file_name = __get_module_file_name_by_test_function(test_function)
+
+    if not module_file_name:
+        return __join_nose_test_node([test_function.__module__, test_function.__qualname__])
+
+    absolute_module_path = __get_absolute_module_path_by_file_name(module_file_name)
+    module_node = __convert_absolute_module_path_to_nose_module_node(absolute_module_path, top_level_directory)
+
+    return __join_nose_test_node([module_node, test_function.__module__, test_function.__qualname__])
+
+
+def __get_module_file_name_by_test_function(test_function):
+    return __import__(test_function.__module__).__file__
+
+
+def __get_absolute_module_path_by_file_name(module_file_name: str):
+    return os.path.dirname(module_file_name)
+
+
+def __convert_absolute_module_path_to_nose_module_node(absolute_module_path: str, top_level_directory: str):
+    directories_in_project = absolute_module_path.replace(top_level_directory + os.sep, '')
+
+    return directories_in_project.replace(os.sep, '.')
+
+
+def __join_nose_test_node(test_node_parts: typing.List[str]):
+    return ".".join(test_node_parts)
+
+
 def fullname(event):
     if hasattr(event.test, "_testFunc"):
         test_module = event.test._testFunc.__module__
@@ -379,4 +413,5 @@ def convert_executable_test_to_test_result_model(executable_test: dict) -> TestR
         .set_result_links(executable_test['resultLinks'])\
         .set_labels(executable_test['labels'])\
         .set_work_item_ids(executable_test['workItemsID'])\
-        .set_message(executable_test['message'])
+        .set_message(executable_test['message'])\
+        .set_external_key(executable_test['externalKey'])

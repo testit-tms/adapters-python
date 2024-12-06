@@ -295,6 +295,8 @@ def get_hash(value: str):
 
 
 def convert_executable_test_to_test_result_model(executable_test: ExecutableTest) -> TestResult:
+    pytest_autotest_keys = convert_node_id_to_pytest_autotest_keys(executable_test.node_id)
+
     return TestResult()\
         .set_external_id(executable_test.external_id)\
         .set_autotest_name(executable_test.name)\
@@ -314,8 +316,35 @@ def convert_executable_test_to_test_result_model(executable_test: ExecutableTest
         .set_links(executable_test.links)\
         .set_result_links(executable_test.result_links)\
         .set_labels(executable_test.labels)\
-        .set_work_item_ids(executable_test.work_item_ids)\
-        .set_message(executable_test.message)
+        .set_work_item_ids(executable_test.work_item_ids) \
+        .set_message(executable_test.message) \
+        .set_external_key(pytest_autotest_keys)
+
+
+def convert_node_id_to_pytest_autotest_keys(node_id: str) -> str:
+    test_path_parts = __get_test_path_parts_by_node_id(node_id)
+    directories_in_project = __get_directories_in_project_by_test_path_parts(test_path_parts)
+    test_node_parts_from_module = __get_test_node_parts_from_module_by_test_path_parts(test_path_parts)
+
+    return __join_test_node_parts_to_pytest_autotest_keys(directories_in_project + test_node_parts_from_module)
+
+
+def __get_test_path_parts_by_node_id(node_id: str):
+    return node_id.split('/')
+
+
+def __get_directories_in_project_by_test_path_parts(test_path_parts: typing.List[str]):
+    return test_path_parts[:-1]
+
+
+def __get_test_node_parts_from_module_by_test_path_parts(test_path_parts: typing.List[str]):
+    test_node_from_module = test_path_parts[-1]
+
+    return test_node_from_module.split('::')
+
+
+def __join_test_node_parts_to_pytest_autotest_keys(test_node_parts: typing.List[str]):
+    return ' and '.join(test_node_parts)
 
 
 def fixtures_containers_to_test_results_with_all_fixture_step_results(
