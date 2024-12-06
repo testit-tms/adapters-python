@@ -322,17 +322,29 @@ def convert_executable_test_to_test_result_model(executable_test: ExecutableTest
 
 
 def convert_node_id_to_pytest_autotest_keys(node_id: str) -> str:
-    pytest_autotest_keys = ''
-    split_path = node_id.split('/')
-    directories = split_path[:-1]
-    split_node = split_path[-1].split('::')
+    test_path_parts = __get_test_path_parts_by_node_id(node_id)
+    directories_in_project = __get_directories_in_project_by_test_path_parts(test_path_parts)
+    test_node_parts_from_module = __get_test_node_parts_from_module_by_test_path_parts(test_path_parts)
 
-    for directory in directories:
-        pytest_autotest_keys += directory + ' and '
+    return __join_test_node_parts_to_pytest_autotest_keys(directories_in_project + test_node_parts_from_module)
 
-    pytest_autotest_keys += ' and '.join(split_node)
 
-    return pytest_autotest_keys
+def __get_test_path_parts_by_node_id(node_id: str):
+    return node_id.split('/')
+
+
+def __get_directories_in_project_by_test_path_parts(test_path_parts: typing.List[str]):
+    return test_path_parts[:-1]
+
+
+def __get_test_node_parts_from_module_by_test_path_parts(test_path_parts: typing.List[str]):
+    test_node_from_module = test_path_parts[-1]
+
+    return test_node_from_module.split('::')
+
+
+def __join_test_node_parts_to_pytest_autotest_keys(test_node_parts: typing.List[str]):
+    return ' and '.join(test_node_parts)
 
 
 def fixtures_containers_to_test_results_with_all_fixture_step_results(

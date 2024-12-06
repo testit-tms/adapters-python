@@ -2,6 +2,7 @@ import hashlib
 import logging
 import re
 import os
+import typing
 from traceback import format_exception_only
 from nose2 import (
     util,
@@ -260,16 +261,35 @@ def __get_work_item_ids_from(item):
     return map(str, result) if isinstance(result, __ARRAY_TYPES) else [str(result)]
 
 
-def __get_fullname(item, top_level_directory):
-    test = item._testFunc
+def __get_fullname(item, top_level_directory: str):
+    test_function = item._testFunc
+    module_file_name = __get_module_file_name_by_test_function(test_function)
 
-    if not __import__(test.__module__).__file__:
-        return ".".join([test.__module__, test.__qualname__])
+    if not module_file_name:
+        return __join_nose_test_node([test_function.__module__, test_function.__qualname__])
 
-    abs_module_path = os.path.dirname(__import__(test.__module__).__file__)
-    module_path = abs_module_path.replace(top_level_directory + os.sep, '').replace(os.sep, '.')
+    absolute_module_path = __get_absolute_module_path_by_file_name(module_file_name)
+    module_node = __convert_absolute_module_path_to_nose_module_node(absolute_module_path, top_level_directory)
 
-    return ".".join([module_path, test.__module__, test.__qualname__])
+    return __join_nose_test_node([module_node, test_function.__module__, test_function.__qualname__])
+
+
+def __get_module_file_name_by_test_function(test_function):
+    return __import__(test_function.__module__).__file__
+
+
+def __get_absolute_module_path_by_file_name(module_file_name: str):
+    return os.path.dirname(module_file_name)
+
+
+def __convert_absolute_module_path_to_nose_module_node(absolute_module_path: str, top_level_directory: str):
+    directories_in_project = absolute_module_path.replace(top_level_directory + os.sep, '')
+
+    return directories_in_project.replace(os.sep, '.')
+
+
+def __join_nose_test_node(test_node_parts: typing.List[str]):
+    return ".".join(test_node_parts)
 
 
 def fullname(event):
