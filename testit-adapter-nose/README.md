@@ -78,7 +78,7 @@ $ testit autotests_filter
   --framework nose \
   --output tmp/filter.txt
   
-$ nose2 "$(cat tmp/filter.txt)" --testit
+$ nose2 $(cat tmp/filter.txt) --testit
 ```
 
 ### Decorators

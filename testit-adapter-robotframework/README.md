@@ -81,7 +81,7 @@ $ testit autotests_filter
   --framework robotframework \
   --output tmp/filter.txt
 
-$ robot -v testit -v tmsTestRunId:6d4ac4b7-dd67-4805-b879-18da0b89d4a8 -v tmsAdapterMode:1 "$(cat tmp/filter.txt)" TEST_DIRECTORY
+$ robot -v testit -v tmsTestRunId:6d4ac4b7-dd67-4805-b879-18da0b89d4a8 -v tmsAdapterMode:1 $(cat tmp/filter.txt) TEST_DIRECTORY
 ```
 
 ### Tags
