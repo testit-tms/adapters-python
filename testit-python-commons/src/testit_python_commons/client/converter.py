@@ -98,7 +98,8 @@ class Converter:
             description=test_result.get_description(),
             links=cls.links_to_links_post_model(test_result.get_links()),
             labels=test_result.get_labels(),
-            should_create_work_item=test_result.get_automatic_creation_test_cases()
+            should_create_work_item=test_result.get_automatic_creation_test_cases(),
+            external_key=test_result.get_external_key()
         )
 
     @classmethod
@@ -123,7 +124,8 @@ class Converter:
                 title=test_result.get_title(),
                 description=test_result.get_description(),
                 links=cls.links_to_links_put_model(test_result.get_links()),
-                labels=test_result.get_labels()
+                labels=test_result.get_labels(),
+                external_key=test_result.get_external_key()
             )
         else:
             return AutoTestPutModel(
@@ -141,7 +143,8 @@ class Converter:
                 title=test_result.get_title(),
                 description=test_result.get_description(),
                 links=cls.links_to_links_put_model(test_result.get_links()),
-                labels=test_result.get_labels()
+                labels=test_result.get_labels(),
+                external_key=test_result.get_external_key()
             )
 
     @classmethod

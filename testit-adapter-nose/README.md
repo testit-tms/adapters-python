@@ -66,6 +66,21 @@ $ nose2 --testit
 If you want to enable debug mode then
 see [How to enable debug logging?](https://github.com/testit-tms/adapters-python/tree/main/testit-python-commons)
 
+#### Run with filter
+To create filter by autotests you can use the Test IT CLI (use adapterMode 1 for run with filter):
+
+```
+$ export TMS_TOKEN=<YOUR_TOKEN>
+$ testit autotests_filter 
+  --url https://tms.testit.software \
+  --configuration-id 5236eb3f-7c05-46f9-a609-dc0278896464 \
+  --testrun-id 6d4ac4b7-dd67-4805-b879-18da0b89d4a8 \
+  --framework nose \
+  --output tmp/filter.txt
+  
+$ nose2 $(cat tmp/filter.txt) --testit
+```
+
 ### Decorators
 
 Decorators can be used to specify information about autotest.

@@ -141,7 +141,8 @@ def convert_executable_test_to_test_result_model(executable_test: dict) -> TestR
         .set_result_links(executable_test['resultLinks'])\
         .set_labels(executable_test['labels'])\
         .set_work_item_ids(executable_test['workItemsID'])\
-        .set_message(executable_test['message'])
+        .set_message(executable_test['message'])\
+        .set_external_key(executable_test['externalKey'])
 
 
 def convert_step_to_step_result_model(step: dict, nested_step_results: typing.List[StepResult]) -> StepResult:

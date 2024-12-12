@@ -76,6 +76,21 @@ tmsAutomaticUpdationLinksToTestCases=AUTOMATIC_UPDATION_LINKS_TO_TEST_CASES
 If you want to enable debug mode then
 see [How to enable debug logging?](https://github.com/testit-tms/adapters-python/tree/main/testit-python-commons)
 
+#### Run with filter
+To create filter by autotests you can use the Test IT CLI (use adapterMode 1 for run with filter):
+
+```
+$ export TMS_TOKEN=<YOUR_TOKEN>
+$ testit autotests_filter 
+  --url https://tms.testit.software \
+  --configuration-id 5236eb3f-7c05-46f9-a609-dc0278896464 \
+  --testrun-id 6d4ac4b7-dd67-4805-b879-18da0b89d4a8 \
+  --framework behave \
+  --output tmp/filter.txt
+  
+$ behave "$(cat tmp/filter.txt)" -D tmsTestRunId=6d4ac4b7-dd67-4805-b879-18da0b89d4a8 -D tmsAdapterMode=1 -f testit_adapter_behave.formatter:AdapterFormatter
+```
+
 ### Tags
 
 Use tags to specify information about autotest.
