@@ -44,3 +44,6 @@ class AdapterFormatter(Formatter):
 
     def result(self, step):
         self.__listener.get_step_result(step)
+
+    def close_stream(self):
+        self.__listener.stop_launch()

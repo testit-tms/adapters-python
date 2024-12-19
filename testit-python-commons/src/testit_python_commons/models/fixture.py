@@ -19,6 +19,6 @@ class FixtureResult:
 @attrs
 class FixturesContainer:
     uuid = attrib(default=None)
-    node_ids = attrib(default=Factory(list))
+    external_ids = attrib(default=Factory(list))
     befores = attrib(default=Factory(list))
     afters = attrib(default=Factory(list))

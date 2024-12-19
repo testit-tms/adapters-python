@@ -16,3 +16,4 @@ class Option(object):
     set_cert_validation = attrib(default=None)
     set_automatic_creation_test_cases = attrib(default=None)
     set_automatic_updation_links_to_test_cases = attrib(default=None)
+    set_import_realtime = attrib(default=None)

@@ -115,3 +115,11 @@ class Utils:
             return body
 
         return str(body).encode('utf-8')
+
+    @staticmethod
+    @adapter_logger
+    def convert_value_str_to_bool(value: str) -> bool:
+        if value:
+            return value == 'true'
+
+        return False

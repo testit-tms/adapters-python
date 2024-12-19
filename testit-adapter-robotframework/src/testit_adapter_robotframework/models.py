@@ -215,3 +215,5 @@ class Option:
             self.set_automatic_creation_test_cases = kwargs.get('tmsAutomaticCreationTestCases', None)
         if kwargs.get('tmsAutomaticUpdationLinksToTestCases', None):
             self.set_automatic_updation_links_to_test_cases = kwargs.get('tmsAutomaticUpdationLinksToTestCases', None)
+        if kwargs.get('tmsImportRealtime', None):
+            self.set_import_realtime = kwargs.get('tmsImportRealtime', None)

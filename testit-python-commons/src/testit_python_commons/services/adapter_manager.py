@@ -1,12 +1,11 @@
 import os
-import typing
 import uuid
 
 from testit_python_commons.client.api_client import ApiClientWorker
 from testit_python_commons.client.client_configuration import ClientConfiguration
 from testit_python_commons.models.adapter_mode import AdapterMode
 from testit_python_commons.models.test_result import TestResult
-from testit_python_commons.models.test_result_with_all_fixture_step_results_model import TestResultWithAllFixtureStepResults
+from testit_python_commons.services.fixture_manager import FixtureManager
 from testit_python_commons.services.adapter_manager_configuration import AdapterManagerConfiguration
 from testit_python_commons.services.logger import adapter_logger
 from testit_python_commons.services.utils import Utils
@@ -16,9 +15,13 @@ class AdapterManager:
     def __init__(
             self,
             adapter_configuration: AdapterManagerConfiguration,
-            client_configuration: ClientConfiguration):
+            client_configuration: ClientConfiguration,
+            fixture_manager: FixtureManager):
         self.__config = adapter_configuration
         self.__api_client = ApiClientWorker(client_configuration)
+        self.__fixture_manager = fixture_manager
+        self.__test_result_map = {}
+        self.__test_results = []
 
     @adapter_logger
     def set_test_run_id(self, test_run_id: str):
@@ -40,15 +43,39 @@ class AdapterManager:
         return
 
     @adapter_logger
-    def write_test(self, test_result: TestResult) -> str:
+    def write_test(self, test_result: TestResult):
+        if self.__config.should_import_realtime():
+            self.__write_test_realtime(test_result)
+
+            return
+
+        self.__test_results.append(test_result)
+
+    @adapter_logger
+    def __write_test_realtime(self, test_result: TestResult):
         test_result.set_automatic_creation_test_cases(
             self.__config.should_automatic_creation_test_cases())
 
-        return self.__api_client.write_test(test_result)
+        self.__test_result_map[test_result.get_external_id()] = self.__api_client.write_test(test_result)
 
     @adapter_logger
-    def load_setup_and_teardown_step_results(self, test_results: typing.List[TestResultWithAllFixtureStepResults]):
-        self.__api_client.update_test_results(test_results)
+    def write_tests(self):
+        if self.__config.should_import_realtime():
+            self.__load_setup_and_teardown_step_results()
+
+            return
+
+        self.__write_tests_after_all()
+
+    @adapter_logger
+    def __load_setup_and_teardown_step_results(self):
+        self.__api_client.update_test_results(self.__fixture_manager.get_all_items(), self.__test_result_map)
+
+    @adapter_logger
+    def __write_tests_after_all(self):
+        fixtures = self.__fixture_manager.get_all_items()
+
+        self.__api_client.write_tests(self.__test_results, fixtures)
 
     @adapter_logger
     def load_attachments(self, attach_paths: list or tuple):

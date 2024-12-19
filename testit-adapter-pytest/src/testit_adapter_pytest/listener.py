@@ -8,14 +8,12 @@ import pytest
 
 import testit_python_commons.services as adapter
 from testit_python_commons.models.outcome_type import OutcomeType
-from testit_python_commons.services import AdapterManager
-from testit_python_commons.services import StepManager
+from testit_python_commons.models.fixture import FixtureResult, FixturesContainer
+from testit_python_commons.services import AdapterManager, StepManager, FixtureManager
 from testit_python_commons.services.logger import adapter_logger
 
 import testit_adapter_pytest.utils as utils
 from testit_adapter_pytest.fixture_context import FixtureContext
-from testit_adapter_pytest.fixture_manager import FixtureManager
-from testit_adapter_pytest.models.fixture import FixtureResult, FixturesContainer
 
 STATUS = {
     'passed': OutcomeType.PASSED,
@@ -66,12 +64,11 @@ class TmsListener(object):
     __pytest_check_info = None
     __failures = None
 
-    def __init__(self, adapter_manager: AdapterManager, step_manager: StepManager):
+    def __init__(self, adapter_manager: AdapterManager, step_manager: StepManager, fixture_manager: FixtureManager):
         self.__adapter_manager = adapter_manager
         self.__step_manager = step_manager
-        self.fixture_manager = FixtureManager()
+        self.__fixture_manager = fixture_manager
         self._cache = ItemCache()
-        self.__test_result_ids = {}
 
     @pytest.hookimpl
     def pytest_configure(self, config):
@@ -189,21 +186,21 @@ class TmsListener(object):
         if not container_uuid:
             container_uuid = self._cache.push(fixturedef)
             container = FixturesContainer(uuid=container_uuid)
-            self.fixture_manager.start_group(container_uuid, container)
+            self.__fixture_manager.start_group(container_uuid, container)
 
-        self.fixture_manager.update_group(container_uuid)
+        self.__fixture_manager.update_group(container_uuid)
 
         before_fixture_uuid = uuid4()
         before_fixture = FixtureResult(title=fixture_name)
 
-        self.fixture_manager.start_before_fixture(container_uuid, before_fixture_uuid, before_fixture)
+        self.__fixture_manager.start_before_fixture(container_uuid, before_fixture_uuid, before_fixture)
 
         outcome = yield
 
         results_steps_data = self.__step_manager.get_steps_tree()
 
-        self.fixture_manager.stop_before_fixture(before_fixture_uuid,
-                                                 outcome=utils.get_outcome_status(outcome), steps=results_steps_data)
+        self.__fixture_manager.stop_before_fixture(before_fixture_uuid,
+                                                   outcome=utils.get_outcome_status(outcome), steps=results_steps_data)
 
         finalizers = getattr(fixturedef, '_finalizers', [])
         for index, finalizer in enumerate(finalizers):
@@ -230,7 +227,7 @@ class TmsListener(object):
 
         if hasattr(fixturedef, 'cached_result') and self._cache.get(fixturedef):
             group_uuid = self._cache.pop(fixturedef)
-            self.fixture_manager.stop_group(group_uuid)
+            self.__fixture_manager.stop_group(group_uuid)
 
     @pytest.hookimpl
     def pytest_runtest_logreport(self, report):
@@ -257,19 +254,12 @@ class TmsListener(object):
         if not self.__executable_test:
             return
 
-        self.__test_result_ids[self.__executable_test.node_id] = self.__adapter_manager.write_test(
+        self.__adapter_manager.write_test(
             utils.convert_executable_test_to_test_result_model(self.__executable_test))
 
     @pytest.hookimpl
     def pytest_sessionfinish(self, session):
-        if not self.__test_result_ids:
-            return
-
-        self.__adapter_manager.load_setup_and_teardown_step_results(
-            utils.fixtures_containers_to_test_results_with_all_fixture_step_results(
-                self.fixture_manager.get_all_items(),
-                self.__test_result_ids
-            ))
+        self.__adapter_manager.write_tests()
 
     @adapter.hookimpl
     def add_link(self, link):
@@ -294,29 +284,29 @@ class TmsListener(object):
     @adapter.hookimpl
     def start_fixture(self, parent_uuid, uuid, title):
         after_fixture = FixtureResult(title=title)
-        self.fixture_manager.start_after_fixture(parent_uuid, uuid, after_fixture)
+        self.__fixture_manager.start_after_fixture(parent_uuid, uuid, after_fixture)
 
     @adapter.hookimpl
     def stop_fixture(self, uuid, exc_type, exc_val, exc_tb):
         results_steps_data = self.__step_manager.get_steps_tree()
 
-        self.fixture_manager.stop_after_fixture(uuid,
-                                                outcome=utils.get_status(exc_val),
-                                                steps=results_steps_data,
-                                                message=utils.get_message(exc_type, exc_val),
-                                                stacktrace=utils.get_traceback(exc_tb))
+        self.__fixture_manager.stop_after_fixture(uuid,
+                                                  outcome=utils.get_status(exc_val),
+                                                  steps=results_steps_data,
+                                                  message=utils.get_message(exc_type, exc_val),
+                                                  stacktrace=utils.get_traceback(exc_tb))
 
     def _update_fixtures_external_ids(self, item):
         for fixturedef in self._test_fixtures(item):
             group_uuid = self._cache.get(fixturedef)
             if group_uuid:
-                group = self.fixture_manager.get_item(group_uuid)
+                group = self.__fixture_manager.get_item(group_uuid)
             else:
                 group_uuid = self._cache.push(fixturedef)
                 group = FixturesContainer(uuid=group_uuid)
-                self.fixture_manager.start_group(group_uuid, group)
-            if item.nodeid not in group.node_ids:
-                self.fixture_manager.update_group(group_uuid, node_ids=item.nodeid)
+                self.__fixture_manager.start_group(group_uuid, group)
+            if self.__executable_test.external_id not in group.external_ids:
+                self.__fixture_manager.update_group(group_uuid, external_ids=self.__executable_test.external_id)
 
     def _test_fixtures(self, item):
         fixturemanager = item.session._fixturemanager

@@ -30,6 +30,9 @@ class TmsPlugin(Plugin):
         self.__listener.start_launch()
         self.__tests_for_launch = self.__listener.get_tests_for_launch()
 
+    def afterTestRun(self, event):
+        self.__listener.stop_launch()
+
     def startTest(self, event):
         self.__listener.start_test(event.test)
 
