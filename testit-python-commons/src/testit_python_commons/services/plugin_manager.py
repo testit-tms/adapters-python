@@ -9,6 +9,7 @@ from testit_python_commons.app_properties import AppProperties
 class TmsPluginManager:
     __plugin_manager = None
     __adapter_manager = None
+    __fixture_manager = None
     __step_manager = None
     __logger = None
 
@@ -32,10 +33,20 @@ class TmsPluginManager:
 
             client_configuration = ClientConfiguration(app_properties)
             adapter_configuration = AdapterManagerConfiguration(app_properties)
+            fixture_manager = cls.get_fixture_manager()
 
-            cls.__adapter_manager = AdapterManager(adapter_configuration, client_configuration)
+            cls.__adapter_manager = AdapterManager(adapter_configuration, client_configuration, fixture_manager)
 
         return cls.__adapter_manager
+
+    @classmethod
+    def get_fixture_manager(cls):
+        if cls.__fixture_manager is None:
+            from testit_python_commons.services.fixture_manager import FixtureManager
+
+            cls.__fixture_manager = FixtureManager()
+
+        return cls.__fixture_manager
 
     @classmethod
     def get_step_manager(cls) -> StepManager:

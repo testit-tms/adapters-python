@@ -31,6 +31,7 @@ pip install testit-adapter-nose
 | It enables/disables certificate validation (**It's optional**). Default value - true                                                                                                                                                                                                                                                                                                   | certValidation                    | TMS_CERT_VALIDATION                        |
 | Mode of automatic creation test cases (**It's optional**). Default value - false. The adapter supports following modes:<br/>true - in this mode, the adapter will create a test case linked to the created autotest (not to the updated autotest)<br/>false - in this mode, the adapter will not create a test case                                                                    | automaticCreationTestCases        | TMS_AUTOMATIC_CREATION_TEST_CASES          |
 | Mode of automatic updation links to test cases (**It's optional**). Default value - false. The adapter supports following modes:<br/>true - in this mode, the adapter will update links to test cases<br/>false - in this mode, the adapter will not update link to test cases                                                                                                         | automaticUpdationLinksToTestCases | TMS_AUTOMATIC_UPDATION_LINKS_TO_TEST_CASES |
+| Mode of import type selection when launching autotests (**It's optional**). Default value - true. The adapter supports following modes:<br/>true - in this mode, the adapter will create/update each autotest in real time<br/>false - in this mode, the adapter will create/update multiple autotests                                                                                 | importRealtime                    | TMS_IMPORT_REALTIME                        |
 | Url of proxy server (**It's optional**)                                                                                                                                                                                                                                                                                                                                                | tmsProxy                          | TMS_PROXY                                  |
 | Name of the configuration file If it is not provided, it is used default file name (**It's optional**)                                                                                                                                                                                                                                                                                 | -                                 | TMS_CONFIG_FILE                            |
 
@@ -49,6 +50,7 @@ adapterMode = ADAPTER_MODE
 certValidation = CERT_VALIDATION
 automaticCreationTestCases = AUTOMATIC_CREATION_TEST_CASES
 automaticUpdationLinksToTestCases = AUTOMATIC_UPDATION_LINKS_TO_TEST_CASES
+importRealtime = IMPORT_REALTIME
 
 # This section are optional. It enables debug mode.
 [debug]

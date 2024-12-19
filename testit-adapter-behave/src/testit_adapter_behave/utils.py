@@ -54,6 +54,9 @@ def parse_userdata(userdata):
     if 'tmsAutomaticUpdationLinksToTestCases' in userdata:
         option.set_automatic_updation_links_to_test_cases = userdata['tmsAutomaticUpdationLinksToTestCases']
 
+    if 'tmsImportRealtime' in userdata:
+        option.set_import_realtime = userdata['tmsImportRealtime']
+
     return option
 
 

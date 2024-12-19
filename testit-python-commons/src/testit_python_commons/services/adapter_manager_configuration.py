@@ -11,13 +11,9 @@ class AdapterManagerConfiguration:
             self.__test_run_id = Utils.uuid_check(app_properties.get('testrunid'))
 
         self.__adapter_mode = app_properties.get('adaptermode', AdapterMode.USE_FILTER)
-
-        __automatic_creation_test_cases = app_properties.get('automaticcreationtestcases')
-
-        if __automatic_creation_test_cases and __automatic_creation_test_cases == 'true':
-            self.__automatic_creation_test_cases = True
-        else:
-            self.__automatic_creation_test_cases = False
+        self.__automatic_creation_test_cases = Utils.convert_value_str_to_bool(
+            app_properties.get('automaticcreationtestcases'))
+        self.__import_realtime = Utils.convert_value_str_to_bool(app_properties.get('importrealtime'))
 
     @adapter_logger
     def get_test_run_id(self):
@@ -32,5 +28,9 @@ class AdapterManagerConfiguration:
         return self.__adapter_mode
 
     @adapter_logger
-    def should_automatic_creation_test_cases(self):
+    def should_automatic_creation_test_cases(self) -> bool:
         return self.__automatic_creation_test_cases
+
+    @adapter_logger
+    def should_import_realtime(self) -> bool:
+        return self.__import_realtime

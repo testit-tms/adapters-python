@@ -113,6 +113,10 @@ class AppProperties:
                 option.set_automatic_updation_links_to_test_cases):
             cli_properties['automaticupdationlinkstotestcases'] = option.set_automatic_updation_links_to_test_cases
 
+        if hasattr(option, 'set_import_realtime') and cls.__check_property_value(
+                option.set_import_realtime):
+            cli_properties['importrealtime'] = option.set_import_realtime
+
         return cli_properties
 
     @classmethod
@@ -164,6 +168,11 @@ class AppProperties:
                 os.environ.get(f'{cls.__env_prefix}_AUTOMATIC_UPDATION_LINKS_TO_TEST_CASES')):
             env_properties['automaticupdationlinkstotestcases'] = os.environ.get(
                 f'{cls.__env_prefix}_AUTOMATIC_UPDATION_LINKS_TO_TEST_CASES')
+
+        if f'{cls.__env_prefix}_IMPORT_REALTIME' in os.environ.keys() and cls.__check_property_value(
+                os.environ.get(f'{cls.__env_prefix}_IMPORT_REALTIME')):
+            env_properties['importrealtime'] = os.environ.get(
+                f'{cls.__env_prefix}_IMPORT_REALTIME')
 
         return env_properties
 
@@ -225,6 +234,9 @@ class AppProperties:
 
         if not cls.__check_property_value(properties.get('automaticupdationlinkstotestcases')):
             properties['automaticupdationlinkstotestcases'] = 'false'
+
+        if not cls.__check_property_value(properties.get('importrealtime')):
+            properties['importrealtime'] = 'true'
 
     @staticmethod
     def __search_in_environ(var_name: str):

@@ -1,5 +1,5 @@
-from testit_adapter_pytest.fixture_storage import ThreadContextFixtures
-from testit_adapter_pytest.models.fixture import FixtureResult
+from testit_python_commons.services.fixture_storage import ThreadContextFixtures
+from testit_python_commons.models.step_result import StepResult
 
 
 class FixtureManager:
@@ -18,7 +18,7 @@ class FixtureManager:
 
     def _last_executable(self):
         for _uuid in reversed(self._items):
-            if isinstance(self._items[_uuid], FixtureResult):
+            if isinstance(self._items[_uuid], StepResult):
                 return _uuid
 
     def get_item(self, uuid):

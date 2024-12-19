@@ -331,6 +331,29 @@ class Converter:
 
         return autotest_model_step_results
 
+    @staticmethod
+    @adapter_logger
+    def fixtures_containers_to_test_results_with_all_fixture_step_results(
+            fixtures_containers: dict,
+            test_result_ids: dict) -> typing.List[TestResultWithAllFixtureStepResults]:
+        test_results_with_all_fixture_step_results = []
+
+        for external_id, test_result_id in test_result_ids.items():
+            test_result_with_all_fixture_step_results = TestResultWithAllFixtureStepResults(test_result_id)
+
+            for uuid, fixtures_container in fixtures_containers.items():
+                if external_id in fixtures_container.external_ids:
+                    if fixtures_container.befores:
+                        test_result_with_all_fixture_step_results.set_setup_results(fixtures_container.befores[0].steps)
+
+                    if fixtures_container.afters:
+                        test_result_with_all_fixture_step_results.set_teardown_results(
+                            fixtures_container.afters[0].steps)
+
+            test_results_with_all_fixture_step_results.append(test_result_with_all_fixture_step_results)
+
+        return test_results_with_all_fixture_step_results
+
     @classmethod
     @adapter_logger
     def step_results_to_auto_test_step_result_update_request(

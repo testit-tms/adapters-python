@@ -31,6 +31,7 @@ pip install testit-adapter-behave
 | It enables/disables certificate validation (**It's optional**). Default value - true                                                                                                                                                                                                                                                                                                   | certValidation                    | TMS_CERT_VALIDATION                        | tmsCertValidation                    |
 | Mode of automatic creation test cases (**It's optional**). Default value - false. The adapter supports following modes:<br/>true - in this mode, the adapter will create a test case linked to the created autotest (not to the updated autotest)<br/>false - in this mode, the adapter will not create a test case                                                                    | automaticCreationTestCases        | TMS_AUTOMATIC_CREATION_TEST_CASES          | tmsAutomaticCreationTestCases        |
 | Mode of automatic updation links to test cases (**It's optional**). Default value - false. The adapter supports following modes:<br/>true - in this mode, the adapter will update links to test cases<br/>false - in this mode, the adapter will not update link to test cases                                                                                                         | automaticUpdationLinksToTestCases | TMS_AUTOMATIC_UPDATION_LINKS_TO_TEST_CASES | tmsAutomaticUpdationLinksToTestCases |
+| Mode of import type selection when launching autotests (**It's optional**). Default value - true. The adapter supports following modes:<br/>true - in this mode, the adapter will create/update each autotest in real time<br/>false - in this mode, the adapter will create/update multiple autotests                                                                                 | importRealtime                    | TMS_IMPORT_REALTIME                        | tmsImportRealtime                    |
 | Url of proxy server (**It's optional**)                                                                                                                                                                                                                                                                                                                                                | tmsProxy                          | TMS_PROXY                                  | tmsProxy                             |
 | Name of the configuration file If it is not provided, it is used default file name (**It's optional**)                                                                                                                                                                                                                                                                                 | -                                 | TMS_CONFIG_FILE                            | tmsConfigFile                        |
 
@@ -49,6 +50,7 @@ adapterMode = ADAPTER_MODE
 certValidation = CERT_VALIDATION
 automaticCreationTestCases = AUTOMATIC_CREATION_TEST_CASES
 automaticUpdationLinksToTestCases = AUTOMATIC_UPDATION_LINKS_TO_TEST_CASES
+importRealtime = IMPORT_REALTIME
 
 # This section are optional. It enables debug mode.
 [debug]
@@ -70,7 +72,7 @@ $ behave -f testit_adapter_behave.formatter:AdapterFormatter -D tmsUrl=URL -D tm
 tmsProjectId=PROJECT_ID -D tmsConfigurationId=CONFIGURATION_ID -D tmsTestRunId=TEST_RUN_ID -D tmsAdapterMode=ADAPTER_MODE -D
 tmsTestRunName=TEST_RUN_NAME -D tmsProxy='{"http":"http://localhost:8888","https":"http://localhost:8888"}' -D
 tmsCertValidation=CERT_VALIDATION -D tmsAutomaticCreationTestCases=AUTOMATIC_CREATION_TEST_CASES -D 
-tmsAutomaticUpdationLinksToTestCases=AUTOMATIC_UPDATION_LINKS_TO_TEST_CASES
+tmsAutomaticUpdationLinksToTestCases=AUTOMATIC_UPDATION_LINKS_TO_TEST_CASES -D tmsImportRealtime=IMPORT_REALTIME
 ```
 
 If you want to enable debug mode then

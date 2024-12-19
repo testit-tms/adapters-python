@@ -71,6 +71,9 @@ class AutotestAdapter:
             self.adapter_manager.write_test(
                 convert_executable_test_to_test_result_model(self.active_test.order()))
 
+    def close(self):
+        self.adapter_manager.write_tests()
+
 
 class TestRunAdapter:
     ROBOT_LISTENER_API_VERSION = 3

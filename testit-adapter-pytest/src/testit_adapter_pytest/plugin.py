@@ -109,6 +109,17 @@ def pytest_addoption(parser):
         false - not update links to test cases (Default)
         """
     )
+    parser.getgroup('testit').addoption(
+        '--tmsImportRealtime',
+        action="store",
+        dest="set_import_realtime",
+        metavar="false",
+        help="""
+        Set mode of import type selection when launching autotests (optional):
+        true - the adapter will create/update each autotest in real time (Default)
+        false - the adapter will create/update multiple autotests
+        """
+    )
 
 
 @pytest.mark.tryfirst
@@ -116,7 +127,8 @@ def pytest_cmdline_main(config):
     if config.option.tms_report:
         listener = TmsListener(
             TmsPluginManager.get_adapter_manager(config.option),
-            TmsPluginManager.get_step_manager())
+            TmsPluginManager.get_step_manager(),
+            TmsPluginManager.get_fixture_manager())
 
         config.pluginmanager.register(listener)
         TmsPluginManager.get_plugin_manager().register(listener)
