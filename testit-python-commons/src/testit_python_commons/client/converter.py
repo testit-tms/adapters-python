@@ -17,7 +17,7 @@ from testit_api_client.models import (
     SearchAutoTestsQueryIncludesModel,
     AutotestsSelectModel,
     TestResultUpdateV2Request,
-    TestResultModel,
+    TestResultResponse,
     TestResultV2GetModel,
     AttachmentModel,
     AttachmentUpdateRequest
@@ -179,7 +179,7 @@ class Converter:
     @adapter_logger
     def convert_test_result_model_to_test_results_id_put_request(
             cls,
-            test_result: TestResultModel) -> TestResultUpdateV2Request:
+            test_result: TestResultResponse) -> TestResultUpdateV2Request:
         return TestResultUpdateV2Request(
             failure_class_ids=test_result.failure_class_ids,
             outcome=test_result.outcome,

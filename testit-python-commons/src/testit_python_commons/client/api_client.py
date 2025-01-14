@@ -11,7 +11,7 @@ from testit_api_client.models import (
     AutoTestPutModel,
     AttachmentPutModel,
     AutoTestResultsForTestRunModel,
-    TestResultModel,
+    TestResultResponse,
     WorkItemIdModel,
     WorkItemIdentifierModel
 )
@@ -249,7 +249,7 @@ class ApiClientWorker:
         return work_item_uuids
 
     @adapter_logger
-    def __get_work_item_uuid_by_work_item_id(self, work_item_id: str) -> str | None:
+    def __get_work_item_uuid_by_work_item_id(self, work_item_id: str) -> str or None:
         logging.debug('Getting workitem by id ' + work_item_id)
 
         try:
@@ -363,7 +363,7 @@ class ApiClientWorker:
             auto_test_results_for_test_run_model=test_results)
 
     @adapter_logger
-    def get_test_result_by_id(self, test_result_id: str) -> TestResultModel:
+    def get_test_result_by_id(self, test_result_id: str) -> TestResultResponse:
         return self.__test_results_api.api_v2_test_results_id_get(id=test_result_id)
 
     @adapter_logger
