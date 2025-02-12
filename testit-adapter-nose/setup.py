@@ -1,8 +1,10 @@
 from setuptools import setup, find_packages
 
+VERSION = "3.4.1"
+
 setup(
     name='testit-adapter-nose',
-    version='3.4.1',
+    version=VERSION,
     description='Nose adapter for Test IT',
     long_description=open('README.md', "r").read(),
     long_description_content_type="text/markdown",

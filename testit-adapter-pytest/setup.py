@@ -1,8 +1,10 @@
 from setuptools import find_packages, setup
 
+VERSION = "3.4.1"
+
 setup(
     name='testit-adapter-pytest',
-    version='3.4.1',
+    version=VERSION,
     description='Pytest adapter for Test IT',
     long_description=open('README.md', "r").read(),
     long_description_content_type="text/markdown",
