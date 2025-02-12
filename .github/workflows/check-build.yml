@@ -1,25 +1,16 @@
-# This workflow will upload a Python Package using Twine when a release is created
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python#publishing-to-package-registries
-
-# This workflow uses actions that are not certified by GitHub.
-# They are provided by a third-party and are governed by
-# separate terms of service, privacy policy, and support
-# documentation.
-
-name: Upload Python Package
+name: Check build like on publish
 
 on:
-  release:
-    types: [ published ]
+  - pull_request
+
 
 permissions:
   contents: read
 
 jobs:
   deploy:
-
     runs-on: ubuntu-latest
-
+    
     strategy:
       matrix:
         package: [
@@ -43,19 +34,14 @@ jobs:
               VERSION=$(grep -oP 'VERSION\s*=\s*"\K[^"]+' $str/setup.py)
               python .version_check/check.py $VERSION
           done
+          
       - name: Install dependencies for ${{ matrix.package }}
         working-directory: ${{ matrix.package }}
         run: |
           python -m pip install --upgrade pip
           pip install build
+      
       - name: Build package
         working-directory: ${{ matrix.package }}
         run: |
           python -m build -s
-      - name: Publish package for ${{ matrix.package }}
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          skip-existing: true
-          user: __token__
-          packages-dir: ${{ matrix.package }}/dist/
-          password: ${{ secrets.PYPI_API_TOKEN }}
