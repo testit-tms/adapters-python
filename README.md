@@ -11,6 +11,7 @@ The repository contains new versions of adapters for python test frameworks.
 | 4.6     | 2.8    | 2.8  | 2.8    | 2.8            |
 | 5.0     | 3.2    | 3.2  | 3.2    | 3.2            |
 | 5.2     | 3.3    | 3.3  | 3.3    | 3.3            |
+| Cloud   | 3.5    | 3.5  | 3.5    | 3.5            |
 
 Supported test frameworks :
  1. [Pytest](https://github.com/testit-tms/adapters-python/tree/main/testit-adapter-pytest)
