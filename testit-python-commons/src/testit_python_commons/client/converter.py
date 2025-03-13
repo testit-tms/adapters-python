@@ -11,15 +11,15 @@ from testit_api_client.models import (
     LinkPostModel,
     LinkPutModel,
     LinkType,
-    TestRunV2PostShortModel,
-    TestRunV2GetModel,
-    AutotestFilterModel,
-    SearchAutoTestsQueryIncludesModel,
-    AutotestsSelectModel,
+    CreateEmptyTestRunApiModel,
+    TestRunV2ApiResult,
+    AutoTestFilterApiModel,
+    AutoTestSearchIncludeApiModel,
+    AutoTestSearchApiModel,
     TestResultUpdateV2Request,
     TestResultResponse,
     TestResultV2GetModel,
-    AttachmentModel,
+    AttachmentApiResult,
     AttachmentUpdateRequest
 )
 
@@ -34,19 +34,19 @@ class Converter:
     @classmethod
     @adapter_logger
     def test_run_to_test_run_short_model(cls, project_id, name):
-        return TestRunV2PostShortModel(
+        return CreateEmptyTestRunApiModel(
             project_id=project_id,
             name=name
         )
 
     @classmethod
     @adapter_logger
-    def get_id_from_create_test_run_response(cls, response: TestRunV2GetModel):
+    def get_id_from_create_test_run_response(cls, response: TestRunV2ApiResult):
         return response.id
 
     @classmethod
     @adapter_logger
-    def get_resolved_autotests_from_get_test_run_response(cls, response: TestRunV2GetModel, configuration: str):
+    def get_resolved_autotests_from_get_test_run_response(cls, response: TestRunV2ApiResult, configuration: str):
         autotests = response.test_results
 
         return cls.__get_resolved_autotests(autotests, configuration)
@@ -54,16 +54,16 @@ class Converter:
     @classmethod
     @adapter_logger
     def project_id_and_external_id_to_auto_tests_search_post_request(cls, project_id: str, external_id: str):
-        autotests_filter = AutotestFilterModel(
+        autotests_filter = AutoTestFilterApiModel(
             project_ids=[project_id],
             external_ids=[external_id],
             is_deleted=False)
-        autotests_includes = SearchAutoTestsQueryIncludesModel(
+        autotests_includes = AutoTestSearchIncludeApiModel(
             include_steps=False,
             include_links=False,
             include_labels=False)
 
-        return AutotestsSelectModel(filter=autotests_filter, includes=autotests_includes)
+        return AutoTestSearchApiModel(filter=autotests_filter, includes=autotests_includes)
 
     @staticmethod
     @adapter_logger
@@ -275,7 +275,7 @@ class Converter:
     @classmethod
     @adapter_logger
     def attachment_models_to_attachment_put_models(
-            cls, attachments: typing.List[AttachmentModel]) -> typing.List[AttachmentUpdateRequest]:
+            cls, attachments: typing.List[AttachmentApiResult]) -> typing.List[AttachmentUpdateRequest]:
         put_model_attachments = []
 
         for attachment in attachments:
@@ -287,7 +287,7 @@ class Converter:
 
     @staticmethod
     @adapter_logger
-    def attachment_model_to_attachment_put_model(attachment: AttachmentModel) -> AttachmentUpdateRequest:
+    def attachment_model_to_attachment_put_model(attachment: AttachmentApiResult) -> AttachmentUpdateRequest:
         return AttachmentUpdateRequest(id=attachment.id)
 
     @classmethod

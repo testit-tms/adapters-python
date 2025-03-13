@@ -6,7 +6,7 @@ from datetime import datetime
 from testit_api_client import ApiClient, Configuration
 from testit_api_client.api import AttachmentsApi, AutoTestsApi, TestRunsApi, TestResultsApi, WorkItemsApi
 from testit_api_client.models import (
-    AutoTestModel,
+    AutoTestApiResult,
     AutoTestPostModel,
     AutoTestPutModel,
     AttachmentPutModel,
@@ -66,7 +66,7 @@ class ApiClientWorker:
             test_run_name
         )
 
-        response = self.__test_run_api.create_empty(test_run_v2_post_short_model=model)
+        response = self.__test_run_api.create_empty(create_empty_test_run_api_model=model)
 
         return Converter.get_id_from_create_test_run_response(response)
 
@@ -88,7 +88,7 @@ class ApiClientWorker:
             self.__config.get_project_id(),
             test_result.get_external_id())
 
-        autotests = self.__autotest_api.api_v2_auto_tests_search_post(autotests_select_model=model)
+        autotests = self.__autotest_api.api_v2_auto_tests_search_post(auto_test_search_api_model=model)
 
         if autotests:
             self.__update_test(test_result, autotests[0])
@@ -172,7 +172,7 @@ class ApiClientWorker:
     def __prepare_to_update_autotest(
             self,
             test_result: TestResult,
-            autotest: AutoTestModel) -> AutoTestPutModel:
+            autotest: AutoTestApiResult) -> AutoTestPutModel:
         logging.debug('Preparing to update the auto test ', test_result.get_external_id())
 
         model = Converter.test_result_to_autotest_put_model(
@@ -304,7 +304,7 @@ class ApiClientWorker:
         logging.debug(f'Autotests were created')
 
     @adapter_logger
-    def __update_test(self, test_result: TestResult, autotest: AutoTestModel):
+    def __update_test(self, test_result: TestResult, autotest: AutoTestApiResult):
         logging.debug(f'Autotest "{test_result.get_autotest_name()}" was found')
 
         model = self.__prepare_to_update_autotest(test_result, autotest)
