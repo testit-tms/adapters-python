@@ -12,7 +12,7 @@ from testit_python_commons.models.adapter_mode import AdapterMode
 class AppProperties:
     __project_metadata_file = 'pyproject.toml'
     __properties_file = 'connection_config.ini'
-    __available_extensions = [".ini", ".toml"]
+    __available_extensions = ['.ini', '.toml']
 
     __env_prefix = 'TMS'
 
@@ -41,7 +41,7 @@ class AppProperties:
             _, extension = os.path.splitext(file_name)
             if extension not in cls.__available_extensions:
                 raise FileNotFoundError(
-                    f"{file_name} is not a valid file. Available extensions: {cls.__available_extensions}"
+                    f'{file_name} is not a valid file. Available extensions: {cls.__available_extensions}'
                 )
             cls.__properties_file = file_name
 
