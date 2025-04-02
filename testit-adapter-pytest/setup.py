@@ -1,6 +1,6 @@
 from setuptools import find_packages, setup
 
-VERSION = "3.5.1"
+VERSION = "3.5.2"
 
 setup(
     name='testit-adapter-pytest',
@@ -23,6 +23,6 @@ setup(
     py_modules=['testit_adapter_pytest'],
     packages=find_packages(where='src'),
     package_dir={'': 'src'},
-    install_requires=['pytest', 'pytest-xdist', 'attrs', 'testit-python-commons==3.5.1'],
+    install_requires=['pytest', 'pytest-xdist', 'attrs', 'testit-python-commons==' + VERSION],
     entry_points={'pytest11': ['testit_adapter_pytest = testit_adapter_pytest.plugin']}
 )
