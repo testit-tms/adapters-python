@@ -143,7 +143,7 @@ def __get_class_name_from(item, function):
         i = function.__qualname__.find('.')
 
         if i != -1:
-            return func.__qualname__[:i]
+            return function.__qualname__[:i]
 
         return None
 
@@ -264,9 +264,9 @@ def __join_nose_test_node(test_node_parts: typing.List[str]):
     return ".".join(test_node_parts)
 
 
-def __search_attribute(func, attribute):
-    if hasattr(func, attribute):
-        return getattr(func, attribute)
+def __search_attribute(function, attribute):
+    if hasattr(function, attribute):
+        return getattr(function, attribute)
 
     return
 
