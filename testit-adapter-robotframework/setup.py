@@ -1,6 +1,6 @@
 from setuptools import find_packages, setup
 
-VERSION = "3.5.0"
+VERSION = "3.5.3"
 
 setup(
     name='testit-adapter-robotframework',
@@ -25,5 +25,5 @@ setup(
     py_modules=['testit_adapter_robotframework'],
     packages=find_packages(where='src'),
     package_dir={'': 'src'},
-    install_requires=['attrs', 'robotframework', 'testit-python-commons==3.5.0']
+    install_requires=['attrs', 'robotframework', 'testit-python-commons==' + VERSION]
 )

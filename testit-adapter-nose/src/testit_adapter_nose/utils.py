@@ -30,17 +30,6 @@ def status_details(event):
     return message, trace
 
 
-def update_attrs(test, name, values):
-    if type(values) in (list, tuple, str) and name.isidentifier():
-        attrib = getattr(test, name, values)
-        if attrib and attrib != values:
-            attrib = sum(
-                [tuple(i) if type(i) in (tuple, list) else (i,) for i in (attrib, values)],
-                ()
-            )
-        setattr(test, name, attrib)
-
-
 def get_outcome(event):
     outcome = None
     message = None
@@ -65,68 +54,63 @@ def get_outcome(event):
 
 
 def form_test(item, top_level_directory):
-    data = {}
+    if hasattr(item, '_testFunc'):
+        function = item._testFunc
+    elif hasattr(item, '_testMethodName'):
+        function = getattr(item.__class__, item._testMethodName)
+    else:
+        raise Exception('')
 
-    if hasattr(item, "_testFunc"):
-        data = {
-            'externalID': __get_external_id_from(item),
-            'autoTestName': __get_display_name_from(item),
-            'steps': [],
-            'stepResults': [],
-            'setUp': [],
-            'setUpResults': [],
-            'tearDown': [],
-            'tearDownResults': [],
-            'resultLinks': [],
-            'duration': 0,
-            'outcome': None,
-            'failureReasonName': None,
-            'traces': None,
-            'attachments': [],
-            'parameters': get_all_parameters(item),
-            'properties': __get_properties_from(item),
-            'namespace': __get_namespace_from(item),
-            'classname': __get_class_name_from(item),
-            'title': __get_title_from(item),
-            'description': __get_description_from(item),
-            'links': __get_links_from(item),
-            'labels': __get_labels_from(item),
-            'workItemsID': __get_work_item_ids_from(item),
-            'message': None,
-            'externalKey': __get_fullname(item, top_level_directory)
-        }
-
-    elif hasattr(item, "_testMethodName"):
-        data = {
-            'externalID': get_hash(item._testMethodName),
-            'autoTestName': item.__doc__ if item.__doc__ else item._testMethodName,
-            'parameters': get_all_parameters(item)
-        }
-
-    return data
+    return {
+        'externalID': __get_external_id_from(item, function),
+        'autoTestName': __get_display_name_from(item, function),
+        'steps': [],
+        'stepResults': [],
+        'setUp': [],
+        'setUpResults': [],
+        'tearDown': [],
+        'tearDownResults': [],
+        'resultLinks': [],
+        'duration': 0,
+        'outcome': None,
+        'failureReasonName': None,
+        'traces': None,
+        'attachments': [],
+        'parameters': get_all_parameters(item),
+        'properties': __get_properties_from(function),
+        'namespace': __get_namespace_from(item, function),
+        'classname': __get_class_name_from(item, function),
+        'title': __get_title_from(item, function),
+        'description': __get_description_from(item, function),
+        'links': __get_links_from(item, function),
+        'labels': __get_labels_from(item, function),
+        'workItemsID': __get_work_item_ids_from(item, function),
+        'message': None,
+        'externalKey': __get_fullname(function, top_level_directory)
+    }
 
 
-def __get_display_name_from(item):
-    display_name = __search_attribute(item, 'test_displayname')
+def __get_display_name_from(item, function):
+    display_name = __search_attribute(function, 'test_displayname')
 
     if not display_name:
-        return item._testFunc.__doc__ if \
-            item._testFunc.__doc__ else item._testFunc.__name__
+        return function.__doc__ if \
+            function.__doc__ else function.__name__
 
     return collect_parameters_in_string_attribute(display_name, get_all_parameters(item))
 
 
-def __get_external_id_from(item):
-    external_id = __search_attribute(item, 'test_external_id')
+def __get_external_id_from(item, function):
+    external_id = __search_attribute(function, 'test_external_id')
 
     if not external_id:
-        return get_hash(item._testFunc.__qualname__ + item._testFunc.__name__)
+        return get_hash(function.__qualname__ + function.__name__)
 
     return collect_parameters_in_string_attribute(external_id, get_all_parameters(item))
 
 
-def __get_title_from(item):
-    title = __search_attribute(item, 'test_title')
+def __get_title_from(item, function):
+    title = __search_attribute(function, 'test_title')
 
     if not title:
         return None
@@ -134,8 +118,8 @@ def __get_title_from(item):
     return collect_parameters_in_string_attribute(title, get_all_parameters(item))
 
 
-def __get_description_from(item):
-    description = __search_attribute(item, 'test_description')
+def __get_description_from(item, function):
+    description = __search_attribute(function, 'test_description')
 
     if not description:
         return None
@@ -143,31 +127,31 @@ def __get_description_from(item):
     return collect_parameters_in_string_attribute(description, get_all_parameters(item))
 
 
-def __get_namespace_from(item):
-    namespace = __search_attribute(item, 'test_namespace')
+def __get_namespace_from(item, function):
+    namespace = __search_attribute(function, 'test_namespace')
 
     if not namespace:
-        return item._testFunc.__module__
+        return function.__module__
 
     return collect_parameters_in_string_attribute(namespace, get_all_parameters(item))
 
 
-def __get_class_name_from(item):
-    class_name = __search_attribute(item, 'test_classname')
+def __get_class_name_from(item, function):
+    class_name = __search_attribute(function, 'test_classname')
 
     if not class_name:
-        i = item._testFunc.__qualname__.find('.')
+        i = function.__qualname__.find('.')
 
         if i != -1:
-            return item._testFunc.__qualname__[:i]
+            return function.__qualname__[:i]
 
         return None
 
     return collect_parameters_in_string_attribute(class_name, get_all_parameters(item))
 
 
-def __get_links_from(item):
-    links = __search_attribute(item, 'test_links')
+def __get_links_from(item, function):
+    links = __search_attribute(function, 'test_links')
 
     if not links:
         return []
@@ -175,19 +159,8 @@ def __get_links_from(item):
     return __set_parameters_to_links(links, get_all_parameters(item))
 
 
-def __get_parameters_from(item):
-    if hasattr(item, 'array_parametrize_mark_id'):
-        test_parameters = {}
-        for key, parameter in item.callspec.params.items():
-            test_parameters[key] = str(parameter)
-        return test_parameters
-    return None
-
-
-def __get_properties_from(item):
-    if hasattr(item, 'test_properties'):
-        return item.test_properties
-    return None
+def __get_properties_from(function):
+    return __search_attribute(function, 'test_properties')
 
 
 def __set_parameters_to_links(links, all_parameters):
@@ -219,8 +192,8 @@ def __set_parameters_to_links(links, all_parameters):
     return links_with_parameters
 
 
-def __get_labels_from(item):
-    test_labels = __search_attribute(item, 'test_labels')
+def __get_labels_from(item, function):
+    test_labels = __search_attribute(function, 'test_labels')
 
     if not test_labels:
         return []
@@ -245,8 +218,8 @@ def __get_labels_from(item):
     return labels
 
 
-def __get_work_item_ids_from(item):
-    test_workitems_id = __search_attribute(item, 'test_workitems_id')
+def __get_work_item_ids_from(item, function):
+    test_workitems_id = __search_attribute(function, 'test_workitems_id')
 
     if not test_workitems_id:
         return []
@@ -261,17 +234,16 @@ def __get_work_item_ids_from(item):
     return map(str, result) if isinstance(result, __ARRAY_TYPES) else [str(result)]
 
 
-def __get_fullname(item, top_level_directory: str):
-    test_function = item._testFunc
-    module_file_name = __get_module_file_name_by_test_function(test_function)
+def __get_fullname(function, top_level_directory: str):
+    module_file_name = __get_module_file_name_by_test_function(function)
 
     if not module_file_name:
-        return __join_nose_test_node([test_function.__module__, test_function.__qualname__])
+        return __join_nose_test_node([function.__module__, function.__qualname__])
 
     absolute_module_path = __get_absolute_module_path_by_file_name(module_file_name)
     module_node = __convert_absolute_module_path_to_nose_module_node(absolute_module_path, top_level_directory)
 
-    return __join_nose_test_node([module_node, test_function.__module__, test_function.__qualname__])
+    return __join_nose_test_node([module_node, function.__module__, function.__qualname__])
 
 
 def __get_module_file_name_by_test_function(test_function):
@@ -292,18 +264,9 @@ def __join_nose_test_node(test_node_parts: typing.List[str]):
     return ".".join(test_node_parts)
 
 
-def fullname(event):
-    if hasattr(event.test, "_testFunc"):
-        test_module = event.test._testFunc.__module__
-        test_name = event.test._testFunc.__name__
-        return f"{test_module}.{test_name}"
-    test_id = event.test.id()
-    return test_id.split(":")[0]
-
-
-def __search_attribute(item, attribute):
-    if hasattr(item._testFunc, attribute):
-        return getattr(item._testFunc, attribute)
+def __search_attribute(function, attribute):
+    if hasattr(function, attribute):
+        return getattr(function, attribute)
 
     return
 

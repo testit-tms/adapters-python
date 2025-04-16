@@ -1,6 +1,6 @@
 from setuptools import find_packages, setup
 
-VERSION = "3.5.0"
+VERSION = "3.5.3"
 
 setup(
     name='testit-adapter-behave',
@@ -27,6 +27,6 @@ setup(
     package_dir={'': 'src'},
     install_requires=[
         'behave',
-        'testit-python-commons==3.5.0',
+        'testit-python-commons==' + VERSION,
         'attrs'],
 )
