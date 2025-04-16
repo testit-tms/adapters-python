@@ -10,7 +10,10 @@ from testit_python_commons.models.adapter_mode import AdapterMode
 
 
 class AppProperties:
-    __properties_file = 'connection_config'
+    __project_metadata_file = 'pyproject.toml'
+    __properties_file = 'connection_config.ini'
+    __available_extensions = ['.ini', '.toml']
+
     __env_prefix = 'TMS'
 
     @staticmethod
@@ -35,16 +38,25 @@ class AppProperties:
         root = path[:path.index(os.sep)]
 
         if file_name:
+            _, extension = os.path.splitext(file_name)
+            if extension not in cls.__available_extensions:
+                raise FileNotFoundError(
+                    f'{file_name} is not a valid file. Available extensions: {cls.__available_extensions}'
+                )
             cls.__properties_file = file_name
 
         if os.environ.get(f'{cls.__env_prefix}_CONFIG_FILE'):
             cls.__properties_file = os.environ.get(f'{cls.__env_prefix}_CONFIG_FILE')
 
+        if os.path.isfile(cls.__project_metadata_file):
+            # https://peps.python.org/pep-0621/
+            cls.__properties_file = cls.__project_metadata_file
+
         while not os.path.isfile(
-                path + os.sep + f'{cls.__properties_file}.ini') and path != root:
+                path + os.sep + cls.__properties_file) and path != root:
             path = path[:path.rindex(os.sep)]
 
-        path = path + os.sep + f'{cls.__properties_file}.ini'
+        path = path + os.sep + cls.__properties_file
 
         if os.path.isfile(path):
             parser = configparser.RawConfigParser()

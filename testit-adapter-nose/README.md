@@ -33,11 +33,11 @@ pip install testit-adapter-nose
 | Mode of automatic updation links to test cases (**It's optional**). Default value - false. The adapter supports following modes:<br/>true - in this mode, the adapter will update links to test cases<br/>false - in this mode, the adapter will not update link to test cases                                                                                                         | automaticUpdationLinksToTestCases | TMS_AUTOMATIC_UPDATION_LINKS_TO_TEST_CASES |
 | Mode of import type selection when launching autotests (**It's optional**). Default value - true. The adapter supports following modes:<br/>true - in this mode, the adapter will create/update each autotest in real time<br/>false - in this mode, the adapter will create/update multiple autotests                                                                                 | importRealtime                    | TMS_IMPORT_REALTIME                        |
 | Url of proxy server (**It's optional**)                                                                                                                                                                                                                                                                                                                                                | tmsProxy                          | TMS_PROXY                                  |
-| Name of the configuration file If it is not provided, it is used default file name (**It's optional**)                                                                                                                                                                                                                                                                                 | -                                 | TMS_CONFIG_FILE                            |
+| Name (**including extension**) of the configuration file If it is not provided, it is used default file name (**It's optional**)                                                                                                                                                                                                                                                       | -                                 | TMS_CONFIG_FILE                            |
 
 #### File
 
-Create **connection_config.ini** file in the root directory of the project:
+Add `[testit]` block to your **pyproject.toml** or create **connection_config.ini** file in the root directory of the project:
 ```
 [testit]
 URL = URL
@@ -59,7 +59,7 @@ tmsProxy = TMS_PROXY
 
 #### Examples
 
-Launch with a connection_config.ini file in the root directory of the project:
+Launch with a `pyproject.toml` or `connection_config.ini` file in the root directory of the project:
 
 ```
 $ nose2 --testit
