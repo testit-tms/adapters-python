@@ -68,6 +68,7 @@ def displayName(test_displayname: str):  # noqa: N802
     return outer
 
 
+@adapter_logger
 def nameSpace(test_namespace: str):  # noqa: N802
     def outer(function):
         function.test_namespace = test_namespace
@@ -76,6 +77,7 @@ def nameSpace(test_namespace: str):  # noqa: N802
     return outer
 
 
+@adapter_logger
 def className(test_classname: str):  # noqa: N802
     def outer(function):
         function.test_classname = test_classname
