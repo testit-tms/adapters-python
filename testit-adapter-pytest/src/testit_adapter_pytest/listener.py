@@ -267,7 +267,7 @@ class TmsListener(object):
             self.__executable_test.result_links.append(link)
 
     @adapter.hookimpl
-    def add_message(self, test_message):
+    def add_message(self, test_message: str):
         if self.__executable_test:
             self.__executable_test.message = str(test_message)
 
@@ -280,6 +280,51 @@ class TmsListener(object):
     def create_attachment(self, body, name: str):
         if self.__executable_test:
             self.__executable_test.attachments += self.__adapter_manager.create_attachment(body, name)
+
+    @adapter.hookimpl
+    def add_work_item_id(self, test_work_item_id: str):
+        if not self.__executable_test:
+            self.__executable_test.work_item_ids.append(test_work_item_id)
+
+    @adapter.hookimpl
+    def add_display_name(self, test_display_name: str):
+        if self.__executable_test:
+            self.__executable_test.name = test_display_name
+
+    @adapter.hookimpl
+    def add_namespace(self, test_namespace: str):
+        if self.__executable_test:
+            self.__executable_test.namespace = test_namespace
+
+    @adapter.hookimpl
+    def add_classname(self, test_classname: str):
+        if self.__executable_test:
+            self.__executable_test.classname = test_classname
+
+    @adapter.hookimpl
+    def add_external_id(self, test_external_id: str):
+        if self.__executable_test:
+            self.__executable_test.external_id = test_external_id
+
+    @adapter.hookimpl
+    def add_title(self, test_title: str):
+        if self.__executable_test:
+            self.__executable_test.title = str(test_title)
+
+    @adapter.hookimpl
+    def add_description(self, test_description: str):
+        if self.__executable_test:
+            self.__executable_test.description = test_description
+
+    @adapter.hookimpl
+    def add_label(self, test_label: str):
+        if self.__executable_test:
+            self.__executable_test.labels.append({'name': test_label})
+
+    @adapter.hookimpl
+    def add_parameter(self, name: str, value: str):
+        if self.__executable_test:
+            self.__executable_test.parameters[name] = value
 
     @adapter.hookimpl
     def start_fixture(self, parent_uuid, uuid, title):
