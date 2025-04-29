@@ -121,12 +121,13 @@ def __get_links_from(item):
 
 
 def __get_parameters_from(item):
+    test_parameters = {}
+
     if hasattr(item, 'callspec'):
-        test_parameters = {}
         for key, parameter in item.callspec.params.items():
             test_parameters[key] = str(parameter)
-        return test_parameters
-    return None
+
+    return test_parameters
 
 
 def __get_properties_from(item):

@@ -17,6 +17,15 @@ from testit_python_commons.dynamic_methods import (
     addLink,
     addLinks,
     addMessage,
+    addWorkItemIds,
+    addDisplayName,
+    addNameSpace,
+    addClassName,
+    addExternalId,
+    addTitle,
+    addDescription,
+    addLabels,
+    addParameter,
     attachments,
     message
 )
@@ -42,6 +51,15 @@ __all__ = [
     'addAttachments',
     'message',
     'addMessage',
+    'addWorkItemIds',
+    'addDisplayName',
+    'addNameSpace',
+    'addClassName',
+    'addExternalId',
+    'addTitle',
+    'addDescription',
+    'addLabels',
+    'addParameter',
     'step',
     'LinkType'
 ]
