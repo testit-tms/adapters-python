@@ -11,7 +11,7 @@ The repository contains new versions of adapters for python test frameworks.
 | 4.6     | 2.8           | 2.8           | 2.8           | 2.8            |
 | 5.0     | 3.2           | 3.2           | 3.2           | 3.2            |
 | 5.2     | 3.3           | 3.3           | 3.3           | 3.3            |
-| 5.3     | 3.5.5.post530 | 3.5.5.post530 | 3.5.5.post530 | 3.5.5.post530  |
+| 5.3     | 3.6.1.post530 | 3.6.1.post530 | 3.6.1.post530 | 3.6.1.post530  |
 | Cloud   | 3.5           | 3.5           | 3.5           | 3.5            |
 
 Supported test frameworks :

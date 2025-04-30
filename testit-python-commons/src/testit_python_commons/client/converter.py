@@ -357,12 +357,12 @@ class Converter:
     @classmethod
     @adapter_logger
     def step_results_to_auto_test_step_result_update_request(
-            cls, step_results: typing.List[StepResult]) -> typing.List[AutoTestStepResultUpdateRequest]:
+            cls, step_results: typing.List[StepResult]) -> typing.List[AttachmentPutModelAutoTestStepResultsModel]:
         autotest_model_step_results = []
 
         for step_result in step_results:
             autotest_model_step_results.append(
-                AutoTestStepResultUpdateRequest(
+                AttachmentPutModelAutoTestStepResultsModel(
                     title=step_result.get_title(),
                     outcome=AvailableTestResultOutcome(step_result.get_outcome()),
                     description=step_result.get_description(),
