@@ -1,6 +1,27 @@
 # Test IT Python Integrations
 The repository contains new versions of adapters for python test frameworks.
 
+Pytest: [![Release
+Status](https://img.shields.io/pypi/v/testit-adapter-pytest?style=plastic)](https://pypi.python.org/pypi/testit-adapter-pytest)
+[![Downloads](https://img.shields.io/pypi/dm/testit-adapter-pytest?style=plastic)](https://pypi.python.org/pypi/testit-adapter-pytest)
+
+Behave: [![Release
+Status](https://img.shields.io/pypi/v/testit-adapter-behave?style=plastic)](https://pypi.python.org/pypi/testit-adapter-behave)
+[![Downloads](https://img.shields.io/pypi/dm/testit-adapter-behave?style=plastic)](https://pypi.python.org/pypi/testit-adapter-behave)
+
+Nose: [![Release
+Status](https://img.shields.io/pypi/v/testit-adapter-nose?style=plastic)](https://pypi.python.org/pypi/testit-adapter-nose)
+[![Downloads](https://img.shields.io/pypi/dm/testit-adapter-nose?style=plastic)](https://pypi.python.org/pypi/testit-adapter-nose)
+
+Robotframework: [![Release
+Status](https://img.shields.io/pypi/v/testit-adapter-robotframework?style=plastic)](https://pypi.python.org/pypi/testit-adapter-robotframework)
+[![Downloads](https://img.shields.io/pypi/dm/testit-adapter-robotframework?style=plastic)](https://pypi.python.org/pypi/testit-adapter-robotframework)
+
+Commons: [![Release
+Status](https://img.shields.io/pypi/v/testit-python-commons?style=plastic)](https://pypi.python.org/pypi/testit-python-commons)
+[![Downloads](https://img.shields.io/pypi/dm/testit-python-commons?style=plastic)](https://pypi.python.org/pypi/testit-python-commons)
+
+
 ## Compatibility
 
 | Test IT | Behave        | Nose          | Pytest        | RobotFramework |
