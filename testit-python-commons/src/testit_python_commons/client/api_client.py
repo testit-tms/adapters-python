@@ -115,7 +115,7 @@ class ApiClientWorker:
                 test_result,
                 self.__config.get_configuration_id())
 
-            autotests = self.__autotest_api.api_v2_auto_tests_search_post(autotests_select_model=model)
+            autotests = self.__autotest_api.api_v2_auto_tests_search_post(auto_test_search_api_model=model)
 
             if autotests:
                 autotest_for_update = self.__prepare_to_update_autotest(test_result, autotests[0])
@@ -375,9 +375,9 @@ class ApiClientWorker:
             model = Converter.convert_test_result_model_to_test_results_id_put_request(
                 self.get_test_result_by_id(test_result.get_test_result_id()))
 
-            model.setup_results = Converter.step_results_to_auto_test_step_result_update_request(
+            model.setup_results = Converter.step_results_to_attachment_put_model_autotest_step_results_model(
                     test_result.get_setup_results())
-            model.teardown_results = Converter.step_results_to_auto_test_step_result_update_request(
+            model.teardown_results = Converter.step_results_to_attachment_put_model_autotest_step_results_model(
                     test_result.get_teardown_results())
 
             try:
