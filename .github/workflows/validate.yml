@@ -83,15 +83,3 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           base-path: ${{ matrix.package }}
           flag-name: ${{ matrix.package }}
-          parallel: true
-
-  coveralls-finish:
-    needs: validate
-    if: always()
-    runs-on: ubuntu-latest
-    steps:
-    - name: Coveralls Finished
-      uses: coverallsapp/github-action@v2
-      with:
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-        parallel-finished: true
