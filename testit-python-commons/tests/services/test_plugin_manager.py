@@ -87,6 +87,3 @@ class TestTmsPluginManager:
             'adapter_manager_configuration_ctor': mock_adapter_manager_configuration_ctor,
             'adapter_manager_ctor': mock_adapter_manager_ctor
         }
-
-    def test_fail(self):
-        assert False
