@@ -76,12 +76,8 @@ jobs:
           TESTS_DIR="${PACKAGE_DIR}/tests"
           SOURCE_DIR="${PACKAGE_DIR}/src"
           COVERAGE_XML_FILE="${PACKAGE_DIR}/coverage.xml"
-
-          pytest "${TESTS_DIR}/" \\
-                 -v --tb=short --no-header \\
-                 --cov="${SOURCE_DIR}" \\
-                 --cov-report=xml:"${COVERAGE_XML_FILE}" \\
-                 --cov-report=term-missing
+          
+          pytest "${TESTS_DIR}/" -v --tb=short --no-header --cov="${SOURCE_DIR}" --cov-report=xml:"${COVERAGE_XML_FILE}" --cov-report=term-missing
           
           echo "Unit tests completed for ${{ matrix.package }}"
 
