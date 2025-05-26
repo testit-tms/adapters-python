@@ -78,8 +78,21 @@ jobs:
 
       - name: Publish coverage to Coveralls.io
         if: success()
-        working-directory: ${{ matrix.package }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          COVERALLS_FLAG_NAME: ${{ matrix.package }}
-        run: coveralls --service=github
+        uses: coverallsapp/github-action@v2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          base-path: ${{ matrix.package }}
+          flag-name: ${{ matrix.package }}
+          parallel: true
+
+  coveralls-finish:
+    needs: validate
+    if: always() # Ensures this job runs even if a matrix job fails, to finalize the Coveralls build
+    runs-on: ubuntu-latest
+    steps:
+    - name: Coveralls Finished
+      uses: coverallsapp/github-action@v2
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        parallel-finished: true
+        carryforward: "testit-adapter-behave,testit-adapter-nose,testit-adapter-pytest,testit-adapter-robotframework,testit-python-commons"
