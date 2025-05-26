@@ -95,4 +95,3 @@ jobs:
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
         parallel-finished: true
-        carryforward: "testit-adapter-behave,testit-adapter-nose,testit-adapter-pytest,testit-adapter-robotframework,testit-python-commons"
