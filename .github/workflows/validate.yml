@@ -69,23 +69,18 @@ jobs:
         run: pip install pytest pytest-mock pytest-cov==4.1.0 coveralls==3.3.1 coverage==6.5.0
 
       - name: Test
+        working-directory: ${{ matrix.package }}
         shell: bash
         run: |
           echo "Running pytest for ${{ matrix.package }}..."
-          PACKAGE_DIR="${{ matrix.package }}"
-          TESTS_DIR="${PACKAGE_DIR}/tests"
-          SOURCE_DIR="${PACKAGE_DIR}/src"
-          COVERAGE_XML_FILE="${PACKAGE_DIR}/coverage.xml"
-          
-          pytest "${TESTS_DIR}/" -v --tb=short --no-header --cov="${SOURCE_DIR}" --cov-report=xml:"${COVERAGE_XML_FILE}" --cov-report=term-missing
-          
+          pytest tests/ -v --tb=short --no-header --cov=src --cov-report=term-missing --cov-report=xml
           echo "Unit tests completed for ${{ matrix.package }}"
 
       - name: Publish coverage to Coveralls.io
         if: success()
         run: |
           cd ${{ matrix.package }}
-          coveralls --service=github --basedir=..
+          coveralls --service=github --basedir=${{ matrix.package }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           COVERALLS_FLAG_NAME: ${{ matrix.package }}
