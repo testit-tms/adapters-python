@@ -73,28 +73,26 @@ jobs:
         shell: bash
         run: |
           echo "Running pytest for ${{ matrix.package }}..."
+          echo "[run]" > .coveragerc
+          echo "source = src" >> .coveragerc
+          echo "relative_files = True" >> .coveragerc
+          echo "[paths]" >> .coveragerc
+          echo "source =" >> .coveragerc
+          echo "    src/" >> .coveragerc
+          echo "    */src" >> .coveragerc
+          echo "    ${{ matrix.package }}/src" >> .coveragerc
+          
           pytest tests/ -v --tb=short --no-header --cov=src --cov-report=term-missing --cov-report=xml
+          sed -i "s|<source>.*</source>|<source>${PWD}</source>|g" coverage.xml
+          sed -i "s|filename=\"src/|filename=\"${{ matrix.package }}/src/|g" coverage.xml
+          
           echo "Unit tests completed for ${{ matrix.package }}"
 
       - name: Publish coverage to Coveralls.io
         if: success()
-        working-directory: ${{ matrix.package }}
-        run: coveralls --service=github
+        run: |
+          cd ${{ matrix.package }}
+          coveralls --service=github --basedir=..
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           COVERALLS_FLAG_NAME: ${{ matrix.package }}
-          COVERALLS_PARALLEL: true
-
-  coveralls:
-      name: Indicate completion to coveralls.io
-      needs: validate
-      if: always()
-      container: python:3-slim
-      runs-on: ubuntu-latest
-      steps:
-      - name: Install coveralls
-        run: pip3 install --upgrade coveralls
-      - name: Finished
-        run: coveralls --finish
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
