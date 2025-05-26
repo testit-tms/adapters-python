@@ -8,7 +8,7 @@ on:
       - "testit-adapter-robotframework/**"
       - "testit-python-commons/**"
       - "requirements.txt"
-      - ".github/workflows/validate.yaml"
+      - ".github/workflows/validate.yml"
 env:
   PYTHON_VERSION: 3.12
 
@@ -52,7 +52,7 @@ jobs:
         run: pip install ./${{ matrix.package }}
 
       - name: Install test dependencies
-        run: pip install pytest pytest-cov pytest-mock
+        run: pip install pytest pytest-mock pytest-cov==4.1.0 coveralls==3.3.1 coverage==6.5.0
 
       - name: Test
         working-directory: ${{ matrix.package }}
@@ -61,9 +61,11 @@ jobs:
           echo "Running pytest for ${{ matrix.package }}..."
           pytest tests/ -v --tb=short --no-header --cov=src --cov-report=term-missing --cov-report=xml
           echo "Unit tests completed for ${{ matrix.package }}"
-          
-      - name: Upload coverage reports
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-${{ matrix.package }}
-          path: ${{ matrix.package }}/coverage.xml
+
+      - name: Publish coverage to Coveralls.io
+        if: success()
+        working-directory: ${{ matrix.package }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          COVERALLS_FLAG_NAME: ${{ matrix.package }}
+        run: coveralls --service=github
