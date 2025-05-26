@@ -78,7 +78,23 @@ jobs:
 
       - name: Publish coverage to Coveralls.io
         if: success()
+        working-directory: ${{ matrix.package }}
         run: coveralls --service=github
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           COVERALLS_FLAG_NAME: ${{ matrix.package }}
+          COVERALLS_PARALLEL: true
+
+  coveralls:
+      name: Indicate completion to coveralls.io
+      needs: validate
+      if: always()
+      container: python:3-slim
+      runs-on: ubuntu-latest
+      steps:
+      - name: Install coveralls
+        run: pip3 install --upgrade coveralls
+      - name: Finished
+        run: coveralls --finish
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
