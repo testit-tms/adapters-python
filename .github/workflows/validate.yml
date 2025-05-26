@@ -75,12 +75,24 @@ jobs:
           echo "Running pytest for ${{ matrix.package }}..."
           pytest tests/ -v --tb=short --no-header --cov=src --cov-report=term-missing --cov-report=xml
           echo "Unit tests completed for ${{ matrix.package }}"
-
+          
       - name: Publish coverage to Coveralls.io
         if: success()
-        run: |
-          cd ${{ matrix.package }}
-          coveralls --service=github --basedir=${{ matrix.package }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          COVERALLS_FLAG_NAME: ${{ matrix.package }}
+        uses: coverallsapp/github-action@v2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          base-path: ${{ matrix.package }}
+          flag-name: ${{ matrix.package }}
+          parallel: true
+
+  coveralls-finish:
+    needs: validate
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+    - name: Coveralls Finished
+      uses: coverallsapp/github-action@v2
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        parallel-finished: true
+        carryforward: "testit-adapter-behave,testit-adapter-nose,testit-adapter-pytest,testit-adapter-robotframework,testit-python-commons"
