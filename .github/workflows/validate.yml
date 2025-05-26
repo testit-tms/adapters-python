@@ -9,6 +9,9 @@ on:
       - "testit-python-commons/**"
       - "requirements.txt"
       - ".github/workflows/validate.yml"
+  push:
+    branches:
+      - main
 env:
   PYTHON_VERSION: 3.12
 
@@ -19,6 +22,10 @@ jobs:
       fail-fast: false
       matrix:
         package: [
+          testit-adapter-behave,
+          testit-adapter-nose,
+          testit-adapter-pytest,
+          testit-adapter-robotframework,
           testit-python-commons
         ]
     steps:
@@ -48,8 +55,9 @@ jobs:
         if: matrix.package != 'testit-python-commons'
         run: pip install ./testit-python-commons
 
-      - name: Install adapter
-        run: pip install ./${{ matrix.package }}
+      - name: Install package in development mode
+        working-directory: ${{ matrix.package }}
+        run: pip install -e .
 
       - name: Install test dependencies
         run: pip install pytest pytest-mock pytest-cov==4.1.0 coveralls==3.3.1 coverage==6.5.0
