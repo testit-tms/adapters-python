@@ -1,0 +1,85 @@
+name: Validate
+on:
+  pull_request:
+    paths:
+      - "testit-adapter-behave/**"
+      - "testit-adapter-nose/**"
+      - "testit-adapter-pytest/**"
+      - "testit-adapter-robotframework/**"
+      - "testit-python-commons/**"
+      - "requirements.txt"
+      - ".github/workflows/validate.yml"
+  push:
+    branches:
+      - main
+env:
+  PYTHON_VERSION: 3.12
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        package: [
+          testit-adapter-behave,
+          testit-adapter-nose,
+          testit-adapter-pytest,
+          testit-adapter-robotframework,
+          testit-python-commons
+        ]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Cache pip dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ matrix.package }}-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: ${{ runner.os }}-pip-${{ matrix.package }}-
+            
+      - name: Install base dependencies
+        run: python -m pip install --upgrade pip
+
+      - name: Install package dependencies
+        working-directory: ${{ matrix.package }}
+        run: |
+          if [ -f requirements.txt ]; then
+            pip install -r requirements.txt
+            echo "Successfully installed dependencies from requirements.txt for ${{ matrix.package }}."
+          else
+            echo "requirements.txt not found in ${{ matrix.package }}, skipping 'pip install -r requirements.txt'."
+          fi
+
+      - name: Install testit-python-commons
+        if: matrix.package != 'testit-python-commons'
+        run: pip install ./testit-python-commons
+
+      - name: Install package in development mode
+        working-directory: ${{ matrix.package }}
+        run: pip install -e .
+
+      - name: Install test dependencies
+        run: pip install pytest pytest-mock pytest-cov==4.1.0 coveralls==3.3.1 coverage==6.5.0
+
+      - name: Test
+        working-directory: ${{ matrix.package }}
+        shell: bash
+        run: |
+          echo "Running pytest for ${{ matrix.package }}..."
+          pytest tests/ -v --tb=short --no-header --cov=src --cov-report=term-missing --cov-report=xml
+          echo "Unit tests completed for ${{ matrix.package }}"
+          
+      - name: Publish coverage to Coveralls.io
+        if: success()
+        uses: coverallsapp/github-action@v2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          base-path: ./${{ matrix.package }}/src
+          flag-name: ${{ matrix.package }}
