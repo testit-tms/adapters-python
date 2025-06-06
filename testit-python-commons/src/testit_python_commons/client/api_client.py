@@ -375,9 +375,9 @@ class ApiClientWorker:
             model = Converter.convert_test_result_model_to_test_results_id_put_request(
                 self.get_test_result_by_id(test_result.get_test_result_id()))
 
-            model.setup_results = Converter.step_results_to_attachment_put_model_autotest_step_results_model(
+            model.setup_results = Converter.step_results_to_auto_test_step_result_update_request(
                     test_result.get_setup_results())
-            model.teardown_results = Converter.step_results_to_attachment_put_model_autotest_step_results_model(
+            model.teardown_results = Converter.step_results_to_auto_test_step_result_update_request(
                     test_result.get_teardown_results())
 
             try:
