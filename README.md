@@ -44,3 +44,7 @@ Supported test frameworks :
 # 🚀 Warning
 Since 3.0.0 version:
 - If the externalId annotation is not specified, then its contents will be a hash of a fully qualified method name.
+
+<a href='https://coveralls.io/github/testit-tms/adapters-python?branch=main'>
+    <img src='https://coveralls.io/repos/github/testit-tms/adapters-python/badge.svg?branch=main' alt='Coverage Status' />
+</a>
