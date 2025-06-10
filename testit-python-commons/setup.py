@@ -25,5 +25,5 @@ setup(
     py_modules=['testit', 'testit_python_commons'],
     packages=find_packages(where='src'),
     package_dir={'': 'src'},
-    install_requires=['pluggy', 'testit-api-client==6.1.0']
+    install_requires=['pluggy', 'testit-api-client==6.1.1']
 )
