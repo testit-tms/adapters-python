@@ -393,16 +393,15 @@ class ApiClientWorker:
 
         for path in attach_paths:
             if os.path.isfile(path):
-                with open(path, "rb+") as file:
-                    try:
-                        attachment_response = self.__attachments_api.api_v2_attachments_post(
-                            file=(file.name, file.read()))
+                try:
+                    attachment_response = self.__attachments_api.api_v2_attachments_post(
+                        file=path)
 
-                        attachments.append(AttachmentPutModel(id=attachment_response.id))
+                    attachments.append(AttachmentPutModel(id=attachment_response.id))
 
-                        logging.debug(f'Attachment "{path}" was uploaded')
-                    except Exception as exc:
-                        logging.error(f'Upload attachment "{path}" status: {exc}')
+                    logging.debug(f'Attachment "{path}" was uploaded')
+                except Exception as exc:
+                    logging.error(f'Upload attachment "{path}" status: {exc}')
             else:
                 logging.error(f'File "{path}" was not found!')
         return attachments
