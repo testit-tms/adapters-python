@@ -39,7 +39,7 @@ class AppProperties:
         return properties
 
     @classmethod
-    def load_file_properties(cls, cli_file_name: str = None):
+    def load_file_properties(cls, cli_file_path: str = None):
         if os.path.isfile(cls.__project_metadata_file):
             # https://peps.python.org/pep-0621/
             cls.__properties_file = cls.__project_metadata_file
@@ -60,8 +60,9 @@ class AppProperties:
             cls.__properties_file = cls.__tms_config_file
             path = os.environ.get(f'{cls.__env_prefix}_CONFIG_FILE')
 
-        if cli_file_name:
-            cls.__properties_file = cli_file_name
+        if cli_file_path:
+            cls.__properties_file = cls.__tms_config_file
+            path = cli_file_path
 
         _, extension = os.path.splitext(cls.__properties_file)
         if extension not in cls.__available_extensions:
