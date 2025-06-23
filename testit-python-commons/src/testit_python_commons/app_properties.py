@@ -14,7 +14,8 @@ class AppProperties:
     __toml_extension = '.toml'
     __ini_extension = '.ini'
     __project_metadata_file = 'pyproject' + __toml_extension
-    __properties_file = 'connection_config' + __ini_extension
+    __tms_config_file = 'connection_config' + __ini_extension
+    __properties_file = __tms_config_file
     __available_extensions = [__toml_extension, __ini_extension]
 
     __env_prefix = 'TMS'
@@ -25,6 +26,8 @@ class AppProperties:
     def load_properties(option=None):
         properties = AppProperties.load_file_properties(
             option.set_config_file if hasattr(option, 'set_config_file') else None)
+
+        AppProperties.__check_token_property(properties)
 
         properties.update(AppProperties.load_env_properties())
 
@@ -41,8 +44,21 @@ class AppProperties:
             # https://peps.python.org/pep-0621/
             cls.__properties_file = cls.__project_metadata_file
 
+        path = os.path.abspath('')
+        root = path[:path.index(os.sep)]
+
+        while not os.path.isfile(
+                path + os.sep + cls.__tms_config_file) and path != root:
+            path = path[:path.rindex(os.sep)]
+
+        path = path + os.sep + cls.__tms_config_file
+
+        if os.path.isfile(path):
+            cls.__properties_file = cls.__tms_config_file
+
         if os.environ.get(f'{cls.__env_prefix}_CONFIG_FILE'):
-            cls.__properties_file = os.environ.get(f'{cls.__env_prefix}_CONFIG_FILE')
+            cls.__properties_file = cls.__tms_config_file
+            path = os.environ.get(f'{cls.__env_prefix}_CONFIG_FILE')
 
         if cli_file_name:
             cls.__properties_file = cli_file_name
@@ -56,7 +72,7 @@ class AppProperties:
         if extension == cls.__toml_extension:
             return cls.__load_file_properties_from_toml()
 
-        return cls.__load_file_properties_from_ini()
+        return cls.__load_file_properties_from_ini(path)
 
     @classmethod
     def load_cli_properties(cls, option):
@@ -248,41 +264,27 @@ class AppProperties:
                     if key == '__dev':
                         properties['logs'] = cls.__search_in_environ(str(value)).lower()
 
-        cls.__check_token_property(properties)
-
         return properties
 
     @classmethod
-    def __load_file_properties_from_ini(cls) -> dict:
+    def __load_file_properties_from_ini(cls, path: str) -> dict:
         properties = {}
-        path = os.path.abspath('')
-        root = path[:path.index(os.sep)]
+        parser = configparser.RawConfigParser()
 
-        while not os.path.isfile(
-                path + os.sep + cls.__properties_file) and path != root:
-            path = path[:path.rindex(os.sep)]
+        parser.read(path, encoding="utf-8")
 
-        path = path + os.sep + cls.__properties_file
+        if parser.has_section(cls.__config_section_name):
+            for key, value in parser.items(cls.__config_section_name):
+                properties[key] = cls.__search_in_environ(value)
 
-        if os.path.isfile(path):
-            parser = configparser.RawConfigParser()
+        if parser.has_section('debug'):
+            if parser.has_option('debug', 'tmsproxy'):
+                properties['tmsproxy'] = cls.__search_in_environ(
+                    parser.get('debug', 'tmsproxy'))
 
-            parser.read(path, encoding="utf-8")
-
-            if parser.has_section(cls.__config_section_name):
-                for key, value in parser.items(cls.__config_section_name):
-                    properties[key] = cls.__search_in_environ(value)
-
-            if parser.has_section('debug'):
-                if parser.has_option('debug', 'tmsproxy'):
-                    properties['tmsproxy'] = cls.__search_in_environ(
-                        parser.get('debug', 'tmsproxy'))
-
-                if parser.has_option('debug', '__dev'):
-                    properties['logs'] = cls.__search_in_environ(
-                        parser.get('debug', '__dev')).lower()
-
-        cls.__check_token_property(properties)
+            if parser.has_option('debug', '__dev'):
+                properties['logs'] = cls.__search_in_environ(
+                    parser.get('debug', '__dev')).lower()
 
         return properties
 
