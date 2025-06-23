@@ -1,25 +1,33 @@
 import configparser
 import logging
 import os
-import re
 import warnings
 import uuid
+import re
 from urllib.parse import urlparse
+import tomli
 
 from testit_python_commons.models.adapter_mode import AdapterMode
 
 
 class AppProperties:
-    __project_metadata_file = 'pyproject.toml'
-    __properties_file = 'connection_config.ini'
-    __available_extensions = ['.ini', '.toml']
+    __toml_extension = '.toml'
+    __ini_extension = '.ini'
+    __project_metadata_file = 'pyproject' + __toml_extension
+    __tms_config_file = 'connection_config' + __ini_extension
+    __properties_file = __tms_config_file
+    __available_extensions = [__toml_extension, __ini_extension]
 
     __env_prefix = 'TMS'
+    __config_section_name = 'testit'
+    __debug_section_name = 'debug'
 
     @staticmethod
     def load_properties(option=None):
         properties = AppProperties.load_file_properties(
             option.set_config_file if hasattr(option, 'set_config_file') else None)
+
+        AppProperties.__check_token_property(properties)
 
         properties.update(AppProperties.load_env_properties())
 
@@ -31,60 +39,41 @@ class AppProperties:
         return properties
 
     @classmethod
-    def load_file_properties(cls, file_name: str = None):
-        properties = {}
-
-        path = os.path.abspath('')
-        root = path[:path.index(os.sep)]
-
-        if file_name:
-            _, extension = os.path.splitext(file_name)
-            if extension not in cls.__available_extensions:
-                raise FileNotFoundError(
-                    f'{file_name} is not a valid file. Available extensions: {cls.__available_extensions}'
-                )
-            cls.__properties_file = file_name
-
-        if os.environ.get(f'{cls.__env_prefix}_CONFIG_FILE'):
-            cls.__properties_file = os.environ.get(f'{cls.__env_prefix}_CONFIG_FILE')
-
+    def load_file_properties(cls, cli_file_path: str = None):
         if os.path.isfile(cls.__project_metadata_file):
             # https://peps.python.org/pep-0621/
             cls.__properties_file = cls.__project_metadata_file
 
+        path = os.path.abspath('')
+        root = path[:path.index(os.sep)]
+
         while not os.path.isfile(
-                path + os.sep + cls.__properties_file) and path != root:
+                path + os.sep + cls.__tms_config_file) and path != root:
             path = path[:path.rindex(os.sep)]
 
-        path = path + os.sep + cls.__properties_file
+        path = path + os.sep + cls.__tms_config_file
 
         if os.path.isfile(path):
-            parser = configparser.RawConfigParser()
+            cls.__properties_file = cls.__tms_config_file
 
-            parser.read(path, encoding="utf-8")
+        if os.environ.get(f'{cls.__env_prefix}_CONFIG_FILE'):
+            cls.__properties_file = cls.__tms_config_file
+            path = os.environ.get(f'{cls.__env_prefix}_CONFIG_FILE')
 
-            if parser.has_section('testit'):
-                for key, value in parser.items('testit'):
-                    properties[key] = cls.__search_in_environ(value)
+        if cli_file_path:
+            cls.__properties_file = cls.__tms_config_file
+            path = cli_file_path
 
-            if parser.has_section('debug'):
-                if parser.has_option('debug', 'tmsproxy'):
-                    properties['tmsproxy'] = cls.__search_in_environ(
-                        parser.get('debug', 'tmsproxy'))
+        _, extension = os.path.splitext(cls.__properties_file)
+        if extension not in cls.__available_extensions:
+            raise FileNotFoundError(
+                f'{cls.__properties_file} is not a valid file ({_, extension}). Available extensions: {cls.__available_extensions}'
+            )
 
-                if parser.has_option('debug', '__dev'):
-                    properties['logs'] = cls.__search_in_environ(
-                        parser.get('debug', '__dev')).lower()
+        if extension == cls.__toml_extension:
+            return cls.__load_file_properties_from_toml()
 
-            if 'privatetoken' in properties:
-                warnings.warn(
-                    'The configuration file specifies a private token. It is not safe.'
-                    ' Use TMS_PRIVATE_TOKEN environment variable',
-                    category=Warning,
-                    stacklevel=2)
-                warnings.simplefilter('default', Warning)
-
-        return properties
+        return cls.__load_file_properties_from_ini(path)
 
     @classmethod
     def load_cli_properties(cls, option):
@@ -250,6 +239,56 @@ class AppProperties:
         if not cls.__check_property_value(properties.get('importrealtime')):
             properties['importrealtime'] = 'true'
 
+    @classmethod
+    def __load_file_properties_from_toml(cls) -> dict:
+        properties = {}
+
+        with open(cls.__project_metadata_file, "rb+") as file:
+            toml_dict = tomli.load(file)
+
+            if not cls.__check_toml_section(toml_dict, cls.__config_section_name):
+                logging.error(f'Config section in "{cls.__properties_file}" file was not found!')
+                raise SystemExit
+
+            config_section = toml_dict.get(cls.__config_section_name)
+
+            for key, value in config_section.items():
+                properties[key.lower()] = cls.__search_in_environ(str(value))
+
+            if cls.__check_toml_section(toml_dict, cls.__debug_section_name):
+                debug_section = toml_dict.get(cls.__debug_section_name)
+
+                for key, value in debug_section.items():
+                    if key == 'tmsproxy':
+                        properties['tmsproxy'] = cls.__search_in_environ(str(value))
+
+                    if key == '__dev':
+                        properties['logs'] = cls.__search_in_environ(str(value)).lower()
+
+        return properties
+
+    @classmethod
+    def __load_file_properties_from_ini(cls, path: str) -> dict:
+        properties = {}
+        parser = configparser.RawConfigParser()
+
+        parser.read(path, encoding="utf-8")
+
+        if parser.has_section(cls.__config_section_name):
+            for key, value in parser.items(cls.__config_section_name):
+                properties[key] = cls.__search_in_environ(value)
+
+        if parser.has_section('debug'):
+            if parser.has_option('debug', 'tmsproxy'):
+                properties['tmsproxy'] = cls.__search_in_environ(
+                    parser.get('debug', 'tmsproxy'))
+
+            if parser.has_option('debug', '__dev'):
+                properties['logs'] = cls.__search_in_environ(
+                    parser.get('debug', '__dev')).lower()
+
+        return properties
+
     @staticmethod
     def __search_in_environ(var_name: str):
         if re.fullmatch(r'{[a-zA-Z_]\w*}', var_name) and var_name[1:-1] in os.environ:
@@ -263,3 +302,22 @@ class AppProperties:
             return True
 
         return False
+
+    @staticmethod
+    def __check_toml_section(toml_dict: dict, section_name: str) -> bool:
+        if section_name not in toml_dict.keys():
+            return False
+        if not type(toml_dict.get(section_name)) is dict:
+            return False
+
+        return True
+
+    @staticmethod
+    def __check_token_property(properties: dict):
+        if 'privatetoken' in properties:
+            warnings.warn(
+                'The configuration file specifies a private token. It is not safe.'
+                ' Use TMS_PRIVATE_TOKEN environment variable',
+                category=Warning,
+                stacklevel=2)
+            warnings.simplefilter('default', Warning)
