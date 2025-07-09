@@ -33,6 +33,7 @@ Status](https://img.shields.io/pypi/v/testit-python-commons?style=plastic)](http
 | 5.0     | 3.2           | 3.2           | 3.2           | 3.2            |
 | 5.2     | 3.3           | 3.3           | 3.3           | 3.3            |
 | 5.3     | 3.6.1.post530 | 3.6.1.post530 | 3.6.1.post530 | 3.6.1.post530  |
+| 5.4     | 3.6.5.post540 | 3.6.5.post540 | 3.6.5.post540 | 3.6.5.post540  |
 | Cloud   | 3.6.1         | 3.6.1         | 3.6.1         | 3.6.1          |
 
 Supported test frameworks :
