@@ -21,6 +21,7 @@ from testit_python_commons.client.converter import Converter
 from testit_python_commons.models.test_result import TestResult
 from testit_python_commons.services.logger import adapter_logger
 from testit_python_commons.services.retry import retry
+from testit_python_commons.utils.html_escape_utils import HtmlEscapeUtils
 
 
 class ApiClientWorker:
@@ -57,6 +58,11 @@ class ApiClientWorker:
             header_name='Authorization',
             header_value='PrivateToken ' + token)
 
+    @staticmethod
+    def _escape_html_in_model(model):
+        """Apply HTML escaping to all models before sending to API"""
+        return HtmlEscapeUtils.escape_html_in_object(model)
+
     @adapter_logger
     def create_test_run(self):
         test_run_name = f'TestRun_{datetime.today().strftime("%Y-%m-%dT%H:%M:%S")}' if \
@@ -65,6 +71,7 @@ class ApiClientWorker:
             self.__config.get_project_id(),
             test_run_name
         )
+        model = self._escape_html_in_model(model)
 
         response = self.__test_run_api.create_empty(create_empty_test_run_api_model=model)
 
@@ -288,6 +295,7 @@ class ApiClientWorker:
         logging.debug(f'Autotest "{test_result.get_autotest_name()}" was not found')
 
         model = self.__prepare_to_create_autotest(test_result)
+        model = self._escape_html_in_model(model)
 
         autotest_response = self.__autotest_api.create_auto_test(auto_test_post_model=model)
 
@@ -299,6 +307,7 @@ class ApiClientWorker:
     def __create_tests(self, autotests_for_create: typing.List[AutoTestPostModel]):
         logging.debug(f'Creating autotests: "{autotests_for_create}')
 
+        autotests_for_create = self._escape_html_in_model(autotests_for_create)
         self.__autotest_api.create_multiple(auto_test_post_model=autotests_for_create)
 
         logging.debug(f'Autotests were created')
@@ -308,6 +317,7 @@ class ApiClientWorker:
         logging.debug(f'Autotest "{test_result.get_autotest_name()}" was found')
 
         model = self.__prepare_to_update_autotest(test_result, autotest)
+        model = self._escape_html_in_model(model)
 
         self.__autotest_api.update_auto_test(auto_test_put_model=model)
 
@@ -317,6 +327,7 @@ class ApiClientWorker:
     def __update_tests(self, autotests_for_update: typing.List[AutoTestPutModel]):
         logging.debug(f'Updating autotests: {autotests_for_update}')
 
+        autotests_for_update = self._escape_html_in_model(autotests_for_update)
         self.__autotest_api.update_multiple(auto_test_put_model=autotests_for_update)
 
         logging.debug(f'Autotests were updated')
@@ -344,6 +355,7 @@ class ApiClientWorker:
         model = Converter.test_result_to_testrun_result_post_model(
             test_result,
             self.__config.get_configuration_id())
+        model = self._escape_html_in_model(model)
 
         response = self.__test_run_api.set_auto_test_results_for_test_run(
             id=self.__config.get_test_run_id(),
@@ -358,6 +370,7 @@ class ApiClientWorker:
     def __load_test_results(self, test_results: typing.List[AutoTestResultsForTestRunModel]):
         logging.debug(f'Loading test results: {test_results}')
 
+        test_results = self._escape_html_in_model(test_results)
         self.__test_run_api.set_auto_test_results_for_test_run(
             id=self.__config.get_test_run_id(),
             auto_test_results_for_test_run_model=test_results)
@@ -379,6 +392,8 @@ class ApiClientWorker:
                     test_result.get_setup_results())
             model.teardown_results = Converter.step_results_to_auto_test_step_result_update_request(
                     test_result.get_teardown_results())
+            
+            model = self._escape_html_in_model(model)
 
             try:
                 self.__test_results_api.api_v2_test_results_id_put(
@@ -397,7 +412,9 @@ class ApiClientWorker:
                     attachment_response = self.__attachments_api.api_v2_attachments_post(
                         file=path)
 
-                    attachments.append(AttachmentPutModel(id=attachment_response.id))
+                    attachment_model = AttachmentPutModel(id=attachment_response.id)
+                    attachment_model = self._escape_html_in_model(attachment_model)
+                    attachments.append(attachment_model)
 
                     logging.debug(f'Attachment "{path}" was uploaded')
                 except Exception as exc:
