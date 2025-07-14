@@ -1,6 +1,6 @@
 from setuptools import find_packages, setup
 
-VERSION = "3.6.5.post540"
+VERSION = "3.6.6.post530"
 
 setup(
     name='testit-adapter-behave',
