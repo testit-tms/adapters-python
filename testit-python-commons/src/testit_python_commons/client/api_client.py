@@ -165,7 +165,7 @@ class ApiClientWorker:
 
     @adapter_logger
     def __prepare_to_create_autotest(self, test_result: TestResult) -> AutoTestPostModel:
-        logging.debug('Preparing to create the auto test ', test_result.get_external_id())
+        logging.debug('Preparing to create the auto test ' + test_result.get_external_id())
 
         model = Converter.test_result_to_autotest_post_model(
             test_result,
@@ -180,7 +180,7 @@ class ApiClientWorker:
             self,
             test_result: TestResult,
             autotest: AutoTestApiResult) -> AutoTestPutModel:
-        logging.debug('Preparing to update the auto test ', test_result.get_external_id())
+        logging.debug('Preparing to update the auto test ' + test_result.get_external_id())
 
         model = Converter.test_result_to_autotest_put_model(
             test_result,
