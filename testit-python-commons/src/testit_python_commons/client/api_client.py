@@ -4,7 +4,7 @@ import typing
 from datetime import datetime
 
 from testit_api_client import ApiClient, Configuration
-from testit_api_client.api import AttachmentsApi, AutoTestsApi, TestRunsApi, TestResultsApi, WorkItemsApi
+from testit_api_client.apis import AttachmentsApi, AutoTestsApi, TestRunsApi, TestResultsApi, WorkItemsApi
 from testit_api_client.models import (
     AutoTestApiResult,
     AutoTestPostModel,
@@ -73,7 +73,7 @@ class ApiClientWorker:
         )
         model = self._escape_html_in_model(model)
 
-        response = self.__test_run_api.create_empty(create_empty_test_run_api_model=model)
+        response = self.__test_run_api.create_empty(create_empty_request=model)
 
         return Converter.get_id_from_create_test_run_response(response)
 
@@ -95,7 +95,7 @@ class ApiClientWorker:
             self.__config.get_project_id(),
             test_result.get_external_id())
 
-        autotests = self.__autotest_api.api_v2_auto_tests_search_post(auto_test_search_api_model=model)
+        autotests = self.__autotest_api.api_v2_auto_tests_search_post(api_v2_auto_tests_search_post_request=model)
 
         if autotests:
             self.__update_test(test_result, autotests[0])
@@ -122,10 +122,10 @@ class ApiClientWorker:
                 test_result,
                 self.__config.get_configuration_id())
 
-            autotests = self.__autotest_api.api_v2_auto_tests_search_post(auto_test_search_api_model=model)
+            autotests = self.__autotest_api.api_v2_auto_tests_search_post(api_v2_auto_tests_search_post_request=model)
 
             if autotests:
-                autotest_for_update = self.__prepare_to_update_autotest(test_result, autotests[0])
+                autotest_for_update = self.__prepare_to_mass_update_autotest(test_result, autotests[0])
 
                 autotests_for_update.append(autotest_for_update)
                 results_for_autotests_being_updated.append(test_result_model)
@@ -137,7 +137,7 @@ class ApiClientWorker:
                     autotests_for_update.clear()
                     results_for_autotests_being_updated.clear()
             else:
-                autotest_for_create = self.__prepare_to_create_autotest(test_result)
+                autotest_for_create = self.__prepare_to_mass_create_autotest(test_result)
 
                 autotests_for_create.append(autotest_for_create)
                 results_for_autotests_being_created.append(test_result_model)
@@ -167,6 +167,18 @@ class ApiClientWorker:
     def __prepare_to_create_autotest(self, test_result: TestResult) -> AutoTestPostModel:
         logging.debug('Preparing to create the auto test ' + test_result.get_external_id())
 
+        model = Converter.test_result_to_create_autotest_request(
+            test_result,
+            self.__config.get_project_id())
+        model.work_item_ids_for_link_with_auto_test = self.__get_work_item_uuids_for_link_with_auto_test(
+            test_result.get_work_item_ids())
+
+        return model
+
+    @adapter_logger
+    def __prepare_to_mass_create_autotest(self, test_result: TestResult) -> AutoTestPostModel:
+        logging.debug('Preparing to create the auto test ' + test_result.get_external_id())
+
         model = Converter.test_result_to_autotest_post_model(
             test_result,
             self.__config.get_project_id())
@@ -177,6 +189,23 @@ class ApiClientWorker:
 
     @adapter_logger
     def __prepare_to_update_autotest(
+            self,
+            test_result: TestResult,
+            autotest: AutoTestApiResult) -> AutoTestPutModel:
+        logging.debug('Preparing to update the auto test ' + test_result.get_external_id())
+
+        model = Converter.test_result_to_update_autotest_request(
+            test_result,
+            self.__config.get_project_id())
+        model.is_flaky = autotest.is_flaky
+        model.work_item_ids_for_link_with_auto_test = self.__get_work_item_uuids_for_link_with_auto_test(
+            test_result.get_work_item_ids(),
+            str(autotest.global_id))
+
+        return model
+
+    @adapter_logger
+    def __prepare_to_mass_update_autotest(
             self,
             test_result: TestResult,
             autotest: AutoTestApiResult) -> AutoTestPutModel:
@@ -297,7 +326,7 @@ class ApiClientWorker:
         model = self.__prepare_to_create_autotest(test_result)
         model = self._escape_html_in_model(model)
 
-        autotest_response = self.__autotest_api.create_auto_test(auto_test_post_model=model)
+        autotest_response = self.__autotest_api.create_auto_test(create_auto_test_request=model)
 
         logging.debug(f'Autotest "{test_result.get_autotest_name()}" was created')
 
@@ -319,7 +348,7 @@ class ApiClientWorker:
         model = self.__prepare_to_update_autotest(test_result, autotest)
         model = self._escape_html_in_model(model)
 
-        self.__autotest_api.update_auto_test(auto_test_put_model=model)
+        self.__autotest_api.update_auto_test(update_auto_test_request=model)
 
         logging.debug(f'Autotest "{test_result.get_autotest_name()}" was updated')
 
@@ -398,7 +427,7 @@ class ApiClientWorker:
             try:
                 self.__test_results_api.api_v2_test_results_id_put(
                     id=test_result.get_test_result_id(),
-                    test_result_update_v2_request=model)
+                    api_v2_test_results_id_put_request=model)
             except Exception as exc:
                 logging.error(f'Cannot update test result with id "{test_result.get_test_result_id()}" status: {exc}')
 
@@ -409,12 +438,9 @@ class ApiClientWorker:
         for path in attach_paths:
             if os.path.isfile(path):
                 try:
-                    attachment_response = self.__attachments_api.api_v2_attachments_post(
-                        file=path)
+                    attachment_response = self.__attachments_api.api_v2_attachments_post(file=open(path, "rb"))
 
-                    attachment_model = AttachmentPutModel(id=attachment_response.id)
-                    attachment_model = self._escape_html_in_model(attachment_model)
-                    attachments.append(attachment_model)
+                    attachments.append(AttachmentPutModel(attachment_response['id']))
 
                     logging.debug(f'Attachment "{path}" was uploaded')
                 except Exception as exc:

@@ -3,6 +3,8 @@ import typing
 from testit_api_client.models import (
     AttachmentPutModelAutoTestStepResultsModel,
     AutoTestStepResultUpdateRequest,
+    CreateAutoTestRequest,
+    UpdateAutoTestRequest,
     AutoTestPostModel,
     AutoTestPutModel,
     AutoTestResultsForTestRunModel,
@@ -11,12 +13,12 @@ from testit_api_client.models import (
     LinkPostModel,
     LinkPutModel,
     LinkType,
-    CreateEmptyTestRunApiModel,
+    CreateEmptyRequest,
     TestRunV2ApiResult,
-    AutoTestFilterApiModel,
-    AutoTestSearchIncludeApiModel,
-    AutoTestSearchApiModel,
-    TestResultUpdateV2Request,
+    AutoTestSearchApiModelFilter,
+    AutoTestSearchApiModelIncludes,
+    ApiV2AutoTestsSearchPostRequest,
+    ApiV2TestResultsIdPutRequest,
     TestResultResponse,
     TestResultV2GetModel,
     AttachmentApiResult,
@@ -34,7 +36,7 @@ class Converter:
     @classmethod
     @adapter_logger
     def test_run_to_test_run_short_model(cls, project_id, name):
-        return CreateEmptyTestRunApiModel(
+        return CreateEmptyRequest(
             project_id=project_id,
             name=name
         )
@@ -54,16 +56,16 @@ class Converter:
     @classmethod
     @adapter_logger
     def project_id_and_external_id_to_auto_tests_search_post_request(cls, project_id: str, external_id: str):
-        autotests_filter = AutoTestFilterApiModel(
+        autotests_filter = AutoTestSearchApiModelFilter(
             project_ids=[project_id],
             external_ids=[external_id],
             is_deleted=False)
-        autotests_includes = AutoTestSearchIncludeApiModel(
+        autotests_includes = AutoTestSearchApiModelIncludes(
             include_steps=False,
             include_links=False,
             include_labels=False)
 
-        return AutoTestSearchApiModel(filter=autotests_filter, includes=autotests_includes)
+        return ApiV2AutoTestsSearchPostRequest(filter=autotests_filter, includes=autotests_includes)
 
     @staticmethod
     @adapter_logger
@@ -83,6 +85,32 @@ class Converter:
             test_result: TestResult,
             project_id: str):
         return AutoTestPostModel(
+            external_id=test_result.get_external_id(),
+            project_id=project_id,
+            name=test_result.get_autotest_name(),
+            steps=cls.step_results_to_autotest_steps_model(
+                test_result.get_step_results()),
+            setup=cls.step_results_to_autotest_steps_model(
+                test_result.get_setup_results()),
+            teardown=cls.step_results_to_autotest_steps_model(
+                test_result.get_teardown_results()),
+            namespace=test_result.get_namespace(),
+            classname=test_result.get_classname(),
+            title=test_result.get_title(),
+            description=test_result.get_description(),
+            links=cls.links_to_links_post_model(test_result.get_links()),
+            labels=test_result.get_labels(),
+            should_create_work_item=test_result.get_automatic_creation_test_cases(),
+            external_key=test_result.get_external_key()
+        )
+
+    @classmethod
+    @adapter_logger
+    def test_result_to_create_autotest_request(
+            cls,
+            test_result: TestResult,
+            project_id: str):
+        return CreateAutoTestRequest(
             external_id=test_result.get_external_id(),
             project_id=project_id,
             name=test_result.get_autotest_name(),
@@ -149,6 +177,51 @@ class Converter:
 
     @classmethod
     @adapter_logger
+    def test_result_to_update_autotest_request(
+            cls,
+            test_result: TestResult,
+            project_id: str):
+        if test_result.get_outcome() == 'Passed':
+            return UpdateAutoTestRequest(
+                external_id=test_result.get_external_id(),
+                project_id=project_id,
+                name=test_result.get_autotest_name(),
+                steps=cls.step_results_to_autotest_steps_model(
+                    test_result.get_step_results()),
+                setup=cls.step_results_to_autotest_steps_model(
+                    test_result.get_setup_results()),
+                teardown=cls.step_results_to_autotest_steps_model(
+                    test_result.get_teardown_results()),
+                namespace=test_result.get_namespace(),
+                classname=test_result.get_classname(),
+                title=test_result.get_title(),
+                description=test_result.get_description(),
+                links=cls.links_to_links_put_model(test_result.get_links()),
+                labels=test_result.get_labels(),
+                external_key=test_result.get_external_key()
+            )
+        else:
+            return UpdateAutoTestRequest(
+                external_id=test_result.get_external_id(),
+                project_id=project_id,
+                name=test_result.get_autotest_name(),
+                steps=cls.step_results_to_autotest_steps_model(
+                    test_result.get_step_results()),
+                setup=cls.step_results_to_autotest_steps_model(
+                    test_result.get_setup_results()),
+                teardown=cls.step_results_to_autotest_steps_model(
+                    test_result.get_teardown_results()),
+                namespace=test_result.get_namespace(),
+                classname=test_result.get_classname(),
+                title=test_result.get_title(),
+                description=test_result.get_description(),
+                links=cls.links_to_links_put_model(test_result.get_links()),
+                labels=test_result.get_labels(),
+                external_key=test_result.get_external_key()
+            )
+
+    @classmethod
+    @adapter_logger
     def test_result_to_testrun_result_post_model(
             cls,
             test_result: TestResult,
@@ -179,8 +252,8 @@ class Converter:
     @adapter_logger
     def convert_test_result_model_to_test_results_id_put_request(
             cls,
-            test_result: TestResultResponse) -> TestResultUpdateV2Request:
-        return TestResultUpdateV2Request(
+            test_result: TestResultResponse) -> ApiV2TestResultsIdPutRequest:
+        return ApiV2TestResultsIdPutRequest(
             failure_class_ids=test_result.failure_class_ids,
             outcome=test_result.outcome,
             comment=test_result.comment,
@@ -198,8 +271,8 @@ class Converter:
     @adapter_logger
     def convert_test_result_with_all_setup_and_teardown_steps_to_test_results_id_put_request(
             cls,
-            test_result: TestResultWithAllFixtureStepResults) -> TestResultUpdateV2Request:
-        return TestResultUpdateV2Request(
+            test_result: TestResultWithAllFixtureStepResults) -> ApiV2TestResultsIdPutRequest:
+        return ApiV2TestResultsIdPutRequest(
             setup_results=cls.step_results_to_attachment_put_model_autotest_step_results_model(
                 test_result.get_setup_results()),
             teardown_results=cls.step_results_to_attachment_put_model_autotest_step_results_model(
