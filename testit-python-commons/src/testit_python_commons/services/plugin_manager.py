@@ -58,8 +58,10 @@ class TmsPluginManager:
     @classmethod
     def get_logger(cls, debug: bool = False):
         if cls.__logger is None:
-            if debug:
-                logging.basicConfig(format='\n%(levelname)s (%(asctime)s): %(message)s', level=logging.DEBUG)
+            # Always show WARNING and above (WARNING, ERROR, CRITICAL)
+            # Only show DEBUG and INFO when debug mode is enabled
+            level = logging.DEBUG if debug else logging.WARNING
+            logging.basicConfig(format='\n%(levelname)s (%(asctime)s): %(message)s', level=level)
 
             cls.__logger = logging.getLogger('TmsLogger')
 

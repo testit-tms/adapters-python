@@ -348,7 +348,10 @@ class ApiClientWorker:
         model = self.__prepare_to_update_autotest(test_result, autotest)
         model = self._escape_html_in_model(model)
 
-        self.__autotest_api.update_auto_test(update_auto_test_request=model)
+        try:
+            self.__autotest_api.update_auto_test(update_auto_test_request=model)
+        except Exception as exc:
+            logging.error(f'Cannot update autotest "{test_result.get_autotest_name()}" status: {exc}')
 
         logging.debug(f'Autotest "{test_result.get_autotest_name()}" was updated')
 
