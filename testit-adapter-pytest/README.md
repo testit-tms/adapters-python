@@ -65,6 +65,12 @@ Launch with a `pyproject.toml` or `connection_config.ini` file in the root direc
 $ pytest --testit
 ```
 
+Enable debug logs: 
+
+```
+$ pytest --testit --log-cli-level=DEBUG
+```
+
 Launch with command-line parameters:
 
 ```
