@@ -9,6 +9,7 @@ from testit_api_client.models import (
     AutoTestApiResult,
     AutoTestPostModel,
     AutoTestPutModel,
+    UpdateAutoTestRequest,
     AttachmentPutModel,
     AutoTestResultsForTestRunModel,
     TestResultResponse,
@@ -18,6 +19,7 @@ from testit_api_client.models import (
 
 from testit_python_commons.client.client_configuration import ClientConfiguration
 from testit_python_commons.client.converter import Converter
+from testit_python_commons.client.helpers.bulk_autotest_helper import BulkAutotestHelper
 from testit_python_commons.models.test_result import TestResult
 from testit_python_commons.services.logger import adapter_logger
 from testit_python_commons.services.retry import retry
@@ -90,6 +92,14 @@ class ApiClientWorker:
             self.__config.get_configuration_id())
 
     @adapter_logger
+    def __get_autotests_by_external_id(self, external_id: str) -> list:
+        model = Converter.project_id_and_external_id_to_auto_tests_search_post_request(
+            self.__config.get_project_id(),
+            external_id)
+
+        return self.__autotest_api.api_v2_auto_tests_search_post(api_v2_auto_tests_search_post_request=model)
+
+    @adapter_logger
     def write_test(self, test_result: TestResult):
         model = Converter.project_id_and_external_id_to_auto_tests_search_post_request(
             self.__config.get_project_id(),
@@ -99,6 +109,10 @@ class ApiClientWorker:
 
         if autotests:
             self.__update_test(test_result, autotests[0])
+
+            autotest_id = autotests[0].id
+
+            self.__update_autotest_link_from_work_items(autotest_id, test_result.get_work_item_ids())
         else:
             self.__create_test(test_result)
 
@@ -106,120 +120,43 @@ class ApiClientWorker:
 
     @adapter_logger
     def write_tests(self, test_results: typing.List[TestResult], fixture_containers: dict):
-        autotests_for_create = []
-        autotests_for_update = []
-        results_for_autotests_being_created = []
-        results_for_autotests_being_updated = []
+        bulk_autotest_helper = BulkAutotestHelper(self.__autotest_api, self.__test_run_api, self.__config)
 
         for test_result in test_results:
             test_result = self.__add_fixtures_to_test_result(test_result, fixture_containers)
-
-            model = Converter.project_id_and_external_id_to_auto_tests_search_post_request(
-                self.__config.get_project_id(),
-                test_result.get_external_id())
 
             test_result_model = Converter.test_result_to_testrun_result_post_model(
                 test_result,
                 self.__config.get_configuration_id())
 
-            autotests = self.__autotest_api.api_v2_auto_tests_search_post(api_v2_auto_tests_search_post_request=model)
+            work_item_ids_for_link_with_auto_test = self.__get_work_item_uuids_for_link_with_auto_test(
+                test_result.get_work_item_ids())
+
+            autotests = self.__get_autotests_by_external_id(test_result.get_external_id())
 
             if autotests:
-                autotest_for_update = self.__prepare_to_mass_update_autotest(test_result, autotests[0])
+                autotest_links_to_wi_for_update = {}
+                autotest_for_update = Converter.prepare_to_mass_update_autotest(
+                    test_result,
+                    autotests[0],
+                    self.__config.get_project_id())
 
-                autotests_for_update.append(autotest_for_update)
-                results_for_autotests_being_updated.append(test_result_model)
+                autotest_id = autotests[0].id
+                autotest_links_to_wi_for_update[autotest_id] = test_result.get_work_item_ids()
 
-                if len(autotests_for_update) >= self.__max_tests_for_write:
-                    self.__update_tests(autotests_for_update)
-                    self.__load_test_results(results_for_autotests_being_updated)
-
-                    autotests_for_update.clear()
-                    results_for_autotests_being_updated.clear()
+                bulk_autotest_helper.add_for_update(
+                    autotest_for_update,
+                    test_result_model,
+                    autotest_links_to_wi_for_update)
             else:
-                autotest_for_create = self.__prepare_to_mass_create_autotest(test_result)
+                autotest_for_create = Converter.prepare_to_mass_create_autotest(
+                    test_result,
+                    self.__config.get_project_id(),
+                    work_item_ids_for_link_with_auto_test)
 
-                autotests_for_create.append(autotest_for_create)
-                results_for_autotests_being_created.append(test_result_model)
+                bulk_autotest_helper.add_for_create(autotest_for_create, test_result_model)
 
-                if len(autotests_for_create) >= self.__max_tests_for_write:
-                    self.__create_tests(autotests_for_create)
-                    self.__load_test_results(results_for_autotests_being_created)
-
-                    autotests_for_create.clear()
-                    results_for_autotests_being_created.clear()
-
-        if len(autotests_for_update) > 0:
-            self.__update_tests(autotests_for_update)
-            self.__load_test_results(results_for_autotests_being_updated)
-
-            autotests_for_update.clear()
-            results_for_autotests_being_updated.clear()
-
-        if len(autotests_for_create) > 0:
-            self.__create_tests(autotests_for_create)
-            self.__load_test_results(results_for_autotests_being_created)
-
-            autotests_for_create.clear()
-            results_for_autotests_being_created.clear()
-
-    @adapter_logger
-    def __prepare_to_create_autotest(self, test_result: TestResult) -> AutoTestPostModel:
-        logging.debug('Preparing to create the auto test ' + test_result.get_external_id())
-
-        model = Converter.test_result_to_create_autotest_request(
-            test_result,
-            self.__config.get_project_id())
-        model.work_item_ids_for_link_with_auto_test = self.__get_work_item_uuids_for_link_with_auto_test(
-            test_result.get_work_item_ids())
-
-        return model
-
-    @adapter_logger
-    def __prepare_to_mass_create_autotest(self, test_result: TestResult) -> AutoTestPostModel:
-        logging.debug('Preparing to create the auto test ' + test_result.get_external_id())
-
-        model = Converter.test_result_to_autotest_post_model(
-            test_result,
-            self.__config.get_project_id())
-        model.work_item_ids_for_link_with_auto_test = self.__get_work_item_uuids_for_link_with_auto_test(
-            test_result.get_work_item_ids())
-
-        return model
-
-    @adapter_logger
-    def __prepare_to_update_autotest(
-            self,
-            test_result: TestResult,
-            autotest: AutoTestApiResult) -> AutoTestPutModel:
-        logging.debug('Preparing to update the auto test ' + test_result.get_external_id())
-
-        model = Converter.test_result_to_update_autotest_request(
-            test_result,
-            self.__config.get_project_id())
-        model.is_flaky = autotest.is_flaky
-        model.work_item_ids_for_link_with_auto_test = self.__get_work_item_uuids_for_link_with_auto_test(
-            test_result.get_work_item_ids(),
-            str(autotest.global_id))
-
-        return model
-
-    @adapter_logger
-    def __prepare_to_mass_update_autotest(
-            self,
-            test_result: TestResult,
-            autotest: AutoTestApiResult) -> AutoTestPutModel:
-        logging.debug('Preparing to update the auto test ' + test_result.get_external_id())
-
-        model = Converter.test_result_to_autotest_put_model(
-            test_result,
-            self.__config.get_project_id())
-        model.is_flaky = autotest.is_flaky
-        model.work_item_ids_for_link_with_auto_test = self.__get_work_item_uuids_for_link_with_auto_test(
-            test_result.get_work_item_ids(),
-            str(autotest.global_id))
-
-        return model
+        bulk_autotest_helper.teardown()
 
     @staticmethod
     @adapter_logger
@@ -323,7 +260,13 @@ class ApiClientWorker:
     def __create_test(self, test_result: TestResult) -> str:
         logging.debug(f'Autotest "{test_result.get_autotest_name()}" was not found')
 
-        model = self.__prepare_to_create_autotest(test_result)
+        work_item_ids_for_link_with_auto_test = self.__get_work_item_uuids_for_link_with_auto_test(
+            test_result.get_work_item_ids())
+
+        model = Converter.prepare_to_create_autotest(
+            test_result,
+            self.__config.get_project_id(),
+            work_item_ids_for_link_with_auto_test)
         model = self._escape_html_in_model(model)
 
         autotest_response = self.__autotest_api.create_auto_test(create_auto_test_request=model)
@@ -345,7 +288,7 @@ class ApiClientWorker:
     def __update_test(self, test_result: TestResult, autotest: AutoTestApiResult):
         logging.debug(f'Autotest "{test_result.get_autotest_name()}" was found')
 
-        model = self.__prepare_to_update_autotest(test_result, autotest)
+        model = Converter.prepare_to_update_autotest(test_result, autotest)
         model = self._escape_html_in_model(model)
 
         try:

@@ -1,6 +1,8 @@
+import logging
 import typing
 
 from testit_api_client.models import (
+    AutoTestApiResult,
     AttachmentPutModelAutoTestStepResultsModel,
     AutoTestStepResultUpdateRequest,
     CreateAutoTestRequest,
@@ -450,3 +452,71 @@ class Converter:
             )
 
         return autotest_model_step_results
+
+    @adapter_logger
+    def prepare_to_create_autotest(
+            self,
+            test_result: TestResult,
+            project_id: str,
+            work_item_ids_for_link_with_auto_test: list) -> AutoTestPostModel:
+        logging.debug('Preparing to create the auto test ' + test_result.get_external_id())
+
+        model = Converter.test_result_to_create_autotest_request(
+            test_result,
+            project_id)
+        model.work_item_ids_for_link_with_auto_test = work_item_ids_for_link_with_auto_test
+
+        return model
+
+    @adapter_logger
+    def prepare_to_mass_create_autotest(
+            self,
+            test_result: TestResult,
+            project_id: str,
+            work_item_ids_for_link_with_auto_test: list) -> AutoTestPostModel:
+        logging.debug('Preparing to create the auto test ' + test_result.get_external_id())
+
+        model = Converter.test_result_to_autotest_post_model(
+            test_result,
+            project_id)
+        model.work_item_ids_for_link_with_auto_test = work_item_ids_for_link_with_auto_test
+
+        return model
+
+    @adapter_logger
+    def prepare_to_update_autotest(
+            self,
+            test_result: TestResult,
+            autotest: AutoTestApiResult,
+            project_id: str) -> UpdateAutoTestRequest:
+        logging.debug('Preparing to update the auto test ' + test_result.get_external_id())
+
+        model = Converter.test_result_to_update_autotest_request(
+            test_result,
+            project_id)
+        model.is_flaky = autotest.is_flaky
+        # TODO: return after fix PUT/api/v2/autoTests
+        # model.work_item_ids_for_link_with_auto_test = self.__get_work_item_uuids_for_link_with_auto_test(
+        #     test_result.get_work_item_ids(),
+        #     str(autotest.global_id))
+
+        return model
+
+    @adapter_logger
+    def prepare_to_mass_update_autotest(
+            self,
+            test_result: TestResult,
+            autotest: AutoTestApiResult,
+            project_id: str) -> AutoTestPutModel:
+        logging.debug('Preparing to update the auto test ' + test_result.get_external_id())
+
+        model = Converter.test_result_to_autotest_put_model(
+            test_result,
+            project_id)
+        model.is_flaky = autotest.is_flaky
+        # TODO: return after fix PUT/api/v2/autoTests
+        # model.work_item_ids_for_link_with_auto_test = self.__get_work_item_uuids_for_link_with_auto_test(
+        #     test_result.get_work_item_ids(),
+        #     str(autotest.global_id))
+
+        return model
