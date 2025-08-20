@@ -453,45 +453,48 @@ class Converter:
 
         return autotest_model_step_results
 
+    @classmethod
     @adapter_logger
     def prepare_to_create_autotest(
-            self,
+            cls,
             test_result: TestResult,
             project_id: str,
             work_item_ids_for_link_with_auto_test: list) -> AutoTestPostModel:
         logging.debug('Preparing to create the auto test ' + test_result.get_external_id())
 
-        model = Converter.test_result_to_create_autotest_request(
+        model = cls.test_result_to_create_autotest_request(
             test_result,
             project_id)
         model.work_item_ids_for_link_with_auto_test = work_item_ids_for_link_with_auto_test
 
         return model
 
+    @classmethod
     @adapter_logger
     def prepare_to_mass_create_autotest(
-            self,
+            cls,
             test_result: TestResult,
             project_id: str,
             work_item_ids_for_link_with_auto_test: list) -> AutoTestPostModel:
         logging.debug('Preparing to create the auto test ' + test_result.get_external_id())
 
-        model = Converter.test_result_to_autotest_post_model(
+        model = cls.test_result_to_autotest_post_model(
             test_result,
             project_id)
         model.work_item_ids_for_link_with_auto_test = work_item_ids_for_link_with_auto_test
 
         return model
 
+    @classmethod
     @adapter_logger
     def prepare_to_update_autotest(
-            self,
+            cls,
             test_result: TestResult,
             autotest: AutoTestApiResult,
             project_id: str) -> UpdateAutoTestRequest:
         logging.debug('Preparing to update the auto test ' + test_result.get_external_id())
 
-        model = Converter.test_result_to_update_autotest_request(
+        model = cls.test_result_to_update_autotest_request(
             test_result,
             project_id)
         model.is_flaky = autotest.is_flaky
@@ -502,15 +505,16 @@ class Converter:
 
         return model
 
+    @classmethod
     @adapter_logger
     def prepare_to_mass_update_autotest(
-            self,
+            cls,
             test_result: TestResult,
             autotest: AutoTestApiResult,
             project_id: str) -> AutoTestPutModel:
         logging.debug('Preparing to update the auto test ' + test_result.get_external_id())
 
-        model = Converter.test_result_to_autotest_put_model(
+        model = cls.test_result_to_autotest_put_model(
             test_result,
             project_id)
         model.is_flaky = autotest.is_flaky

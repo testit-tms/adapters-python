@@ -6,7 +6,7 @@ from testit_api_client.models import (
     AutoTestPostModel,
     AutoTestPutModel,
     AutoTestResultsForTestRunModel,
-    WorkItemIdModel,
+    LinkAutoTestToWorkItemRequest,
     WorkItemIdentifierModel,
 )
 
@@ -79,7 +79,7 @@ class BulkAutotestHelper:
         self.__update_tests(self.__autotests_for_update)
         self.__load_test_results(self.__results_for_autotests_being_updated)
 
-        for autotest_id, work_item_ids in self.__autotest_links_to_wi_for_update:
+        for autotest_id, work_item_ids in self.__autotest_links_to_wi_for_update.items():
             self.__update_autotest_link_from_work_items(autotest_id, work_item_ids)
 
         self.__autotests_for_update.clear()
@@ -134,7 +134,7 @@ class BulkAutotestHelper:
     def __link_test_to_work_item(self, autotest_global_id: str, work_item_id: str):
         self.__autotests_api.link_auto_test_to_work_item(
             autotest_global_id,
-            work_item_id_model=WorkItemIdModel(id=work_item_id))
+            link_auto_test_to_work_item_request=LinkAutoTestToWorkItemRequest(id=work_item_id))
 
         logging.debug(f'Autotest was linked with workItem "{work_item_id}" by global id "{autotest_global_id}')
 

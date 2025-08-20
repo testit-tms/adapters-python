@@ -9,11 +9,10 @@ from testit_api_client.models import (
     AutoTestApiResult,
     AutoTestPostModel,
     AutoTestPutModel,
-    UpdateAutoTestRequest,
     AttachmentPutModel,
     AutoTestResultsForTestRunModel,
     TestResultResponse,
-    WorkItemIdModel,
+    LinkAutoTestToWorkItemRequest,
     WorkItemIdentifierModel
 )
 
@@ -288,7 +287,7 @@ class ApiClientWorker:
     def __update_test(self, test_result: TestResult, autotest: AutoTestApiResult):
         logging.debug(f'Autotest "{test_result.get_autotest_name()}" was found')
 
-        model = Converter.prepare_to_update_autotest(test_result, autotest)
+        model = Converter.prepare_to_update_autotest(test_result, autotest, self.__config.get_project_id())
         model = self._escape_html_in_model(model)
 
         try:
@@ -321,7 +320,7 @@ class ApiClientWorker:
     def __link_test_to_work_item(self, autotest_global_id: str, work_item_id: str):
         self.__autotest_api.link_auto_test_to_work_item(
             autotest_global_id,
-            work_item_id_model=WorkItemIdModel(id=work_item_id))
+            link_auto_test_to_work_item_request=LinkAutoTestToWorkItemRequest(id=work_item_id))
 
         logging.debug(f'Autotest was linked with workItem "{work_item_id}" by global id "{autotest_global_id}')
 
