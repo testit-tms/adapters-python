@@ -2,6 +2,7 @@ import logging
 import typing
 
 from testit_api_client.models import (
+    ApiV2TestResultsSearchPostRequest,
     AutoTestApiResult,
     AttachmentPutModelAutoTestStepResultsModel,
     AutoTestStepResultUpdateRequest,
@@ -17,12 +18,12 @@ from testit_api_client.models import (
     LinkType,
     CreateEmptyRequest,
     TestRunV2ApiResult,
+    TestResultShortResponse,
     AutoTestSearchApiModelFilter,
     AutoTestSearchApiModelIncludes,
     ApiV2AutoTestsSearchPostRequest,
     ApiV2TestResultsIdPutRequest,
     TestResultResponse,
-    TestResultV2GetModel,
     AttachmentApiResult,
     AttachmentUpdateRequest
 )
@@ -50,13 +51,6 @@ class Converter:
 
     @classmethod
     @adapter_logger
-    def get_resolved_autotests_from_get_test_run_response(cls, response: TestRunV2ApiResult, configuration: str):
-        autotests = response.test_results
-
-        return cls.__get_resolved_autotests(autotests, configuration)
-
-    @classmethod
-    @adapter_logger
     def project_id_and_external_id_to_auto_tests_search_post_request(cls, project_id: str, external_id: str):
         autotests_filter = AutoTestSearchApiModelFilter(
             project_ids=[project_id],
@@ -70,15 +64,53 @@ class Converter:
         return ApiV2AutoTestsSearchPostRequest(filter=autotests_filter, includes=autotests_includes)
 
     @staticmethod
+    def testrun_id_and_configuration_id_and_in_progress_outcome_to_test_results_search_post_request(
+            testrun_id: str,
+            configuration_id: str) -> ApiV2TestResultsSearchPostRequest:
+        return ApiV2TestResultsSearchPostRequest(
+            test_run_ids=[testrun_id],
+            configuration_ids=[configuration_id],
+            status_codes=["InProgress"])
+
+    @staticmethod
+    def autotest_ids_to_autotests_search_post_request(
+            autotest_ids: typing.List[int]) -> ApiV2AutoTestsSearchPostRequest:
+        autotests_filter = AutoTestSearchApiModelFilter(
+            global_ids=autotest_ids)
+        autotests_includes = AutoTestSearchApiModelIncludes(
+            include_steps=False,
+            include_links=False,
+            include_labels=False)
+
+        return ApiV2AutoTestsSearchPostRequest(filter=autotests_filter, includes=autotests_includes)
+
+    @staticmethod
     @adapter_logger
-    def __get_resolved_autotests(autotests: typing.List[TestResultV2GetModel], configuration: str):
+    def test_result_short_get_models_to_autotest_ids(
+            autotests: typing.List[TestResultShortResponse],
+            configuration: str):
         resolved_autotests = []
 
         for autotest in autotests:
             if configuration == autotest.configuration_id:
-                resolved_autotests.append(autotest.auto_test.external_id)
+                resolved_autotests.append(autotest.autotest_global_id)
 
         return resolved_autotests
+
+    @staticmethod
+    def autotest_models_to_external_ids(
+            autotests: typing.List[AutoTestApiResult]) -> typing.List[str]:
+        external_ids = []
+
+        for autotest in autotests:
+            external_id = autotest.external_id
+
+            if external_id is None:
+                continue
+
+            external_ids.append(external_id)
+
+        return external_ids
 
     @classmethod
     @adapter_logger
@@ -231,7 +263,7 @@ class Converter:
         return AutoTestResultsForTestRunModel(
             configuration_id=configuration_id,
             auto_test_external_id=test_result.get_external_id(),
-            outcome=AvailableTestResultOutcome(test_result.get_outcome()),
+            status_code=test_result.get_outcome(),
             step_results=cls.step_results_to_attachment_put_model_autotest_step_results_model(
                 test_result.get_step_results()),
             setup_results=cls.step_results_to_attachment_put_model_autotest_step_results_model(
@@ -257,7 +289,7 @@ class Converter:
             test_result: TestResultResponse) -> ApiV2TestResultsIdPutRequest:
         return ApiV2TestResultsIdPutRequest(
             failure_class_ids=test_result.failure_class_ids,
-            outcome=test_result.outcome,
+            status_code=test_result.status.code,
             comment=test_result.comment,
             links=test_result.links,
             step_results=test_result.step_results,

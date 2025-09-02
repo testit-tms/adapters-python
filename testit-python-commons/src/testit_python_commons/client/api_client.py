@@ -6,12 +6,14 @@ from datetime import datetime
 from testit_api_client import ApiClient, Configuration
 from testit_api_client.apis import AttachmentsApi, AutoTestsApi, TestRunsApi, TestResultsApi, WorkItemsApi
 from testit_api_client.models import (
+    ApiV2TestResultsSearchPostRequest,
     AutoTestApiResult,
     AutoTestPostModel,
     AutoTestPutModel,
     AttachmentPutModel,
-    AutoTestResultsForTestRunModel,
+    ApiV2AutoTestsSearchPostRequest,
     TestResultResponse,
+    TestResultShortResponse,
     LinkAutoTestToWorkItemRequest,
     WorkItemIdentifierModel
 )
@@ -27,6 +29,7 @@ from testit_python_commons.utils.html_escape_utils import HtmlEscapeUtils
 
 class ApiClientWorker:
     __max_tests_for_write = 100
+    __tests_limit = 100
 
     def __init__(self, config: ClientConfiguration):
         api_client_config = self.__get_api_client_configuration(
@@ -83,15 +86,75 @@ class ApiClientWorker:
         self.__config.set_test_run_id(test_run_id)
 
     @adapter_logger
-    def get_autotests_by_test_run_id(self):
-        response = self.__test_run_api.get_test_run_by_id(self.__config.get_test_run_id())
-
-        return Converter.get_resolved_autotests_from_get_test_run_response(
-            response,
+    def get_autotests_by_test_run_id(self) -> typing.List[str]:
+        test_results: typing.List[TestResultShortResponse] = self.__get_test_results()
+        autotest_ids: typing.List[int] = Converter.test_result_short_get_models_to_autotest_ids(
+            test_results,
             self.__config.get_configuration_id())
 
+        if len(autotest_ids) == 0:
+            raise Exception('The autotests with the status "InProgress" ' +
+                            f'and the configuration id "{self.__config.get_configuration_id()}" were not found!')
+
+        autotests_search_post_request: ApiV2AutoTestsSearchPostRequest = (
+            Converter.autotest_ids_to_autotests_search_post_request(autotest_ids))
+        autotests: typing.List[AutoTestApiResult] = self.__get_autotests(autotests_search_post_request)
+        external_ids: typing.List[str] = Converter.autotest_models_to_external_ids(autotests)
+
+        return external_ids
+
+    def __get_test_results(self) -> typing.List[TestResultShortResponse]:
+        all_test_results = []
+        skip = 0
+        model: ApiV2TestResultsSearchPostRequest = (
+            Converter.testrun_id_and_configuration_id_and_in_progress_outcome_to_test_results_search_post_request(
+                self.__config.get_test_run_id(),
+                self.__config.get_configuration_id()))
+
+        while skip >= 0:
+            logging.debug(f"Getting test results with limit {self.__tests_limit}: {model}")
+
+            test_results: typing.List[TestResultShortResponse] = self.__test_results_api.api_v2_test_results_search_post(
+                skip=skip,
+                take=self.__tests_limit,
+                api_v2_test_results_search_post_request=model)
+
+            logging.debug(f"Got {len(test_results)} test results in {skip} page: {test_results}")
+
+            all_test_results.extend(test_results)
+            skip += 1
+
+            if len(test_results) == 0:
+                skip = -1
+
+        return all_test_results
+
+    def __get_autotests(self, model: ApiV2AutoTestsSearchPostRequest) \
+            -> typing.List[AutoTestApiResult]:
+        """Function returns list of AutoTestApiResult."""
+        all_autotests = []
+        skip = 0
+
+        while skip >= 0:
+            logging.debug(f"Getting autotests with limit {self.__tests_limit}: {model}")
+
+            autotests: typing.List[AutoTestApiResult] = self.__autotest_api.api_v2_auto_tests_search_post(
+                skip=skip,
+                take=self.__tests_limit,
+                api_v2_auto_tests_search_post_request=model)
+
+            logging.debug(f"Got autotests: {autotests}")
+
+            all_autotests.extend(autotests)
+            skip += 1
+
+            if len(autotests) == 0:
+                skip = -1
+
+        return all_autotests
+
     @adapter_logger
-    def __get_autotests_by_external_id(self, external_id: str) -> list:
+    def __get_autotests_by_external_id(self, external_id: str) -> typing.List[AutoTestApiResult]:
         model = Converter.project_id_and_external_id_to_auto_tests_search_post_request(
             self.__config.get_project_id(),
             external_id)
@@ -99,7 +162,7 @@ class ApiClientWorker:
         return self.__autotest_api.api_v2_auto_tests_search_post(api_v2_auto_tests_search_post_request=model)
 
     @adapter_logger
-    def write_test(self, test_result: TestResult):
+    def write_test(self, test_result: TestResult) -> str:
         model = Converter.project_id_and_external_id_to_auto_tests_search_post_request(
             self.__config.get_project_id(),
             test_result.get_external_id())
@@ -339,15 +402,6 @@ class ApiClientWorker:
                       f'in the test run "{self.__config.get_test_run_id()}"')
 
         return Converter.get_test_result_id_from_testrun_result_post_response(response)
-
-    @adapter_logger
-    def __load_test_results(self, test_results: typing.List[AutoTestResultsForTestRunModel]):
-        logging.debug(f'Loading test results: {test_results}')
-
-        test_results = self._escape_html_in_model(test_results)
-        self.__test_run_api.set_auto_test_results_for_test_run(
-            id=self.__config.get_test_run_id(),
-            auto_test_results_for_test_run_model=test_results)
 
     @adapter_logger
     def get_test_result_by_id(self, test_result_id: str) -> TestResultResponse:
