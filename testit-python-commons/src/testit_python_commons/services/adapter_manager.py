@@ -38,7 +38,7 @@ class AdapterManager:
     @adapter_logger
     def get_autotests_for_launch(self):
         if self.__config.get_mode() == AdapterMode.USE_FILTER:
-            return self.__api_client.get_autotests_by_test_run_id()
+            return self.__api_client.get_external_ids_for_test_run_id()
 
         return
 

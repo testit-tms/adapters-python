@@ -85,9 +85,9 @@ class ApiClientWorker:
         self.__config.set_test_run_id(test_run_id)
 
     @adapter_logger
-    def get_autotests_by_test_run_id(self) -> typing.List[str]:
+    def get_external_ids_for_test_run_id(self) -> typing.List[str]:
         test_results: typing.List[TestResultShortResponse] = self.__get_test_results()
-        autotest_ids: typing.List[int] = Converter.test_result_short_get_models_to_autotest_ids(
+        autotest_ids: typing.List[int] = Converter.get_global_ids_from_autotest_response_list (
             test_results,
             self.__config.get_configuration_id())
 
@@ -98,7 +98,7 @@ class ApiClientWorker:
         autotests_search_post_request: ApiV2AutoTestsSearchPostRequest = (
             Converter.autotest_ids_to_autotests_search_post_request(autotest_ids))
         autotests: typing.List[AutoTestApiResult] = self.__get_autotests(autotests_search_post_request)
-        external_ids: typing.List[str] = Converter.autotest_models_to_external_ids(autotests)
+        external_ids: typing.List[str] = Converter.autotest_results_to_external_ids(autotests)
 
         return external_ids
 
@@ -106,7 +106,7 @@ class ApiClientWorker:
         all_test_results = []
         skip = 0
         model: ApiV2TestResultsSearchPostRequest = (
-            Converter.testrun_id_and_configuration_id_and_in_progress_outcome_to_test_results_search_post_request(
+            Converter.build_test_results_search_post_request_with_in_progress_outcome(
                 self.__config.get_test_run_id(),
                 self.__config.get_configuration_id()))
 

@@ -67,7 +67,7 @@ class Converter:
         return ApiV2AutoTestsSearchPostRequest(filter=autotests_filter, includes=autotests_includes)
 
     @staticmethod
-    def testrun_id_and_configuration_id_and_in_progress_outcome_to_test_results_search_post_request(
+    def build_test_results_search_post_request_with_in_progress_outcome(
             testrun_id: str,
             configuration_id: str) -> ApiV2TestResultsSearchPostRequest:
         return ApiV2TestResultsSearchPostRequest(
@@ -89,7 +89,7 @@ class Converter:
 
     @staticmethod
     @adapter_logger
-    def test_result_short_get_models_to_autotest_ids(
+    def get_global_ids_from_autotest_response_list (
             autotests: typing.List[TestResultShortResponse],
             configuration: str) -> typing.List[int]:
         resolved_autotests = []
@@ -101,7 +101,7 @@ class Converter:
         return resolved_autotests
 
     @staticmethod
-    def autotest_models_to_external_ids(
+    def autotest_results_to_external_ids(
             autotests: typing.List[AutoTestApiResult]) -> typing.List[str]:
         external_ids = []
 

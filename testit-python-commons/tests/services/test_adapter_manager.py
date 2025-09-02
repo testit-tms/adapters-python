@@ -58,13 +58,13 @@ class TestAdapterManager:
     def test_get_autotests_for_launch_use_filter_mode(self, adapter_manager, mock_adapter_config, mock_api_client_worker):
         mock_adapter_config.get_mode.return_value = AdapterMode.USE_FILTER
         expected_autotests = [str(uuid.uuid4()), str(uuid.uuid4())]
-        mock_api_client_worker.get_autotests_by_test_run_id.return_value = expected_autotests
+        mock_api_client_worker.get_external_ids_for_test_run_id.return_value = expected_autotests
 
         autotests = adapter_manager.get_autotests_for_launch()
 
         assert autotests == expected_autotests
         mock_adapter_config.get_mode.assert_called_once()
-        mock_api_client_worker.get_autotests_by_test_run_id.assert_called_once()
+        mock_api_client_worker.get_external_ids_for_test_run_id.assert_called_once()
 
     def test_write_tests_realtime_import_enabled(self, adapter_manager, mock_adapter_config,
                                                  mock_api_client_worker, mock_fixture_manager):
