@@ -36,22 +36,25 @@ from testit_python_commons.services.logger import adapter_logger
 
 
 class Converter:
-    @classmethod
+    @staticmethod
     @adapter_logger
-    def test_run_to_test_run_short_model(cls, project_id, name):
+    def test_run_to_test_run_short_model(project_id: str, name: str) -> CreateEmptyRequest:
         return CreateEmptyRequest(
             project_id=project_id,
             name=name
         )
 
-    @classmethod
+    @staticmethod
     @adapter_logger
-    def get_id_from_create_test_run_response(cls, response: TestRunV2ApiResult):
+    def get_id_from_create_test_run_response(response: TestRunV2ApiResult) -> str:
         return response.id
 
-    @classmethod
+    @staticmethod
     @adapter_logger
-    def project_id_and_external_id_to_auto_tests_search_post_request(cls, project_id: str, external_id: str):
+    def project_id_and_external_id_to_auto_tests_search_post_request(
+            project_id: str,
+            external_id: str
+    ) -> ApiV2AutoTestsSearchPostRequest:
         autotests_filter = AutoTestSearchApiModelFilter(
             project_ids=[project_id],
             external_ids=[external_id],
@@ -88,7 +91,7 @@ class Converter:
     @adapter_logger
     def test_result_short_get_models_to_autotest_ids(
             autotests: typing.List[TestResultShortResponse],
-            configuration: str):
+            configuration: str) -> typing.List[int]:
         resolved_autotests = []
 
         for autotest in autotests:
@@ -117,7 +120,7 @@ class Converter:
     def test_result_to_autotest_post_model(
             cls,
             test_result: TestResult,
-            project_id: str):
+            project_id: str) -> AutoTestPostModel:
         return AutoTestPostModel(
             external_id=test_result.get_external_id(),
             project_id=project_id,
@@ -143,7 +146,7 @@ class Converter:
     def test_result_to_create_autotest_request(
             cls,
             test_result: TestResult,
-            project_id: str):
+            project_id: str) -> CreateAutoTestRequest:
         return CreateAutoTestRequest(
             external_id=test_result.get_external_id(),
             project_id=project_id,
@@ -169,7 +172,7 @@ class Converter:
     def test_result_to_autotest_put_model(
             cls,
             test_result: TestResult,
-            project_id: str):
+            project_id: str) -> AutoTestPutModel:
         if test_result.get_outcome() == 'Passed':
             return AutoTestPutModel(
                 external_id=test_result.get_external_id(),
@@ -214,7 +217,7 @@ class Converter:
     def test_result_to_update_autotest_request(
             cls,
             test_result: TestResult,
-            project_id: str):
+            project_id: str) -> UpdateAutoTestRequest:
         if test_result.get_outcome() == 'Passed':
             return UpdateAutoTestRequest(
                 external_id=test_result.get_external_id(),
@@ -259,7 +262,7 @@ class Converter:
     def test_result_to_testrun_result_post_model(
             cls,
             test_result: TestResult,
-            configuration_id: str):
+            configuration_id: str) -> AutoTestResultsForTestRunModel:
         return AutoTestResultsForTestRunModel(
             configuration_id=configuration_id,
             auto_test_external_id=test_result.get_external_id(),
@@ -491,7 +494,7 @@ class Converter:
             cls,
             test_result: TestResult,
             project_id: str,
-            work_item_ids_for_link_with_auto_test: list) -> AutoTestPostModel:
+            work_item_ids_for_link_with_auto_test: list) -> CreateAutoTestRequest:
         logging.debug('Preparing to create the auto test ' + test_result.get_external_id())
 
         model = cls.test_result_to_create_autotest_request(
