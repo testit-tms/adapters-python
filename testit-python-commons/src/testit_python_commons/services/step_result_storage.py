@@ -1,11 +1,11 @@
 import logging
-import typing
+from typing import List
 
 from testit_python_commons.models.step_result import StepResult
 
 
 class StepResultStorage:
-    __storage: typing.List[StepResult] = []
+    __storage: List[StepResult] = []
 
     def add(self, step_result: StepResult):
         self.__storage.append(step_result)

@@ -2,7 +2,8 @@ import hashlib
 import logging
 import re
 import traceback
-import typing
+from typing import List
+
 import pytest
 
 from traceback import format_exception_only
@@ -334,23 +335,23 @@ def __get_test_path_parts_by_node_id(node_id: str):
     return node_id.split('/')
 
 
-def __get_directories_in_project_by_test_path_parts(test_path_parts: typing.List[str]):
+def __get_directories_in_project_by_test_path_parts(test_path_parts: List[str]):
     return test_path_parts[:-1]
 
 
-def __get_test_node_parts_from_module_by_test_path_parts(test_path_parts: typing.List[str]):
+def __get_test_node_parts_from_module_by_test_path_parts(test_path_parts: List[str]):
     test_node_from_module = test_path_parts[-1]
 
     return test_node_from_module.split('::')
 
 
-def __join_test_node_parts_to_pytest_autotest_keys(test_node_parts: typing.List[str]):
+def __join_test_node_parts_to_pytest_autotest_keys(test_node_parts: List[str]):
     return ' and '.join(test_node_parts)
 
 
 def fixtures_containers_to_test_results_with_all_fixture_step_results(
         fixtures_containers: dict,
-        test_result_ids: dict) -> typing.List[TestResultWithAllFixtureStepResults]:
+        test_result_ids: dict) -> List[TestResultWithAllFixtureStepResults]:
     test_results_with_all_fixture_step_results = []
 
     for node_id, test_result_id in test_result_ids.items():

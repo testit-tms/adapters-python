@@ -1,7 +1,7 @@
 import hashlib
 import logging
 import re
-import typing
+from typing import List
 
 from testit_python_commons.models.step_result import StepResult
 from testit_python_commons.models.test_result import TestResult
@@ -148,7 +148,7 @@ def convert_executable_test_to_test_result_model(executable_test: dict) -> TestR
         .set_external_key(executable_test['externalKey'])
 
 
-def convert_step_to_step_result_model(step: dict, nested_step_results: typing.List[StepResult]) -> StepResult:
+def convert_step_to_step_result_model(step: dict, nested_step_results: List[StepResult]) -> StepResult:
     step_result_model = StepResult()\
         .set_title(step['title'])\
         .set_description(step['description'])\

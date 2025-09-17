@@ -1,11 +1,11 @@
-import typing
+from typing import List
 
 from testit_python_commons.models.step_result import StepResult
 from testit_python_commons.services.step_result_storage import StepResultStorage
 
 
 class StepManager:
-    __steps_tree: typing.List[StepResult] = []
+    __steps_tree: List[StepResult] = []
 
     def __init__(self):
         self.__storage = StepResultStorage()
@@ -29,7 +29,7 @@ class StepManager:
     def get_active_step(self) -> StepResult:
         return self.__storage.get_last()
 
-    def get_steps_tree(self) -> typing.List[StepResult]:
+    def get_steps_tree(self) -> List[StepResult]:
         steps_tree = self.__steps_tree.copy()
         self.__steps_tree.clear()
 

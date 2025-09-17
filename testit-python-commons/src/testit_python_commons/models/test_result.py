@@ -1,4 +1,4 @@
-import typing
+from typing import List
 
 from testit_python_commons.models.link import Link
 from testit_python_commons.models.step_result import StepResult
@@ -18,14 +18,14 @@ class TestResult:
     __classname: str = None
     __message: str = None
     __traces: str = None
-    __step_results: typing.List[StepResult] = []
-    __setup_results: typing.List[StepResult] = []
-    __teardown_results: typing.List[StepResult] = []
-    __links: typing.List[Link] = []
-    __result_links: typing.List[Link] = []
-    __attachments: typing.List[str] = []
-    __labels: typing.List[str] = []
-    __work_item_ids: typing.List[str] = []
+    __step_results: List[StepResult] = []
+    __setup_results: List[StepResult] = []
+    __teardown_results: List[StepResult] = []
+    __links: List[Link] = []
+    __result_links: List[Link] = []
+    __attachments: List[str] = []
+    __labels: List[str] = []
+    __work_item_ids: List[str] = []
     __parameters: dict = {}
     __properties: dict = {}
     __automatic_creation_test_cases: bool = False
@@ -158,7 +158,7 @@ class TestResult:
         return self
 
     @adapter_logger
-    def get_step_results(self) -> typing.List[StepResult]:
+    def get_step_results(self) -> List[StepResult]:
         return self.__step_results
 
     @adapter_logger
@@ -168,7 +168,7 @@ class TestResult:
         return self
 
     @adapter_logger
-    def get_setup_results(self) -> typing.List[StepResult]:
+    def get_setup_results(self) -> List[StepResult]:
         return self.__setup_results
 
     @adapter_logger
@@ -178,7 +178,7 @@ class TestResult:
         return self
 
     @adapter_logger
-    def get_teardown_results(self) -> typing.List[StepResult]:
+    def get_teardown_results(self) -> List[StepResult]:
         return self.__teardown_results
 
     @adapter_logger

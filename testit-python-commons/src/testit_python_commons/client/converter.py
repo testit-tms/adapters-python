@@ -1,5 +1,5 @@
 import logging
-import typing
+from typing import List
 
 from testit_api_client.models import (
     AutoTestApiResult,
@@ -71,7 +71,7 @@ class Converter:
 
     @staticmethod
     @adapter_logger
-    def __get_resolved_autotests(autotests: typing.List[TestResultV2GetModel], configuration: str):
+    def __get_resolved_autotests(autotests: List[TestResultV2GetModel], configuration: str):
         resolved_autotests = []
 
         for autotest in autotests:
@@ -325,7 +325,7 @@ class Converter:
 
     @classmethod
     @adapter_logger
-    def links_to_links_post_model(cls, links: typing.List[Link]) -> typing.List[LinkPostModel]:
+    def links_to_links_post_model(cls, links: List[Link]) -> List[LinkPostModel]:
         post_model_links = []
 
         for link in links:
@@ -337,7 +337,7 @@ class Converter:
 
     @classmethod
     @adapter_logger
-    def links_to_links_put_model(cls, links: typing.List[Link]) -> typing.List[LinkPutModel]:
+    def links_to_links_put_model(cls, links: List[Link]) -> List[LinkPutModel]:
         put_model_links = []
 
         for link in links:
@@ -350,7 +350,7 @@ class Converter:
     @classmethod
     @adapter_logger
     def attachment_models_to_attachment_put_models(
-            cls, attachments: typing.List[AttachmentApiResult]) -> typing.List[AttachmentUpdateRequest]:
+            cls, attachments: List[AttachmentApiResult]) -> List[AttachmentUpdateRequest]:
         put_model_attachments = []
 
         for attachment in attachments:
@@ -368,7 +368,7 @@ class Converter:
     @classmethod
     # @adapter_logger
     def step_results_to_autotest_steps_model(
-            cls, step_results: typing.List[StepResult]) -> typing.List[AutoTestStepModel]:
+            cls, step_results: List[StepResult]) -> List[AutoTestStepModel]:
         autotest_model_steps = []
 
         for step_result in step_results:
@@ -385,7 +385,7 @@ class Converter:
     @classmethod
     @adapter_logger
     def step_results_to_attachment_put_model_autotest_step_results_model(
-            cls, step_results: typing.List[StepResult]) -> typing.List[AttachmentPutModelAutoTestStepResultsModel]:
+            cls, step_results: List[StepResult]) -> List[AttachmentPutModelAutoTestStepResultsModel]:
         autotest_model_step_results = []
 
         for step_result in step_results:
@@ -410,7 +410,7 @@ class Converter:
     @adapter_logger
     def fixtures_containers_to_test_results_with_all_fixture_step_results(
             fixtures_containers: dict,
-            test_result_ids: dict) -> typing.List[TestResultWithAllFixtureStepResults]:
+            test_result_ids: dict) -> List[TestResultWithAllFixtureStepResults]:
         test_results_with_all_fixture_step_results = []
 
         for external_id, test_result_id in test_result_ids.items():
@@ -432,7 +432,7 @@ class Converter:
     @classmethod
     @adapter_logger
     def step_results_to_auto_test_step_result_update_request(
-            cls, step_results: typing.List[StepResult]) -> typing.List[AutoTestStepResultUpdateRequest]:
+            cls, step_results: List[StepResult]) -> List[AutoTestStepResultUpdateRequest]:
         autotest_model_step_results = []
 
         for step_result in step_results:
