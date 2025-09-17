@@ -7,7 +7,7 @@ from testit_api_client.models import (
     AutoTestPutModel,
     AutoTestResultsForTestRunModel,
     LinkAutoTestToWorkItemRequest,
-    WorkItemIdentifierModel,
+    WorkItemIdentifierModel
 )
 
 from testit_python_commons.client.client_configuration import ClientConfiguration
@@ -108,10 +108,11 @@ class BulkAutotestHelper:
     def __teardown_for_update(self):
         all_threads_for_update_and_result: ThreadsForUpdateAndResult = self.__threads_manager\
             .get_all_threads_for_update_and_result()
-        threads_for_update = all_threads_for_update_and_result.get_threads_for_update()
-        threads_results_for_updated_autotests = all_threads_for_update_and_result\
+        threads_for_update: typing.List[typing.Dict[str, AutoTestPutModel]] = all_threads_for_update_and_result\
+            .get_threads_for_update()
+        threads_results_for_updated_autotests: typing.List[typing.List[AutoTestResultsForTestRunModel]] = all_threads_for_update_and_result\
             .get_threads_results_for_updated_autotests()
-        threads_for_autotest_links_to_wi_for_update = all_threads_for_update_and_result\
+        threads_for_autotest_links_to_wi_for_update: typing.List[typing.Dict[str, typing.List[str]]] = all_threads_for_update_and_result\
             .get_threads_for_autotest_links_to_wi_for_update()
 
         for index in range(len(threads_for_update)):
@@ -119,7 +120,7 @@ class BulkAutotestHelper:
             thread_results_for_updated_autotests = threads_results_for_updated_autotests[index]
             thread_for_autotest_links_to_wi_for_update = threads_for_autotest_links_to_wi_for_update[index]
 
-            self.__bulk_create(
+            self.__bulk_update(
                 thread_for_update,
                 thread_results_for_updated_autotests,
                 thread_for_autotest_links_to_wi_for_update
