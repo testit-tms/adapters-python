@@ -11,6 +11,13 @@ from testit_api_client.models import (
 )
 
 from testit_python_commons.client.client_configuration import ClientConfiguration
+from testit_python_commons.client.helpers.threads_manager import ThreadsManager
+from testit_python_commons.client.models import (
+    ThreadForCreateAndResult,
+    ThreadsForCreateAndResult,
+    ThreadForUpdateAndResult,
+    ThreadsForUpdateAndResult
+)
 from testit_python_commons.services.logger import adapter_logger
 from testit_python_commons.services.retry import retry
 from testit_python_commons.utils.html_escape_utils import HtmlEscapeUtils
@@ -28,63 +35,117 @@ class BulkAutotestHelper:
         self.__test_runs_api = test_runs_api
         self.__test_run_id = config.get_test_run_id()
         self.__automatic_updation_links_to_test_cases = config.get_automatic_updation_links_to_test_cases()
-        self.__autotests_for_create = []
-        self.__autotests_for_update = []
-        self.__autotest_links_to_wi_for_update = {}
-        self.__results_for_autotests_being_created = []
-        self.__results_for_autotests_being_updated = []
+        self.__threads_manager = ThreadsManager()
 
     @adapter_logger
     def add_for_create(
             self,
             create_model: AutoTestPostModel,
             result_model: AutoTestResultsForTestRunModel):
-        self.__autotests_for_create.append(create_model)
-        self.__results_for_autotests_being_created.append(result_model)
+        thread_for_create_and_result: ThreadForCreateAndResult = self.__threads_manager.\
+            get_thread_for_create_and_result(create_model.external_id)
 
-        if len(self.__autotests_for_create) >= self.__max_tests_for_import:
-            self.__bulk_create()
+        thread_for_create: typing.Dict[str, AutoTestPostModel] = thread_for_create_and_result.get_thread_for_create()
+        thread_for_create[create_model.external_id] = create_model
+
+        thread_results_for_created_autotests: typing.List[AutoTestResultsForTestRunModel] = thread_for_create_and_result\
+            .get_thread_results_for_created_autotests()
+        thread_results_for_created_autotests.append(result_model)
+
+        if len(thread_for_create) >= self.__max_tests_for_import:
+            self.__bulk_create(thread_for_create, thread_results_for_created_autotests)
+
+            self.__threads_manager.delete_thread_for_create_and_result(thread_for_create_and_result)
 
     @adapter_logger
     def add_for_update(
             self,
             update_model: AutoTestPutModel,
             result_model: AutoTestResultsForTestRunModel,
-            autotest_links_to_wi_for_update: dict):
-        self.__autotests_for_update.append(update_model)
-        self.__results_for_autotests_being_updated.append(result_model)
-        self.__autotest_links_to_wi_for_update.update(autotest_links_to_wi_for_update)
+            autotest_links_to_wi_for_update: typing.Dict[str, typing.List[str]]):
+        thread_for_update_and_result: ThreadForUpdateAndResult = self.__threads_manager.\
+            get_thread_for_update_and_result(update_model.external_id)
 
-        if len(self.__autotests_for_create) >= self.__max_tests_for_import:
-            self.__bulk_update()
+        thread_for_update: typing.Dict[str, AutoTestPutModel] = thread_for_update_and_result.get_thread_for_update()
+        thread_for_update[update_model.external_id] = update_model
+
+        thread_results_for_updated_autotests: typing.List[AutoTestResultsForTestRunModel] = thread_for_update_and_result\
+            .get_thread_results_for_updated_autotests()
+        thread_results_for_updated_autotests.append(result_model)
+
+        thread_for_autotest_links_to_wi_for_update: typing.Dict[str, typing.List[str]] = thread_for_update_and_result\
+            .get_thread_for_autotest_links_to_wi_for_update()
+        thread_for_autotest_links_to_wi_for_update.update(autotest_links_to_wi_for_update)
+
+        if len(thread_for_update) >= self.__max_tests_for_import:
+            self.__bulk_update(
+                thread_for_update,
+                thread_results_for_updated_autotests,
+                thread_for_autotest_links_to_wi_for_update
+            )
+
+            self.__threads_manager.delete_thread_for_update_and_result(thread_for_update_and_result)
 
     @adapter_logger
     def teardown(self):
-        if len(self.__autotests_for_create) > 0:
-            self.__bulk_create()
+        self.__teardown_for_create()
+        self.__teardown_for_update()
 
-        if len(self.__autotests_for_update) > 0:
-            self.__bulk_update()
+    def __teardown_for_create(self):
+        all_threads_for_create_and_result: ThreadsForCreateAndResult = self.__threads_manager\
+            .get_all_threads_for_create_and_result()
+        threads_for_create: typing.List[typing.Dict[str, AutoTestPostModel]] = all_threads_for_create_and_result\
+            .get_threads_for_create()
+        threads_results_for_created_autotests: typing.List[typing.List[AutoTestResultsForTestRunModel]] = all_threads_for_create_and_result\
+            .get_threads_results_for_created_autotests()
+
+        for index in range(len(threads_for_create)):
+            thread_for_create = threads_for_create[index]
+            thread_results_for_created_autotests = threads_results_for_created_autotests[index]
+
+            self.__bulk_create(thread_for_create, thread_results_for_created_autotests)
+
+    def __teardown_for_update(self):
+        all_threads_for_update_and_result: ThreadsForUpdateAndResult = self.__threads_manager\
+            .get_all_threads_for_update_and_result()
+        threads_for_update = all_threads_for_update_and_result.get_threads_for_update()
+        threads_results_for_updated_autotests = all_threads_for_update_and_result\
+            .get_threads_results_for_updated_autotests()
+        threads_for_autotest_links_to_wi_for_update = all_threads_for_update_and_result\
+            .get_threads_for_autotest_links_to_wi_for_update()
+
+        for index in range(len(threads_for_update)):
+            thread_for_update = threads_for_update[index]
+            thread_results_for_updated_autotests = threads_results_for_updated_autotests[index]
+            thread_for_autotest_links_to_wi_for_update = threads_for_autotest_links_to_wi_for_update[index]
+
+            self.__bulk_create(
+                thread_for_update,
+                thread_results_for_updated_autotests,
+                thread_for_autotest_links_to_wi_for_update
+            )
 
     @adapter_logger
-    def __bulk_create(self):
-        self.__create_tests(self.__autotests_for_create)
-        self.__load_test_results(self.__results_for_autotests_being_created)
-
-        self.__autotests_for_create.clear()
-        self.__results_for_autotests_being_created.clear()
+    def __bulk_create(
+            self,
+            thread_for_create: typing.Dict[str, AutoTestPostModel],
+            thread_results_for_created_autotests: typing.List[AutoTestResultsForTestRunModel]
+    ):
+        self.__create_tests(list(thread_for_create.values()))
+        self.__load_test_results(thread_results_for_created_autotests)
 
     @adapter_logger
-    def __bulk_update(self):
-        self.__update_tests(self.__autotests_for_update)
-        self.__load_test_results(self.__results_for_autotests_being_updated)
+    def __bulk_update(
+            self,
+            thread_for_update: typing.Dict[str, AutoTestPutModel],
+            thread_results_for_updated_autotests: typing.List[AutoTestResultsForTestRunModel],
+            thread_for_autotest_links_to_wi_for_update: typing.Dict[str, typing.List[str]]
+    ):
+        self.__update_tests(list(thread_for_update.values()))
+        self.__load_test_results(thread_results_for_updated_autotests)
 
-        for autotest_id, work_item_ids in self.__autotest_links_to_wi_for_update.items():
+        for autotest_id, work_item_ids in thread_for_autotest_links_to_wi_for_update.items():
             self.__update_autotest_link_from_work_items(autotest_id, work_item_ids)
-
-        self.__autotests_for_update.clear()
-        self.__results_for_autotests_being_updated.clear()
-        self.__autotest_links_to_wi_for_update.clear()
 
     @adapter_logger
     def __create_tests(self, autotests_for_create: typing.List[AutoTestPostModel]):
