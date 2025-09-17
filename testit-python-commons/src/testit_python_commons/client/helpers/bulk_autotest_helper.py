@@ -48,14 +48,12 @@ class BulkAutotestHelper:
         thread_for_create: Dict[str, AutoTestPostModel] = thread_for_create_and_result.get_thread_for_create()
         thread_for_create[create_model.external_id] = create_model
 
-        thread_results_for_created_autotests: List[AutoTestResultsForTestRunModel] = thread_for_create_and_result\
+        thread_results_for_created_autotests: Dict[str, AutoTestResultsForTestRunModel] = thread_for_create_and_result\
             .get_thread_results_for_created_autotests()
-        thread_results_for_created_autotests.append(result_model)
+        thread_results_for_created_autotests[result_model.auto_test_external_id] = result_model
 
         if len(thread_for_create) >= self.__max_tests_for_import:
-            self.__bulk_create(thread_for_create, thread_results_for_created_autotests)
-
-            self.__threads_manager.delete_thread_for_create_and_result(thread_for_create_and_result)
+            self.__teardown_for_create()
 
     @adapter_logger
     def add_for_update(
@@ -69,22 +67,16 @@ class BulkAutotestHelper:
         thread_for_update: Dict[str, AutoTestPutModel] = thread_for_update_and_result.get_thread_for_update()
         thread_for_update[update_model.external_id] = update_model
 
-        thread_results_for_updated_autotests: List[AutoTestResultsForTestRunModel] = thread_for_update_and_result\
+        thread_results_for_updated_autotests: Dict[str, AutoTestResultsForTestRunModel] = thread_for_update_and_result\
             .get_thread_results_for_updated_autotests()
-        thread_results_for_updated_autotests.append(result_model)
+        thread_results_for_updated_autotests[result_model.auto_test_external_id] = result_model
 
         thread_for_autotest_links_to_wi_for_update: Dict[str, List[str]] = thread_for_update_and_result\
             .get_thread_for_autotest_links_to_wi_for_update()
         thread_for_autotest_links_to_wi_for_update.update(autotest_links_to_wi_for_update)
 
         if len(thread_for_update) >= self.__max_tests_for_import:
-            self.__bulk_update(
-                thread_for_update,
-                thread_results_for_updated_autotests,
-                thread_for_autotest_links_to_wi_for_update
-            )
-
-            self.__threads_manager.delete_thread_for_update_and_result(thread_for_update_and_result)
+            self.__teardown_for_update()
 
     @adapter_logger
     def teardown(self):
@@ -94,45 +86,55 @@ class BulkAutotestHelper:
     def __teardown_for_create(self):
         all_threads_for_create_and_result: ThreadsForCreateAndResult = self.__threads_manager\
             .get_all_threads_for_create_and_result()
-        threads_for_create: List[Dict[str, AutoTestPostModel]] = all_threads_for_create_and_result\
+
+        thread_for_create: Dict[str, AutoTestPostModel] = all_threads_for_create_and_result\
             .get_threads_for_create()
-        threads_results_for_created_autotests: List[List[AutoTestResultsForTestRunModel]] = all_threads_for_create_and_result\
+        autotests_for_create = list(thread_for_create.values())
+
+        if autotests_for_create:
+            self.__create_tests(autotests_for_create)
+
+        threads_results_for_created_autotests: List[Dict[str, AutoTestResultsForTestRunModel]] = all_threads_for_create_and_result\
             .get_threads_results_for_created_autotests()
 
-        for index in range(len(threads_for_create)):
-            thread_for_create = threads_for_create[index]
-            thread_results_for_created_autotests = threads_results_for_created_autotests[index]
+        for thread_results_for_created_autotests in threads_results_for_created_autotests:
+            self.__load_test_results(list(thread_results_for_created_autotests.values()))
 
-            self.__bulk_create(thread_for_create, thread_results_for_created_autotests)
+        self.__threads_manager.delete_threads_for_create_and_result()
 
     def __teardown_for_update(self):
         all_threads_for_update_and_result: ThreadsForUpdateAndResult = self.__threads_manager\
             .get_all_threads_for_update_and_result()
-        threads_for_update: List[Dict[str, AutoTestPutModel]] = all_threads_for_update_and_result\
+
+        thread_for_update: Dict[str, AutoTestPutModel] = all_threads_for_update_and_result\
             .get_threads_for_update()
-        threads_results_for_updated_autotests: List[List[AutoTestResultsForTestRunModel]] = all_threads_for_update_and_result\
-            .get_threads_results_for_updated_autotests()
-        threads_for_autotest_links_to_wi_for_update: List[Dict[str, List[str]]] = all_threads_for_update_and_result\
+
+        autotests_for_update = list(thread_for_update.values())
+
+        if autotests_for_update:
+            self.__update_tests(autotests_for_update)
+
+        thread_for_autotest_links_to_wi_for_update: Dict[str, List[str]] = all_threads_for_update_and_result\
             .get_threads_for_autotest_links_to_wi_for_update()
 
-        for index in range(len(threads_for_update)):
-            thread_for_update = threads_for_update[index]
-            thread_results_for_updated_autotests = threads_results_for_updated_autotests[index]
-            thread_for_autotest_links_to_wi_for_update = threads_for_autotest_links_to_wi_for_update[index]
+        for autotest_id, work_item_ids in thread_for_autotest_links_to_wi_for_update.items():
+            self.__update_autotest_link_from_work_items(autotest_id, work_item_ids)
 
-            self.__bulk_update(
-                thread_for_update,
-                thread_results_for_updated_autotests,
-                thread_for_autotest_links_to_wi_for_update
-            )
+        threads_results_for_updated_autotests: List[Dict[str, AutoTestResultsForTestRunModel]] = all_threads_for_update_and_result\
+            .get_threads_results_for_updated_autotests()
+
+        for thread_results_for_updated_autotests in threads_results_for_updated_autotests:
+            self.__load_test_results(list(thread_results_for_updated_autotests.values()))
+
+        self.__threads_manager.delete_threads_for_update_and_result()
 
     @adapter_logger
     def __bulk_create(
             self,
-            thread_for_create: Dict[str, AutoTestPostModel],
+            thread_for_create: List[AutoTestPostModel],
             thread_results_for_created_autotests: List[AutoTestResultsForTestRunModel]
     ):
-        self.__create_tests(list(thread_for_create.values()))
+        self.__create_tests(thread_for_create)
         self.__load_test_results(thread_results_for_created_autotests)
 
     @adapter_logger
