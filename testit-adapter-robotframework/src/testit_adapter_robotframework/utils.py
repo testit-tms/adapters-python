@@ -1,6 +1,6 @@
 import hashlib
-import typing
 from datetime import datetime
+from typing import List
 
 from testit_python_commons.models.step_result import StepResult
 from testit_python_commons.models.test_result import TestResult
@@ -40,7 +40,7 @@ def convert_executable_test_to_test_result_model(executable_test: dict) -> TestR
         .set_external_key(executable_test['externalKey'])
 
 
-def step_results_to_autotest_steps_model(step_results: dict) -> typing.List[StepResult]:
+def step_results_to_autotest_steps_model(step_results: dict) -> List[StepResult]:
     autotest_model_steps = []
 
     for step_result in step_results:

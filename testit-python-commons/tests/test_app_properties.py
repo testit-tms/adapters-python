@@ -6,6 +6,7 @@ import pytest
 
 from testit_python_commons.app_properties import AppProperties
 
+
 class TestAppProperties:
     __properties_file = AppProperties._AppProperties__properties_file
     __env_prefix = AppProperties._AppProperties__env_prefix

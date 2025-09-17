@@ -1,4 +1,3 @@
-import typing
 from testit_api_client.models import (
     AutoTestPostModel,
     AutoTestPutModel,
@@ -12,15 +11,16 @@ from testit_python_commons.client.models import (
     ThreadsForUpdateAndResult
 )
 from testit_python_commons.services.logger import adapter_logger
+from typing import Dict, List
 
 
 class ThreadsManager:
     def __init__(self):
-        self.__threads_for_create: typing.List[typing.Dict[str, AutoTestPostModel]] = []
-        self.__threads_for_update: typing.List[typing.Dict[str, AutoTestPutModel]] = []
-        self.__threads_results_for_created_autotests: typing.List[typing.List[AutoTestResultsForTestRunModel]] = []
-        self.__threads_results_for_updated_autotests: typing.List[typing.List[AutoTestResultsForTestRunModel]] = []
-        self.__threads_for_autotest_links_to_wi_for_update: typing.List[typing.Dict[str, typing.List[str]]] = []
+        self.__threads_for_create: List[Dict[str, AutoTestPostModel]] = []
+        self.__threads_for_update: List[Dict[str, AutoTestPutModel]] = []
+        self.__threads_results_for_created_autotests: List[List[AutoTestResultsForTestRunModel]] = []
+        self.__threads_results_for_updated_autotests: List[List[AutoTestResultsForTestRunModel]] = []
+        self.__threads_for_autotest_links_to_wi_for_update: List[Dict[str, List[str]]] = []
 
     @adapter_logger
     def get_thread_for_create_and_result(self, external_id: str) -> ThreadForCreateAndResult:
@@ -75,24 +75,24 @@ class ThreadsManager:
         self.__threads_for_autotest_links_to_wi_for_update.remove(thread_for_autotest_links_to_wi_for_update)
 
     @adapter_logger
-    def __get_thread_for_create(self, external_id: str) -> typing.Dict[str, AutoTestPostModel]:
+    def __get_thread_for_create(self, external_id: str) -> Dict[str, AutoTestPostModel]:
         for thread in self.__threads_for_create:
             if external_id not in thread.keys():
                 return thread
 
-        new_thread: typing.Dict[str, AutoTestPostModel] = {}
+        new_thread: Dict[str, AutoTestPostModel] = {}
 
         self.__threads_for_create.append(new_thread)
 
         return new_thread
 
     @adapter_logger
-    def __get_thread_for_update(self, external_id: str) -> typing.Dict[str, AutoTestPutModel]:
+    def __get_thread_for_update(self, external_id: str) -> Dict[str, AutoTestPutModel]:
         for thread in self.__threads_for_update:
             if external_id not in thread.keys():
                 return thread
 
-        new_thread: typing.Dict[str, AutoTestPutModel] = {}
+        new_thread: Dict[str, AutoTestPutModel] = {}
 
         self.__threads_for_update.append(new_thread)
 
@@ -100,11 +100,11 @@ class ThreadsManager:
 
     @adapter_logger
     def __get_thread_results_for_created_autotests(
-            self, thread_index: int) -> typing.List[AutoTestResultsForTestRunModel]:
+            self, thread_index: int) -> List[AutoTestResultsForTestRunModel]:
         if 0 <= thread_index < len(self.__threads_results_for_created_autotests):
             return self.__threads_results_for_created_autotests[thread_index]
 
-        new_thread_results_for_created_autotests: typing.List[AutoTestResultsForTestRunModel] = []
+        new_thread_results_for_created_autotests: List[AutoTestResultsForTestRunModel] = []
 
         self.__threads_results_for_created_autotests.append(new_thread_results_for_created_autotests)
 
@@ -112,11 +112,11 @@ class ThreadsManager:
 
     @adapter_logger
     def __get_thread_results_for_updated_autotests(
-            self, thread_index: int) -> typing.List[AutoTestResultsForTestRunModel]:
+            self, thread_index: int) -> List[AutoTestResultsForTestRunModel]:
         if 0 <= thread_index < len(self.__threads_results_for_updated_autotests):
             return self.__threads_results_for_updated_autotests[thread_index]
 
-        new_thread_results_for_updated_autotests: typing.List[AutoTestResultsForTestRunModel] = []
+        new_thread_results_for_updated_autotests: List[AutoTestResultsForTestRunModel] = []
 
         self.__threads_results_for_updated_autotests.append(new_thread_results_for_updated_autotests)
 
@@ -124,11 +124,11 @@ class ThreadsManager:
 
     @adapter_logger
     def __get_thread_for_autotest_links_to_wi_for_update(
-            self, thread_index: int) -> typing.Dict[str, typing.List[str]]:
+            self, thread_index: int) -> Dict[str, List[str]]:
         if 0 <= thread_index < len(self.__threads_for_autotest_links_to_wi_for_update):
             return self.__threads_for_autotest_links_to_wi_for_update[thread_index]
 
-        new_thread_for_autotest_links_to_wi_for_update: typing.Dict[str, typing.List[str]] = {}
+        new_thread_for_autotest_links_to_wi_for_update: Dict[str, List[str]] = {}
 
         self.__threads_for_autotest_links_to_wi_for_update.append(new_thread_for_autotest_links_to_wi_for_update)
 

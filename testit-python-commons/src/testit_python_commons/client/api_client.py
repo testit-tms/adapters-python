@@ -1,6 +1,5 @@
 import logging
 import os
-import typing
 from datetime import datetime
 
 from testit_api_client import ApiClient, Configuration
@@ -23,6 +22,7 @@ from testit_python_commons.models.test_result import TestResult
 from testit_python_commons.services.logger import adapter_logger
 from testit_python_commons.services.retry import retry
 from testit_python_commons.utils.html_escape_utils import HtmlEscapeUtils
+from typing import List
 
 
 class ApiClientWorker:
@@ -118,7 +118,7 @@ class ApiClientWorker:
         return self.__load_test_result(test_result)
 
     @adapter_logger
-    def write_tests(self, test_results: typing.List[TestResult], fixture_containers: dict):
+    def write_tests(self, test_results: List[TestResult], fixture_containers: dict):
         bulk_autotest_helper = BulkAutotestHelper(self.__autotest_api, self.__test_run_api, self.__config)
 
         for test_result in test_results:
@@ -234,7 +234,7 @@ class ApiClientWorker:
             logging.error(f'Getting workitem by id {work_item_id} status: {exc}')
 
     @adapter_logger
-    def __get_work_items_linked_to_autotest(self, autotest_global_id: str) -> typing.List[WorkItemIdentifierModel]:
+    def __get_work_items_linked_to_autotest(self, autotest_global_id: str) -> List[WorkItemIdentifierModel]:
         return self.__autotest_api.get_work_items_linked_to_auto_test(id=autotest_global_id)
 
     @adapter_logger
@@ -275,7 +275,7 @@ class ApiClientWorker:
         return autotest_response.id
 
     @adapter_logger
-    def __create_tests(self, autotests_for_create: typing.List[AutoTestPostModel]):
+    def __create_tests(self, autotests_for_create: List[AutoTestPostModel]):
         logging.debug(f'Creating autotests: "{autotests_for_create}')
 
         autotests_for_create = self._escape_html_in_model(autotests_for_create)
@@ -298,7 +298,7 @@ class ApiClientWorker:
         logging.debug(f'Autotest "{test_result.get_autotest_name()}" was updated')
 
     @adapter_logger
-    def __update_tests(self, autotests_for_update: typing.List[AutoTestPutModel]):
+    def __update_tests(self, autotests_for_update: List[AutoTestPutModel]):
         logging.debug(f'Updating autotests: {autotests_for_update}')
 
         autotests_for_update = self._escape_html_in_model(autotests_for_update)
@@ -341,7 +341,7 @@ class ApiClientWorker:
         return Converter.get_test_result_id_from_testrun_result_post_response(response)
 
     @adapter_logger
-    def __load_test_results(self, test_results: typing.List[AutoTestResultsForTestRunModel]):
+    def __load_test_results(self, test_results: List[AutoTestResultsForTestRunModel]):
         logging.debug(f'Loading test results: {test_results}')
 
         test_results = self._escape_html_in_model(test_results)
