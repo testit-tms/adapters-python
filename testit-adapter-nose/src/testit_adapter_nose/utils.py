@@ -2,7 +2,7 @@ import hashlib
 import logging
 import re
 import os
-import typing
+from typing import List
 from traceback import format_exception_only
 from nose2 import (
     util,
@@ -260,7 +260,7 @@ def __convert_absolute_module_path_to_nose_module_node(absolute_module_path: str
     return directories_in_project.replace(os.sep, '.')
 
 
-def __join_nose_test_node(test_node_parts: typing.List[str]):
+def __join_nose_test_node(test_node_parts: List[str]):
     return ".".join(test_node_parts)
 
 

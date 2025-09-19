@@ -1,6 +1,5 @@
 import logging
 import os
-import typing
 from datetime import datetime
 
 from testit_api_client import ApiClient, Configuration
@@ -25,6 +24,7 @@ from testit_python_commons.models.test_result import TestResult
 from testit_python_commons.services.logger import adapter_logger
 from testit_python_commons.services.retry import retry
 from testit_python_commons.utils.html_escape_utils import HtmlEscapeUtils
+from typing import List
 
 
 class ApiClientWorker:
@@ -296,7 +296,7 @@ class ApiClientWorker:
             logging.error(f'Getting workitem by id {work_item_id} status: {exc}')
 
     @adapter_logger
-    def __get_work_items_linked_to_autotest(self, autotest_global_id: str) -> typing.List[WorkItemIdentifierModel]:
+    def __get_work_items_linked_to_autotest(self, autotest_global_id: str) -> List[WorkItemIdentifierModel]:
         return self.__autotest_api.get_work_items_linked_to_auto_test(id=autotest_global_id)
 
     @adapter_logger
