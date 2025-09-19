@@ -77,7 +77,7 @@ class Converter:
 
     @staticmethod
     def autotest_ids_to_autotests_search_post_request(
-            autotest_ids: typing.List[int]) -> ApiV2AutoTestsSearchPostRequest:
+            autotest_ids: List[int]) -> ApiV2AutoTestsSearchPostRequest:
         autotests_filter = AutoTestSearchApiModelFilter(
             global_ids=autotest_ids)
         autotests_includes = AutoTestSearchApiModelIncludes(
@@ -89,29 +89,14 @@ class Converter:
 
     @staticmethod
     @adapter_logger
-    def get_global_ids_from_autotest_response_list (
-            autotests: typing.List[TestResultShortResponse],
-            configuration: str) -> typing.List[int]:
-        resolved_autotests = []
+    def get_external_ids_from_autotest_response_list(
+            autotests: List[TestResultShortResponse],
+            configuration: str) -> List[str]:
+        external_ids: List[str] = []
 
         for autotest in autotests:
             if configuration == autotest.configuration_id:
-                resolved_autotests.append(autotest.autotest_global_id)
-
-        return resolved_autotests
-
-    @staticmethod
-    def autotest_results_to_external_ids(
-            autotests: typing.List[AutoTestApiResult]) -> typing.List[str]:
-        external_ids = []
-
-        for autotest in autotests:
-            external_id = autotest.external_id
-
-            if external_id is None:
-                continue
-
-            external_ids.append(external_id)
+                external_ids.append(autotest.autotest_external_id)
 
         return external_ids
 
