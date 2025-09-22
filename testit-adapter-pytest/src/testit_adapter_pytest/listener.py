@@ -110,8 +110,7 @@ class TmsListener(object):
 
         if resolved_autotests:
             if not separation_of_tests.get_selected_items():
-                print('The specified tests were not found!')
-                raise SystemExit
+                raise Exception('The specified tests were not found!')
 
             config.hook.pytest_deselected(items=separation_of_tests.get_deselected_items())
             items[:] = separation_of_tests.get_selected_items()
