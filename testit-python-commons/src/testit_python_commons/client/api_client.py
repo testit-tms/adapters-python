@@ -10,9 +10,9 @@ from testit_api_client.models import (
     AutoTestPostModel,
     AutoTestPutModel,
     AttachmentPutModel,
-    ApiV2AutoTestsSearchPostRequest,
     TestResultResponse,
     TestResultShortResponse,
+    TestRunV2ApiResult,
     LinkAutoTestToWorkItemRequest,
     WorkItemIdentifierModel
 )
@@ -67,9 +67,9 @@ class ApiClientWorker:
         return HtmlEscapeUtils.escape_html_in_object(model)
 
     @adapter_logger
-    def create_test_run(self) -> str:
+    def create_test_run(self, test_run_name: str = None) -> str:
         test_run_name = f'TestRun_{datetime.today().strftime("%Y-%m-%dT%H:%M:%S")}' if \
-            not self.__config.get_test_run_name() else self.__config.get_test_run_name()
+            not test_run_name else test_run_name
         model = Converter.test_run_to_test_run_short_model(
             self.__config.get_project_id(),
             test_run_name
@@ -79,6 +79,28 @@ class ApiClientWorker:
         response = self.__test_run_api.create_empty(create_empty_request=model)
 
         return Converter.get_id_from_create_test_run_response(response)
+
+    def get_test_run(self, test_run_id: str) -> TestRunV2ApiResult:
+        """Function gets test run and returns test run."""
+        logging.debug(f"Getting test run by id {test_run_id}")
+
+        test_run = self.__test_run_api.get_test_run_by_id(test_run_id)
+        if test_run is not None:
+            logging.debug(f"Got testrun: {test_run}")
+            return test_run
+
+        logging.error(f"Test run by id {test_run_id} not found!")
+        raise Exception(f"Test run by id {test_run_id} not found!")
+
+    def update_test_run(self, test_run: TestRunV2ApiResult) -> None:
+        """Function updates test run."""
+        model = Converter.build_update_empty_request(test_run)
+        model = HtmlEscapeUtils.escape_html_in_object(model)
+        logging.debug(f"Updating test run with model: {model}")
+
+        self.__test_run_api.update_empty(update_empty_request=model)
+
+        logging.debug(f'Updated testrun (ID: {test_run.id})')
 
     @adapter_logger
     def set_test_run_id(self, test_run_id: str) -> None:
