@@ -16,7 +16,6 @@ class ClientConfiguration:
         self.__url = Utils.url_check(app_properties.get('url'))
         self.__private_token = app_properties.get('privatetoken')
         self.__configuration_id = Utils.uuid_check(app_properties.get('configurationid'))
-        self.__test_run_name = app_properties.get('testrunname')
         self.__tms_proxy = app_properties.get('tmsproxy')
         self.__adapter_mode = app_properties.get('adaptermode')
         self.__cert_validation = app_properties.get('certvalidation')
@@ -49,10 +48,6 @@ class ClientConfiguration:
     @adapter_logger
     def set_test_run_id(self, test_run_id: str):
         self.__test_run_id = test_run_id
-
-    @adapter_logger
-    def get_test_run_name(self):
-        return self.__test_run_name
 
     @adapter_logger
     def get_proxy(self):

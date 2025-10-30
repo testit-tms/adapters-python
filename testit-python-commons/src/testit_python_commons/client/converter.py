@@ -25,7 +25,11 @@ from testit_api_client.models import (
     ApiV2TestResultsIdPutRequest,
     TestResultResponse,
     AttachmentApiResult,
-    AttachmentUpdateRequest
+    AttachmentUpdateRequest,
+    UpdateEmptyRequest,
+    LinkApiResult,
+    UpdateLinkApiModel,
+    AssignAttachmentApiModel,
 )
 
 from testit_python_commons.models.link import Link
@@ -49,6 +53,35 @@ class Converter:
     def get_id_from_create_test_run_response(response: TestRunV2ApiResult) -> str:
         return response.id
 
+    @classmethod
+    @adapter_logger
+    def build_update_empty_request(cls, test_run: TestRunV2ApiResult) -> UpdateEmptyRequest:
+        return UpdateEmptyRequest(
+            id=test_run.id,
+            name=test_run.name,
+            description=test_run.description,
+            launch_source=test_run.launch_source,
+            attachments=list(map(cls.build_assign_attachment_api_model, test_run.attachments)),
+            links=list(map(cls.build_update_link_api_model, test_run.links))
+        )
+
+    @staticmethod
+    @adapter_logger
+    def build_update_link_api_model(link: LinkApiResult) -> UpdateLinkApiModel:
+        return UpdateLinkApiModel(
+            id=link.id,
+            title=link.title,
+            description=link.description,
+            type=link.type,
+            url=link.url,
+            has_info=link.has_info
+        )
+
+    @staticmethod
+    @adapter_logger
+    def build_assign_attachment_api_model(attachment: AttachmentApiResult) -> AssignAttachmentApiModel:
+        return AssignAttachmentApiModel(id=attachment.id)
+
     @staticmethod
     @adapter_logger
     def project_id_and_external_id_to_auto_tests_search_post_request(
@@ -67,6 +100,7 @@ class Converter:
         return ApiV2AutoTestsSearchPostRequest(filter=autotests_filter, includes=autotests_includes)
 
     @staticmethod
+    @adapter_logger
     def build_test_results_search_post_request_with_in_progress_outcome(
             testrun_id: str,
             configuration_id: str) -> ApiV2TestResultsSearchPostRequest:
@@ -76,6 +110,7 @@ class Converter:
             status_codes=["InProgress"])
 
     @staticmethod
+    @adapter_logger
     def autotest_ids_to_autotests_search_post_request(
             autotest_ids: List[int]) -> ApiV2AutoTestsSearchPostRequest:
         autotests_filter = AutoTestSearchApiModelFilter(
