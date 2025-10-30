@@ -61,19 +61,9 @@ class Converter:
             name=test_run.name,
             description=test_run.description,
             launch_source=test_run.launch_source,
-            attachments=cls.build_assign_attachment_api_models(test_run.attachments),
-            links=cls.build_update_link_api_models(test_run.links)
+            attachments=list(map(cls.build_assign_attachment_api_model, test_run.attachments)),
+            links=list(map(cls.build_update_link_api_model, test_run.links))
         )
-
-    @classmethod
-    @adapter_logger
-    def build_update_link_api_models(cls, links: List[LinkApiResult]) -> List[UpdateLinkApiModel]:
-        update_links = []
-
-        for link in links:
-            update_links.append(cls.build_update_link_api_model(link))
-
-        return update_links
 
     @staticmethod
     @adapter_logger
@@ -86,19 +76,6 @@ class Converter:
             url=link.url,
             has_info=link.has_info
         )
-
-    @classmethod
-    @adapter_logger
-    def build_assign_attachment_api_models(
-            cls,
-            attachments: List[AttachmentApiResult]
-    ) -> List[AssignAttachmentApiModel]:
-        update_attachments = []
-
-        for attachment in attachments:
-            update_attachments.append(cls.build_assign_attachment_api_model(attachment))
-
-        return update_attachments
 
     @staticmethod
     @adapter_logger
