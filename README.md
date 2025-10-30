@@ -35,7 +35,7 @@ Status](https://img.shields.io/pypi/v/testit-python-commons?style=plastic)](http
 | 5.3     | 3.6.1.post530  | 3.6.1.post530  | 3.6.1.post530  | 3.6.1.post530  |
 | 5.4     | 3.6.6.post540  | 3.6.6.post540  | 3.6.6.post540  | 3.6.6.post540  |
 | 5.5     | 3.10.1.post550 | 3.10.1.post550 | 3.10.1.post550 | 3.10.1.post550 |
-| Cloud   | 3.10.3         | 3.10.3         | 3.10.3         | 3.10.3         |
+| Cloud   | 3.10.4         | 3.10.4         | 3.10.4         | 3.10.4         |
 
 Supported test frameworks:
  1. [Pytest](https://github.com/testit-tms/adapters-python/tree/main/testit-adapter-pytest)
