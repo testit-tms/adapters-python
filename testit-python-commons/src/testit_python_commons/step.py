@@ -13,7 +13,12 @@ from testit_python_commons.services import (
 Func = TypeVar("Func", bound=Callable[..., Any])
 
 
+# if we return title: "", it will be replaced to
+# step name in fact later
 def step(*args, **kwargs):
+    if len(args) == 0:
+        return StepContext("", None, {})
+
     if callable(args[0]):
         function = args[0]
         return StepContext(function.__name__, None, {})(function)
