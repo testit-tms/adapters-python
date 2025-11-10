@@ -14,6 +14,7 @@ class AdapterManagerConfiguration:
         self.__automatic_creation_test_cases = Utils.convert_value_str_to_bool(
             app_properties.get('automaticcreationtestcases'))
         self.__import_realtime = Utils.convert_value_str_to_bool(app_properties.get('importrealtime'))
+        self.__test_run_name = app_properties.get('testrunname')
 
     @adapter_logger
     def get_test_run_id(self):
@@ -22,6 +23,10 @@ class AdapterManagerConfiguration:
     @adapter_logger
     def set_test_run_id(self, test_run_id: str):
         self.__test_run_id = test_run_id
+
+    @adapter_logger
+    def get_test_run_name(self):
+        return self.__test_run_name
 
     @adapter_logger
     def get_mode(self):
