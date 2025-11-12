@@ -10,6 +10,13 @@ on:
        - "testit-python-commons/**"
        - "requirements.txt"
        - ".github/**/test.yml"
+   workflow_dispatch:
+     inputs:
+       run_tests:
+         description: 'Запустить тесты'
+         required: true
+         type: boolean
+         default: true        
 env:
   DOTNET_VERSION: 8
   GITHUB_PAT: ${{ secrets.SERVICE_ACCOUNT_TOKEN }}
