@@ -23,8 +23,7 @@ from testit_python_commons.client.helpers.bulk_autotest_helper import BulkAutote
 from testit_python_commons.models.test_result import TestResult
 from testit_python_commons.services.logger import adapter_logger
 from testit_python_commons.services.retry import retry
-from testit_python_commons.utils.html_escape_utils import HtmlEscapeUtils
-from typing import List, Any
+from typing import List
 
 
 class ApiClientWorker:
@@ -61,11 +60,6 @@ class ApiClientWorker:
             header_name='Authorization',
             header_value='PrivateToken ' + token)
 
-    @staticmethod
-    def _escape_html_in_model(model: Any) -> Any:
-        """Apply HTML escaping to all models before sending to API"""
-        return HtmlEscapeUtils.escape_html_in_object(model)
-
     @adapter_logger
     def create_test_run(self, test_run_name: str = None) -> str:
         test_run_name = f'TestRun_{datetime.today().strftime("%Y-%m-%dT%H:%M:%S")}' if \
@@ -74,7 +68,6 @@ class ApiClientWorker:
             self.__config.get_project_id(),
             test_run_name
         )
-        model = self._escape_html_in_model(model)
 
         response = self.__test_run_api.create_empty(create_empty_request=model)
 
@@ -95,7 +88,6 @@ class ApiClientWorker:
     def update_test_run(self, test_run: TestRunV2ApiResult) -> None:
         """Function updates test run."""
         model = Converter.build_update_empty_request(test_run)
-        model = HtmlEscapeUtils.escape_html_in_object(model)
         logging.debug(f"Updating test run with model: {model}")
 
         self.__test_run_api.update_empty(update_empty_request=model)
@@ -321,7 +313,6 @@ class ApiClientWorker:
             test_result,
             self.__config.get_project_id(),
             work_item_ids_for_link_with_auto_test)
-        model = self._escape_html_in_model(model)
 
         autotest_response = self.__autotest_api.create_auto_test(create_auto_test_request=model)
 
@@ -333,7 +324,6 @@ class ApiClientWorker:
     def __create_tests(self, autotests_for_create: List[AutoTestPostModel]) -> None:
         logging.debug(f'Creating autotests: "{autotests_for_create}')
 
-        autotests_for_create = self._escape_html_in_model(autotests_for_create)
         self.__autotest_api.create_multiple(auto_test_post_model=autotests_for_create)
 
         logging.debug(f'Autotests were created')
@@ -343,7 +333,6 @@ class ApiClientWorker:
         logging.debug(f'Autotest "{test_result.get_autotest_name()}" was found')
 
         model = Converter.prepare_to_update_autotest(test_result, autotest, self.__config.get_project_id())
-        model = self._escape_html_in_model(model)
 
         try:
             self.__autotest_api.update_auto_test(update_auto_test_request=model)
@@ -356,7 +345,6 @@ class ApiClientWorker:
     def __update_tests(self, autotests_for_update: List[AutoTestPutModel]) -> None:
         logging.debug(f'Updating autotests: {autotests_for_update}')
 
-        autotests_for_update = self._escape_html_in_model(autotests_for_update)
         self.__autotest_api.update_multiple(auto_test_put_model=autotests_for_update)
 
         logging.debug(f'Autotests were updated')
@@ -384,7 +372,6 @@ class ApiClientWorker:
         model = Converter.test_result_to_testrun_result_post_model(
             test_result,
             self.__config.get_configuration_id())
-        model = self._escape_html_in_model(model)
 
         response = self.__test_run_api.set_auto_test_results_for_test_run(
             id=self.__config.get_test_run_id(),
@@ -412,8 +399,6 @@ class ApiClientWorker:
                     test_result.get_setup_results())
             model.teardown_results = Converter.step_results_to_auto_test_step_result_update_request(
                     test_result.get_teardown_results())
-            
-            model = self._escape_html_in_model(model)
 
             try:
                 self.__test_results_api.api_v2_test_results_id_put(

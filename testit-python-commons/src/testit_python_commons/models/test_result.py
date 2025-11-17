@@ -3,6 +3,7 @@ from typing import List
 from testit_python_commons.models.link import Link
 from testit_python_commons.models.step_result import StepResult
 from testit_python_commons.services.logger import adapter_logger
+from testit_python_commons.utils import HtmlEscapeUtils
 
 
 class TestResult:
@@ -33,7 +34,7 @@ class TestResult:
 
     @adapter_logger
     def set_external_id(self, external_id: str):
-        self.__external_id = external_id
+        self.__external_id = HtmlEscapeUtils.escape_html_tags(external_id)
 
         return self
 
@@ -43,7 +44,7 @@ class TestResult:
 
     @adapter_logger
     def set_autotest_name(self, autotest_name: str):
-        self.__autotest_name = autotest_name
+        self.__autotest_name = HtmlEscapeUtils.escape_html_tags(autotest_name)
 
         return self
 
@@ -53,7 +54,7 @@ class TestResult:
 
     @adapter_logger
     def set_outcome(self, outcome: str):
-        self.__outcome = outcome
+        self.__outcome = HtmlEscapeUtils.escape_html_tags(outcome)
 
         return self
 
@@ -63,7 +64,7 @@ class TestResult:
 
     @adapter_logger
     def set_title(self, title: str):
-        self.__title = title
+        self.__title = HtmlEscapeUtils.escape_html_tags(title)
 
         return self
 
@@ -73,7 +74,7 @@ class TestResult:
 
     @adapter_logger
     def set_description(self, description: str):
-        self.__description = description
+        self.__description = HtmlEscapeUtils.escape_html_tags(description)
 
         return self
 
@@ -113,7 +114,7 @@ class TestResult:
 
     @adapter_logger
     def set_namespace(self, namespace: str):
-        self.__namespace = namespace
+        self.__namespace = HtmlEscapeUtils.escape_html_tags(namespace)
 
         return self
 
@@ -123,7 +124,7 @@ class TestResult:
 
     @adapter_logger
     def set_classname(self, classname: str):
-        self.__classname = classname
+        self.__classname = HtmlEscapeUtils.escape_html_tags(classname)
 
         return self
 
@@ -133,7 +134,7 @@ class TestResult:
 
     @adapter_logger
     def set_message(self, message: str):
-        self.__message = message
+        self.__message = HtmlEscapeUtils.escape_html_tags(message)
 
         return self
 
@@ -143,7 +144,7 @@ class TestResult:
 
     @adapter_logger
     def set_traces(self, traces: str):
-        self.__traces = traces
+        self.__traces = HtmlEscapeUtils.escape_html_tags(traces)
 
         return self
 
@@ -213,7 +214,7 @@ class TestResult:
 
     @adapter_logger
     def set_labels(self, labels: list):
-        self.__labels = labels
+        self.__labels = HtmlEscapeUtils.escape_html_in_object(labels)
 
         return self
 
@@ -233,7 +234,7 @@ class TestResult:
 
     @adapter_logger
     def set_parameters(self, parameters: dict):
-        self.__parameters = parameters
+        self.__parameters = HtmlEscapeUtils.escape_html_in_object(parameters)
 
         return self
 
@@ -243,7 +244,7 @@ class TestResult:
 
     @adapter_logger
     def set_properties(self, properties: dict):
-        self.__properties = properties
+        self.__properties = HtmlEscapeUtils.escape_html_in_object(properties)
 
         return self
 
