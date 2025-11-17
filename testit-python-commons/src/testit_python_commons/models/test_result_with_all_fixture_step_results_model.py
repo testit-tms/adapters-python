@@ -1,6 +1,7 @@
 from testit_python_commons.models.step_result import StepResult
 from typing import List
 
+
 class TestResultWithAllFixtureStepResults:
     def __init__(self, test_result_id: str):
         self.__test_result_id = test_result_id
