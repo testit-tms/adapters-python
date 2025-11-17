@@ -1,3 +1,6 @@
+from testit_python_commons.utils.html_escape_utils import HtmlEscapeUtils
+
+
 class StepResult:
     __title: str = None
     __outcome: str = None
@@ -15,7 +18,7 @@ class StepResult:
         self.__parameters = {}
 
     def set_title(self, title: str):
-        self.__title = title
+        self.__title = HtmlEscapeUtils.escape_html_tags(title)
 
         return self
 
@@ -23,7 +26,7 @@ class StepResult:
         return self.__title
 
     def set_outcome(self, outcome: str):
-        self.__outcome = outcome
+        self.__outcome = HtmlEscapeUtils.escape_html_tags(outcome)
 
         return self
 
@@ -31,7 +34,7 @@ class StepResult:
         return self.__outcome
 
     def set_description(self, description: str):
-        self.__description = description
+        self.__description = HtmlEscapeUtils.escape_html_tags(description)
 
         return self
 
@@ -79,7 +82,7 @@ class StepResult:
         return self.__attachments
 
     def set_parameters(self, parameters: dict):
-        self.__parameters = parameters
+        self.__parameters = HtmlEscapeUtils.escape_html_in_object(parameters)
 
         return self
 

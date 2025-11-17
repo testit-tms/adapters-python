@@ -1,5 +1,6 @@
 from testit_python_commons.models.link_type import LinkType
 from testit_python_commons.services.logger import adapter_logger
+from testit_python_commons.utils import HtmlEscapeUtils
 
 
 class Link:
@@ -20,7 +21,7 @@ class Link:
 
     @adapter_logger
     def set_title(self, title: str):
-        self.__title = title
+        self.__title = HtmlEscapeUtils.escape_html_tags(title)
 
         return self
 
@@ -40,7 +41,7 @@ class Link:
 
     @adapter_logger
     def set_description(self, description: str):
-        self.__description = description
+        self.__description = HtmlEscapeUtils.escape_html_tags(description)
 
         return self
 

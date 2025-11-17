@@ -21,8 +21,8 @@ class HtmlEscapeUtils:
     
     # Regex patterns to escape only non-escaped characters
     # Using negative lookbehind to avoid double escaping
-    _LESS_THAN_PATTERN = re.compile(r'(?<!\\)<')
-    _GREATER_THAN_PATTERN = re.compile(r'(?<!\\)>')
+    _LESS_THAN_PATTERN = re.compile('<')
+    _GREATER_THAN_PATTERN = re.compile('>')
     
     @staticmethod
     def escape_html_tags(text: Optional[str]) -> Optional[str]:
@@ -52,8 +52,8 @@ class HtmlEscapeUtils:
             return text  # No HTML tags found, return original string
             
         # Use regex with negative lookbehind to escape only non-escaped characters
-        result = HtmlEscapeUtils._LESS_THAN_PATTERN.sub(r'\\<', text)
-        result = HtmlEscapeUtils._GREATER_THAN_PATTERN.sub(r'\\>', result)
+        result = HtmlEscapeUtils._LESS_THAN_PATTERN.sub('&lt;', text)
+        result = HtmlEscapeUtils._GREATER_THAN_PATTERN.sub('&gt;', result)
         
         return result
     
