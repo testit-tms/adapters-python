@@ -16,7 +16,7 @@ class TestHtmlEscapeUtils(unittest.TestCase):
         """Test basic HTML tag escaping"""
         text = "Hello <script>alert('test')</script> world"
         result = HtmlEscapeUtils.escape_html_tags(text)
-        expected = "Hello \\<script\\>alert('test')\\</script\\> world"
+        expected = "Hello &lt;script&gt;alert('test')&lt;/script&gt; world"
         self.assertEqual(result, expected)
 
     def test_escape_html_tags_no_html_content(self):
@@ -38,18 +38,18 @@ class TestHtmlEscapeUtils(unittest.TestCase):
 
     def test_escape_html_tags_no_double_escaping(self):
         """Test that already escaped characters are not double-escaped"""
-        text = "Already \\<escaped\\> and <not_escaped>"
+        text = "Already &lt;escaped&gt; and <not_escaped>"
         result = HtmlEscapeUtils.escape_html_tags(text)
-        expected = "Already \\<escaped\\> and \\<not_escaped\\>"
+        expected = "Already &lt;escaped&gt; and &lt;not_escaped&gt;"
         self.assertEqual(result, expected)
 
     def test_escape_html_tags_various_tags(self):
         """Test escaping of various HTML tag types"""
         test_cases = [
-            ("<div>content</div>", "\\<div\\>content\\</div\\>"),
-            ("<img src='test.jpg'/>", "\\<img src='test.jpg'/\\>"),
-            ("<br>", "\\<br\\>"),
-            ("<span class='test'>text</span>", "\\<span class='test'\\>text\\</span\\>"),
+            ("<div>content</div>", "&lt;div&gt;content&lt;/div&gt;"),
+            ("<img src='test.jpg'/>", "&lt;img src='test.jpg'/&gt;"),
+            ("<br>", "&lt;br&gt;"),
+            ("<span class='test'>text</span>", "&lt;span class='test'&gt;text&lt;/span&gt;"),
             ("No tags here", "No tags here"),  # Should remain unchanged
             ("<>", "<>"),  # Empty angle brackets - should remain unchanged
             ("< >", "< >"),  # Spaced angle brackets - should remain unchanged
@@ -66,8 +66,8 @@ class TestHtmlEscapeUtils(unittest.TestCase):
         result = HtmlEscapeUtils.escape_html_in_object(test_obj)
         
         self.assertEqual(result.name, "Test Name")  # No escaping needed
-        self.assertEqual(result.description, "\\<script\\>alert('xss')\\</script\\>")  # Escaped
-        self.assertEqual(result.tags[0], "\\<tag\\>")  # Escaped
+        self.assertEqual(result.description, "&lt;script&gt;alert('xss')&lt;/script&gt;")  # Escaped
+        self.assertEqual(result.tags[0], "&lt;tag&gt;")  # Escaped
         self.assertEqual(result.tags[1], "normal_tag")  # No escaping needed
 
     def test_escape_html_in_object_list(self):
@@ -78,8 +78,8 @@ class TestHtmlEscapeUtils(unittest.TestCase):
         ]
         result = HtmlEscapeUtils.escape_html_in_object_list(test_list)
         
-        self.assertEqual(result[0].description, "\\<div\\>content\\</div\\>")
-        self.assertEqual(result[1].description, "\\<span\\>more\\</span\\>")
+        self.assertEqual(result[0].description, "&lt;div&gt;content&lt;/div&gt;")
+        self.assertEqual(result[1].description, "&lt;span&gt;more&lt;/span&gt;")
 
     def test_escape_disabled_by_env_var(self):
         """Test that escaping can be disabled via environment variable"""
@@ -107,8 +107,8 @@ class TestHtmlEscapeUtils(unittest.TestCase):
         result = HtmlEscapeUtils.escape_html_in_object(test_dict)
         
         self.assertEqual(result["name"], "Test")
-        self.assertEqual(result["description"], "\\<script\\>alert('xss')\\</script\\>")
-        self.assertEqual(result["tags"][0], "\\<tag\\>")
+        self.assertEqual(result["description"], "&lt;script&gt;alert('xss')&lt;/script&gt;")
+        self.assertEqual(result["tags"][0], "&lt;tag&gt;")
         self.assertEqual(result["tags"][1], "normal_tag")
 
 
