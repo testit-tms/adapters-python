@@ -32,7 +32,7 @@ class ApiClientWorker:
     def __init__(self, config: ClientConfiguration):
         api_client_config = self.__get_api_client_configuration(
             url=config.get_url(),
-            verify_ssl=config.get_cert_validation() != 'false',
+            verify_ssl=config.get_cert_validation(),
             proxy=config.get_proxy())
         api_client = self.__get_api_client(api_client_config, config.get_private_token())
 
@@ -256,7 +256,7 @@ class ApiClientWorker:
 
                 continue
 
-            if self.__config.get_automatic_updation_links_to_test_cases() != 'true':
+            if not self.__config.get_automatic_updation_links_to_test_cases():
                 work_item_uuids.append(linked_work_item_uuid)
 
         for work_item_id in work_item_ids:
@@ -296,7 +296,7 @@ class ApiClientWorker:
 
                 continue
 
-            if self.__config.get_automatic_updation_links_to_test_cases() != 'false':
+            if self.__config.get_automatic_updation_links_to_test_cases():
                 self.__unlink_test_to_work_item(autotest_global_id, linked_work_item_id)
 
         for work_item_id in work_item_ids:

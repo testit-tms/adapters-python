@@ -18,8 +18,9 @@ class ClientConfiguration:
         self.__configuration_id = Utils.uuid_check(app_properties.get('configurationid'))
         self.__tms_proxy = app_properties.get('tmsproxy')
         self.__adapter_mode = app_properties.get('adaptermode')
-        self.__cert_validation = app_properties.get('certvalidation')
-        self.__automatic_updation_links_to_test_cases = app_properties.get('automaticupdationlinkstotestcases')
+        self.__cert_validation = Utils.convert_value_str_to_bool(app_properties.get('certvalidation').lower())
+        self.__automatic_updation_links_to_test_cases = Utils.convert_value_str_to_bool(
+            app_properties.get('automaticupdationlinkstotestcases').lower())
 
     @adapter_logger
     def get_url(self):
@@ -57,8 +58,8 @@ class ClientConfiguration:
     def get_mode(self):
         return self.__adapter_mode
 
-    def get_cert_validation(self):
+    def get_cert_validation(self) -> bool:
         return self.__cert_validation
 
-    def get_automatic_updation_links_to_test_cases(self):
+    def get_automatic_updation_links_to_test_cases(self) -> bool:
         return self.__automatic_updation_links_to_test_cases
