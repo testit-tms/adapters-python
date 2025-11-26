@@ -12,8 +12,8 @@ class AdapterManagerConfiguration:
 
         self.__adapter_mode = app_properties.get('adaptermode', AdapterMode.USE_FILTER)
         self.__automatic_creation_test_cases = Utils.convert_value_str_to_bool(
-            app_properties.get('automaticcreationtestcases'))
-        self.__import_realtime = Utils.convert_value_str_to_bool(app_properties.get('importrealtime'))
+            app_properties.get('automaticcreationtestcases').lower())
+        self.__import_realtime = Utils.convert_value_str_to_bool(app_properties.get('importrealtime').lower())
         self.__test_run_name = app_properties.get('testrunname')
 
     @adapter_logger

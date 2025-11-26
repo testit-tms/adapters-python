@@ -215,7 +215,7 @@ class BulkAutotestHelper:
 
                 continue
 
-            if self.__automatic_updation_links_to_test_cases != 'false':
+            if self.__automatic_updation_links_to_test_cases:
                 self.__unlink_test_to_work_item(autotest_global_id, linked_work_item_id)
 
         for work_item_id in work_item_ids:
