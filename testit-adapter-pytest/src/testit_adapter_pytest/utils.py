@@ -8,6 +8,7 @@ import pytest
 
 from traceback import format_exception_only
 
+from _pytest.mark import Mark
 from testit_python_commons.models.link import Link
 from testit_python_commons.models.test_result import TestResult
 from testit_python_commons.models.test_result_with_all_fixture_step_results_model import TestResultWithAllFixtureStepResults
@@ -36,18 +37,24 @@ def form_test(item) -> ExecutableTest:
     )
 
     if item.own_markers:
-        for mark in item.own_markers:
-            if mark.name == 'skip' or mark.name == 'skipif':
-                executable_test.outcome = 'Skipped'
-                if mark.args:
-                    executable_test.message = mark.args[0]
-                if mark.kwargs and 'reason' in mark.kwargs:
-                    executable_test.message = mark.kwargs['reason']
-            if mark.name == 'xfail':
-                if mark.args:
-                    executable_test.message = mark.args[0]
-                if mark.kwargs and 'reason' in mark.kwargs:
-                    executable_test.message = mark.kwargs['reason']
+        executable_test = __set_outcome_and_message_from_markers(executable_test, item.own_markers)
+
+    return executable_test
+
+
+def __set_outcome_and_message_from_markers(executable_test: ExecutableTest, markers: List[Mark]) -> ExecutableTest:
+    for marker in markers:
+        if marker.name in ('skip', 'skipif'):
+            executable_test.outcome = 'Skipped'
+        if marker.name in ('skip', 'skipif', 'xfail'):
+            if len(marker.args) == 1 and isinstance(marker.args, str):
+                executable_test.message = marker.args[0]
+
+            condition_in_args = marker.args and marker.args[0]
+            condition_in_kwargs = marker.kwargs and 'condition' in marker.kwargs and marker.kwargs['condition']
+
+            if (condition_in_kwargs or condition_in_args) and 'reason' in marker.kwargs:
+                executable_test.message = marker.kwargs['reason']
 
     return executable_test
 

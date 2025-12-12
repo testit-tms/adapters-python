@@ -59,13 +59,12 @@ class AutotestAdapter:
             self.active_test.outcome = STATUSES[attributes['status']]
             self.active_test.started_on = convert_time(attributes['starttime'])
             self.active_test.completed_on = convert_time(attributes['endtime'])
-            if not self.active_test.message:
-                if self.active_test.outcome == 'Failed':
-                    for step in (self.active_test.setUpResults + self.active_test.stepResults +
-                                 self.active_test.tearDownResults):
-                        if step.outcome == 'Failed':
-                            self.active_test.message = f"Failed on step: '{step.title}'"
-                            break
+            if not self.active_test.message and self.active_test.outcome == 'Failed':
+                for step in (self.active_test.setUpResults + self.active_test.stepResults +
+                             self.active_test.tearDownResults):
+                    if step.outcome == 'Failed':
+                        self.active_test.message = f"Failed on step: '{step.title}'"
+                        break
             self.active_test.traces = attributes['message']
             self.active_test.duration = attributes['elapsedtime']
             self.adapter_manager.write_test(
