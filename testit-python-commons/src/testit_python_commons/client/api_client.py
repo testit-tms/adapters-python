@@ -61,6 +61,7 @@ class ApiClientWorker:
             header_value='PrivateToken ' + token)
 
     @adapter_logger
+    @retry
     def create_test_run(self, test_run_name: str = None) -> str:
         test_run_name = f'TestRun_{datetime.today().strftime("%Y-%m-%dT%H:%M:%S")}' if \
             not test_run_name else test_run_name
@@ -73,6 +74,7 @@ class ApiClientWorker:
 
         return Converter.get_id_from_create_test_run_response(response)
 
+    @retry
     def get_test_run(self, test_run_id: str) -> TestRunV2ApiResult:
         """Function gets test run and returns test run."""
         logging.debug(f"Getting test run by id {test_run_id}")
@@ -85,6 +87,7 @@ class ApiClientWorker:
         logging.error(f"Test run by id {test_run_id} not found!")
         raise Exception(f"Test run by id {test_run_id} not found!")
 
+    @retry
     def update_test_run(self, test_run: TestRunV2ApiResult) -> None:
         """Function updates test run."""
         model = Converter.build_update_empty_request(test_run)
@@ -111,6 +114,7 @@ class ApiClientWorker:
         raise Exception('The autotests with the status "InProgress" ' +
                         f'and the configuration id "{self.__config.get_configuration_id()}" were not found!')
 
+    @retry
     def __get_test_results(self) -> List[TestResultShortResponse]:
         all_test_results = []
         skip = 0
@@ -138,6 +142,7 @@ class ApiClientWorker:
         return all_test_results
 
     @adapter_logger
+    @retry
     def __get_autotests_by_external_id(self, external_id: str) -> List[AutoTestApiResult]:
         model = Converter.project_id_and_external_id_to_auto_tests_search_post_request(
             self.__config.get_project_id(),
@@ -281,6 +286,7 @@ class ApiClientWorker:
             logging.error(f'Getting workitem by id {work_item_id} status: {exc}')
 
     @adapter_logger
+    @retry
     def __get_work_items_linked_to_autotest(self, autotest_global_id: str) -> List[WorkItemIdentifierModel]:
         return self.__autotest_api.get_work_items_linked_to_auto_test(id=autotest_global_id)
 
@@ -303,6 +309,7 @@ class ApiClientWorker:
             self.__link_test_to_work_item(autotest_global_id, work_item_id)
 
     @adapter_logger
+    @retry
     def __create_test(self, test_result: TestResult) -> str:
         logging.debug(f'Autotest "{test_result.get_autotest_name()}" was not found')
 
@@ -321,6 +328,7 @@ class ApiClientWorker:
         return autotest_response.id
 
     @adapter_logger
+    @retry
     def __create_tests(self, autotests_for_create: List[AutoTestPostModel]) -> None:
         logging.debug(f'Creating autotests: "{autotests_for_create}')
 
@@ -329,6 +337,7 @@ class ApiClientWorker:
         logging.debug(f'Autotests were created')
 
     @adapter_logger
+    @retry
     def __update_test(self, test_result: TestResult, autotest: AutoTestApiResult) -> None:
         logging.debug(f'Autotest "{test_result.get_autotest_name()}" was found')
 
@@ -342,6 +351,7 @@ class ApiClientWorker:
         logging.debug(f'Autotest "{test_result.get_autotest_name()}" was updated')
 
     @adapter_logger
+    @retry
     def __update_tests(self, autotests_for_update: List[AutoTestPutModel]) -> None:
         logging.debug(f'Updating autotests: {autotests_for_update}')
 
@@ -368,6 +378,7 @@ class ApiClientWorker:
         logging.debug(f'Autotest was linked with workItem "{work_item_id}" by global id "{autotest_global_id}')
 
     @adapter_logger
+    @retry
     def __load_test_result(self, test_result: TestResult) -> str:
         model = Converter.test_result_to_testrun_result_post_model(
             test_result,
@@ -383,6 +394,7 @@ class ApiClientWorker:
         return Converter.get_test_result_id_from_testrun_result_post_response(response)
 
     @adapter_logger
+    @retry
     def get_test_result_by_id(self, test_result_id: str) -> TestResultResponse:
         return self.__test_results_api.api_v2_test_results_id_get(id=test_result_id)
 
