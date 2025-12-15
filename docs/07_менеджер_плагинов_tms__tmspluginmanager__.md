@@ -102,7 +102,7 @@ class AdapterFormatter(Formatter):
         self.__listener = AdapterListener(adapter_manager, ...)
         # ...
 ```
-*   При инициализации `AdapterFormatter` вызывает `TmsPluginManager.get_adapter_manager()`. Если это первый вызов, `TmsPluginManager` создаст `AdapterManager` (загрузив конфигурацию через [`AppProperties`](01_загрузка_конфигурации__appproperties__.md)), а затем вернет его. При последующих вызовах будет возвращаться тот же самый экземпляр.
+*   При инициализации `AdapterFormatter` вызывает `TmsPluginManager.get_adapter_manager()`. Если это первый вызов, `TmsPluginManager` создаст `AdapterManager` (загрузив конфигурацию через [`AppProperties`](01_appproperties__.md)), а затем вернет его. При последующих вызовах будет возвращаться тот же самый экземпляр.
 
 Таким образом, `TmsPluginManager` действует как **фабрика** и **реестр** для основных сервисов, предоставляя к ним удобный и стандартизированный доступ из любой части адаптера.
 
@@ -117,7 +117,7 @@ class AdapterFormatter(Formatter):
 3.  **Если Да:** `TmsPluginManager` немедленно возвращает ссылку на уже существующий экземпляр `AdapterManager`.
 4.  **Если Нет (первый запрос):**
     *   `TmsPluginManager` понимает, что `AdapterManager` нужно создать.
-    *   Он вызывает [`AppProperties.load_properties()`](01_загрузка_конфигурации__appproperties__.md) для сбора всей конфигурации (из файла, переменных окружения, CLI).
+    *   Он вызывает [`AppProperties.load_properties()`](01_appproperties__.md) для сбора всей конфигурации (из файла, переменных окружения, CLI).
     *   Он создает необходимые объекты конфигурации (`ClientConfiguration`, `AdapterManagerConfiguration`).
     *   Он (при необходимости) рекурсивно запрашивает и создает другие нужные менеджеры (например, `FixtureManager`, `Logger`).
     *   Он создает **новый** экземпляр `AdapterManager`, передавая ему все нужные конфигурации и менеджеры.

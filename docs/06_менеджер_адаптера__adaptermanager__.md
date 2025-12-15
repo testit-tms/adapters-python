@@ -30,7 +30,7 @@
 
 ### 1. Управление Тест-Раном
 
-Перед началом любого теста `AdapterManager` должен знать, в рамках какого **тест-рана** (Test Run) в Test IT будут сохраняться результаты. Эта информация берется из [конфигурации](01_загрузка_конфигурации__appproperties__.md) (`testRunId`, `adapterMode`).
+Перед началом любого теста `AdapterManager` должен знать, в рамках какого **тест-рана** (Test Run) в Test IT будут сохраняться результаты. Эта информация берется из [конфигурации](01_appproperties__.md) (`testRunId`, `adapterMode`).
 
 *   **Если `adapterMode` = 0 или 1 (используем существующий тест-ран):** `AdapterManager` просто берет `testRunId` из конфигурации и передает его `ApiClientWorker`.
 *   **Если `adapterMode` = 2 (создаем новый тест-ран):** `AdapterManager` просит `ApiClientWorker` создать новый тест-ран в Test IT. `ApiClientWorker` возвращает ID созданного тест-рана, и `AdapterManager` запоминает его для дальнейшего использования.
@@ -49,7 +49,7 @@
 
 ### 4. Управление Режимами Загрузки
 
-В [конфигурации](01_загрузка_конфигурации__appproperties__.md) есть параметр `importRealtime` (или переменная окружения `TMS_IMPORT_REALTIME`), который определяет, как результаты будут отправляться в Test IT.
+В [конфигурации](01_appproperties__.md) есть параметр `importRealtime` (или переменная окружения `TMS_IMPORT_REALTIME`), который определяет, как результаты будут отправляться в Test IT.
 
 *   **Режим реального времени (`importRealtime = true`):**
     *   Как только `AdapterManager` получает `TestResult` через `write_test`, он **немедленно** передает его `ApiClientWorker` для отправки в Test IT (`__write_test_realtime` вызывает `ApiClientWorker.write_test`).
