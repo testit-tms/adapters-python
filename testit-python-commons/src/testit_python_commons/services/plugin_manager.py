@@ -2,8 +2,8 @@ import logging
 
 from pluggy import PluginManager
 
-from testit_python_commons.services.step_manager import StepManager
 from testit_python_commons.app_properties import AppProperties
+from testit_python_commons.services.step_manager import StepManager
 
 
 class TmsPluginManager:
@@ -16,26 +16,32 @@ class TmsPluginManager:
     @classmethod
     def get_plugin_manager(cls):
         if cls.__plugin_manager is None:
-            cls.__plugin_manager = PluginManager('testit')
+            cls.__plugin_manager = PluginManager("testit")
 
         return cls.__plugin_manager
 
     @classmethod
     def get_adapter_manager(cls, option=None):
         if cls.__adapter_manager is None:
+            from testit_python_commons.client.client_configuration import (
+                ClientConfiguration,
+            )
             from testit_python_commons.services.adapter_manager import AdapterManager
-            from testit_python_commons.client.client_configuration import ClientConfiguration
-            from testit_python_commons.services.adapter_manager_configuration import AdapterManagerConfiguration
+            from testit_python_commons.services.adapter_manager_configuration import (
+                AdapterManagerConfiguration,
+            )
 
             app_properties = AppProperties.load_properties(option)
 
-            cls.get_logger(app_properties.get('logs') == 'true')
+            cls.get_logger(app_properties.get("logs") == "true")
 
             client_configuration = ClientConfiguration(app_properties)
             adapter_configuration = AdapterManagerConfiguration(app_properties)
             fixture_manager = cls.get_fixture_manager()
 
-            cls.__adapter_manager = AdapterManager(adapter_configuration, client_configuration, fixture_manager)
+            cls.__adapter_manager = AdapterManager(
+                adapter_configuration, client_configuration, fixture_manager
+            )
 
         return cls.__adapter_manager
 
@@ -58,12 +64,26 @@ class TmsPluginManager:
     @classmethod
     def get_logger(cls, debug: bool = False):
         if cls.__logger is None:
+            # Fix for live log duplication issue
+            # Create a dedicated handler for TmsLogger to avoid affecting global logging configuration
+            cls.__logger = logging.getLogger("TmsLogger")
+
+            # Only add handler if none exists to prevent duplicates
+            if not cls.__logger.handlers:
+                handler = logging.StreamHandler()
+                formatter = logging.Formatter(
+                    "\n%(levelname)s (%(asctime)s): %(message)s"
+                )
+                handler.setFormatter(formatter)
+                cls.__logger.addHandler(handler)
+
             # Always show WARNING and above (WARNING, ERROR, CRITICAL)
             # Only show DEBUG and INFO when debug mode is enabled
             level = logging.DEBUG if debug else logging.WARNING
-            logging.basicConfig(format='\n%(levelname)s (%(asctime)s): %(message)s', level=level)
+            cls.__logger.setLevel(level)
 
-            cls.__logger = logging.getLogger('TmsLogger')
+            # Prevent propagation to root logger to avoid interference with user loggers
+            cls.__logger.propagate = False
 
         return cls.__logger
 
