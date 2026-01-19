@@ -19,5 +19,11 @@ def retry(func):
                 attempts += 1
 
                 logging.error(e)
+                if e.status == '404':
+                    attempts = retries
+                    return 
+                if e.status == '400':
+                    attempts = retries
+                    return 
 
     return retry_wrapper

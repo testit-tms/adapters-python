@@ -76,7 +76,15 @@ class AdapterManager:
         test_result.set_automatic_creation_test_cases(
             self.__config.should_automatic_creation_test_cases())
 
-        self.__test_result_map[test_result.get_external_id()] = self.__api_client.write_test(test_result)
+        ext_id = test_result.get_external_id()
+        test_result_id = self.__api_client.write_test(test_result)
+      
+        if (ext_id is None or test_result_id is None):
+            logger.warning("test_result got empty external_id or test_result_id")
+            logger.warning(test_result)
+            return
+
+        self.__test_result_map[ext_id] = test_result_id
 
     @adapter_logger
     def write_tests(self) -> None:
