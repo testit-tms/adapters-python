@@ -35,7 +35,11 @@ Status](https://img.shields.io/pypi/v/testit-python-commons?style=plastic)](http
 | 5.3     | 3.6.1.post530  | 3.6.1.post530  | 3.6.1.post530  | 3.6.1.post530  |
 | 5.4     | 3.6.6.post540  | 3.6.6.post540  | 3.6.6.post540  | 3.6.6.post540  |
 | 5.5     | 3.10.1.post550 | 3.10.1.post550 | 3.10.1.post550 | 3.10.1.post550 |
-| Cloud   | 3.10.4         | 3.10.4         | 3.10.4         | 3.10.4         |
+| Cloud   | 3.10.4 +       | 3.10.4 +       | 3.10.4 +       | 3.10.4 +       |
+
+1. For current versions, see the releases tab. 
+2. Starting with 5.2, we have added a TMS postscript, which means that the utility is compatible with a specific enterprise version. 
+3. If you are in doubt about which version to use, check with the support staff. support@yoonion.ru
 
 Supported test frameworks:
  1. [Pytest](https://github.com/testit-tms/adapters-python/tree/main/testit-adapter-pytest)
