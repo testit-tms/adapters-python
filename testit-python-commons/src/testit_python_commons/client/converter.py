@@ -8,13 +8,14 @@ from testit_api_client.models import (
     AutoTestStepResultUpdateRequest,
     CreateAutoTestRequest,
     UpdateAutoTestRequest,
-    AutoTestPostModel,
-    AutoTestPutModel,
+    AutoTestCreateApiModel,
+    AutoTestUpdateApiModel,
     AutoTestResultsForTestRunModel,
-    AutoTestStepModel,
+    AutoTestStepApiModel,
     AvailableTestResultOutcome,
     LinkPostModel,
-    LinkPutModel,
+    LinkCreateApiModel,
+    LinkUpdateApiModel,
     LinkType,
     CreateEmptyRequest,
     TestRunV2ApiResult,
@@ -140,8 +141,8 @@ class Converter:
     def test_result_to_autotest_post_model(
             cls,
             test_result: TestResult,
-            project_id: str) -> AutoTestPostModel:
-        return AutoTestPostModel(
+            project_id: str) -> AutoTestCreateApiModel:
+        return AutoTestCreateApiModel(
             external_id=test_result.get_external_id(),
             project_id=project_id,
             name=test_result.get_autotest_name(),
@@ -155,7 +156,7 @@ class Converter:
             classname=test_result.get_classname(),
             title=test_result.get_title(),
             description=test_result.get_description(),
-            links=cls.links_to_links_post_model(test_result.get_links()),
+            links=cls.links_to_links_create_api_model(test_result.get_links()),
             labels=test_result.get_labels(),
             should_create_work_item=test_result.get_automatic_creation_test_cases(),
             external_key=test_result.get_external_key()
@@ -181,7 +182,7 @@ class Converter:
             classname=test_result.get_classname(),
             title=test_result.get_title(),
             description=test_result.get_description(),
-            links=cls.links_to_links_post_model(test_result.get_links()),
+            links=cls.links_to_links_create_api_model(test_result.get_links()),
             labels=test_result.get_labels(),
             should_create_work_item=test_result.get_automatic_creation_test_cases(),
             external_key=test_result.get_external_key()
@@ -192,9 +193,9 @@ class Converter:
     def test_result_to_autotest_put_model(
             cls,
             test_result: TestResult,
-            project_id: str) -> AutoTestPutModel:
+            project_id: str) -> AutoTestUpdateApiModel:
         if test_result.get_outcome() == 'Passed':
-            return AutoTestPutModel(
+            return AutoTestUpdateApiModel(
                 external_id=test_result.get_external_id(),
                 project_id=project_id,
                 name=test_result.get_autotest_name(),
@@ -213,7 +214,7 @@ class Converter:
                 external_key=test_result.get_external_key()
             )
         else:
-            return AutoTestPutModel(
+            return AutoTestUpdateApiModel(
                 external_id=test_result.get_external_id(),
                 project_id=project_id,
                 name=test_result.get_autotest_name(),
@@ -361,9 +362,9 @@ class Converter:
 
     @staticmethod
     @adapter_logger
-    def link_to_link_put_model(link: Link) -> LinkPutModel:
+    def link_to_link_create_api_model(link: Link) -> LinkCreateApiModel:
         if link.get_link_type():
-            return LinkPutModel(
+            return LinkCreateApiModel(
                 url=link.get_url(),
                 title=link.get_title(),
                 type=LinkType(link.get_link_type()),
@@ -371,7 +372,26 @@ class Converter:
                 has_info=True,
             )
         else:
-            return LinkPutModel(
+            return LinkCreateApiModel(
+                url=link.get_url(),
+                title=link.get_title(),
+                description=link.get_description(),
+                has_info=True,
+            )
+
+    @staticmethod
+    @adapter_logger
+    def link_to_link_put_model(link: Link) -> LinkUpdateApiModel:
+        if link.get_link_type():
+            return LinkUpdateApiModel(
+                url=link.get_url(),
+                title=link.get_title(),
+                type=LinkType(link.get_link_type()),
+                description=link.get_description(),
+                has_info=True,
+            )
+        else:
+            return LinkUpdateApiModel(
                 url=link.get_url(),
                 title=link.get_title(),
                 description=link.get_description(),
@@ -392,7 +412,19 @@ class Converter:
 
     @classmethod
     @adapter_logger
-    def links_to_links_put_model(cls, links: List[Link]) -> List[LinkPutModel]:
+    def links_to_links_create_api_model(cls, links: List[Link]) -> List[LinkCreateApiModel]:
+        create_api_model_links = []
+
+        for link in links:
+            create_api_model_links.append(
+                cls.link_to_link_create_api_model(link)
+            )
+
+        return create_api_model_links
+
+    @classmethod
+    @adapter_logger
+    def links_to_links_put_model(cls, links: List[Link]) -> List[LinkUpdateApiModel]:
         put_model_links = []
 
         for link in links:
@@ -423,12 +455,12 @@ class Converter:
     @classmethod
     # @adapter_logger
     def step_results_to_autotest_steps_model(
-            cls, step_results: List[StepResult]) -> List[AutoTestStepModel]:
+            cls, step_results: List[StepResult]) -> List[AutoTestStepApiModel]:
         autotest_model_steps = []
 
         for step_result in step_results:
             autotest_model_steps.append(
-                AutoTestStepModel(
+                AutoTestStepApiModel(
                     title=step_result.get_title(),
                     description=step_result.get_description(),
                     steps=cls.step_results_to_autotest_steps_model(
@@ -530,7 +562,7 @@ class Converter:
             cls,
             test_result: TestResult,
             project_id: str,
-            work_item_ids_for_link_with_auto_test: list) -> AutoTestPostModel:
+            work_item_ids_for_link_with_auto_test: list) -> AutoTestCreateApiModel:
         logging.debug('Preparing to create the auto test ' + test_result.get_external_id())
 
         model = cls.test_result_to_autotest_post_model(
@@ -566,7 +598,7 @@ class Converter:
             cls,
             test_result: TestResult,
             autotest: AutoTestApiResult,
-            project_id: str) -> AutoTestPutModel:
+            project_id: str) -> AutoTestUpdateApiModel:
         logging.debug('Preparing to update the auto test ' + test_result.get_external_id())
 
         model = cls.test_result_to_autotest_put_model(

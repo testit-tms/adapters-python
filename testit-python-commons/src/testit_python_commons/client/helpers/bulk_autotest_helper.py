@@ -2,11 +2,11 @@ import logging
 
 from testit_api_client.apis import AutoTestsApi, TestRunsApi
 from testit_api_client.models import (
-    AutoTestPostModel,
-    AutoTestPutModel,
+    AutoTestCreateApiModel,
+    AutoTestUpdateApiModel,
     AutoTestResultsForTestRunModel,
     LinkAutoTestToWorkItemRequest,
-    WorkItemIdentifierModel
+    AutoTestWorkItemIdentifierApiResult,
 )
 
 from testit_python_commons.client.client_configuration import ClientConfiguration
@@ -40,12 +40,12 @@ class BulkAutotestHelper:
     @adapter_logger
     def add_for_create(
             self,
-            create_model: AutoTestPostModel,
+            create_model: AutoTestCreateApiModel,
             result_model: AutoTestResultsForTestRunModel):
         thread_for_create_and_result: ThreadForCreateAndResult = self.__threads_manager.\
             get_thread_for_create_and_result(create_model.external_id)
 
-        thread_for_create: Dict[str, AutoTestPostModel] = thread_for_create_and_result.get_thread_for_create()
+        thread_for_create: Dict[str, AutoTestCreateApiModel] = thread_for_create_and_result.get_thread_for_create()
         thread_for_create[create_model.external_id] = create_model
 
         thread_results_for_created_autotests: Dict[str, AutoTestResultsForTestRunModel] = thread_for_create_and_result\
@@ -58,13 +58,13 @@ class BulkAutotestHelper:
     @adapter_logger
     def add_for_update(
             self,
-            update_model: AutoTestPutModel,
+            update_model: AutoTestUpdateApiModel,
             result_model: AutoTestResultsForTestRunModel,
             autotest_links_to_wi_for_update: Dict[str, List[str]]):
         thread_for_update_and_result: ThreadForUpdateAndResult = self.__threads_manager.\
             get_thread_for_update_and_result(update_model.external_id)
 
-        thread_for_update: Dict[str, AutoTestPutModel] = thread_for_update_and_result.get_thread_for_update()
+        thread_for_update: Dict[str, AutoTestUpdateApiModel] = thread_for_update_and_result.get_thread_for_update()
         thread_for_update[update_model.external_id] = update_model
 
         thread_results_for_updated_autotests: Dict[str, AutoTestResultsForTestRunModel] = thread_for_update_and_result\
@@ -87,7 +87,7 @@ class BulkAutotestHelper:
         all_threads_for_create_and_result: ThreadsForCreateAndResult = self.__threads_manager\
             .get_all_threads_for_create_and_result()
 
-        thread_for_create: Dict[str, AutoTestPostModel] = all_threads_for_create_and_result\
+        thread_for_create: Dict[str, AutoTestCreateApiModel] = all_threads_for_create_and_result\
             .get_threads_for_create()
         autotests_for_create = list(thread_for_create.values())
 
@@ -106,7 +106,7 @@ class BulkAutotestHelper:
         all_threads_for_update_and_result: ThreadsForUpdateAndResult = self.__threads_manager\
             .get_all_threads_for_update_and_result()
 
-        thread_for_update: Dict[str, AutoTestPutModel] = all_threads_for_update_and_result\
+        thread_for_update: Dict[str, AutoTestUpdateApiModel] = all_threads_for_update_and_result\
             .get_threads_for_update()
 
         autotests_for_update = list(thread_for_update.values())
@@ -131,7 +131,7 @@ class BulkAutotestHelper:
     @adapter_logger
     def __bulk_create(
             self,
-            thread_for_create: List[AutoTestPostModel],
+            thread_for_create: List[AutoTestCreateApiModel],
             thread_results_for_created_autotests: List[AutoTestResultsForTestRunModel]
     ):
         self.__create_tests(thread_for_create)
@@ -140,7 +140,7 @@ class BulkAutotestHelper:
     @adapter_logger
     def __bulk_update(
             self,
-            thread_for_update: Dict[str, AutoTestPutModel],
+            thread_for_update: Dict[str, AutoTestUpdateApiModel],
             thread_results_for_updated_autotests: List[AutoTestResultsForTestRunModel],
             thread_for_autotest_links_to_wi_for_update: Dict[str, List[str]]
     ):
@@ -151,20 +151,20 @@ class BulkAutotestHelper:
             self.__update_autotest_link_from_work_items(autotest_id, work_item_ids)
 
     @adapter_logger
-    def __create_tests(self, autotests_for_create: List[AutoTestPostModel]):
+    def __create_tests(self, autotests_for_create: List[AutoTestCreateApiModel]):
         logging.debug(f'Creating autotests: "{autotests_for_create}')
 
         autotests_for_create = HtmlEscapeUtils.escape_html_in_object(autotests_for_create)
-        self.__autotests_api.create_multiple(auto_test_post_model=autotests_for_create)
+        self.__autotests_api.create_multiple(auto_test_create_api_model=autotests_for_create)
 
         logging.debug(f'Autotests were created')
 
     @adapter_logger
-    def __update_tests(self, autotests_for_update: List[AutoTestPutModel]):
+    def __update_tests(self, autotests_for_update: List[AutoTestUpdateApiModel]):
         logging.debug(f'Updating autotests: {autotests_for_update}')
 
         autotests_for_update = HtmlEscapeUtils.escape_html_in_object(autotests_for_update)
-        self.__autotests_api.update_multiple(auto_test_put_model=autotests_for_update)
+        self.__autotests_api.update_multiple(auto_test_update_api_model=autotests_for_update)
 
         logging.debug(f'Autotests were updated')
 
@@ -179,7 +179,7 @@ class BulkAutotestHelper:
 
     # TODO: delete after fix PUT/api/v2/autoTests
     @adapter_logger
-    def __get_work_items_linked_to_autotest(self, autotest_global_id: str) -> List[WorkItemIdentifierModel]:
+    def __get_work_items_linked_to_autotest(self, autotest_global_id: str) -> List[AutoTestWorkItemIdentifierApiResult]:
         return self.__autotests_api.get_work_items_linked_to_auto_test(id=autotest_global_id)
 
     # TODO: delete after fix PUT/api/v2/autoTests
