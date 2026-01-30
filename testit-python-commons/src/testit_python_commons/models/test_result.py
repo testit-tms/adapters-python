@@ -34,7 +34,9 @@ class TestResult:
 
     @adapter_logger
     def set_external_id(self, external_id: str):
-        self.__external_id = HtmlEscapeUtils.escape_html_tags(external_id)
+        # don't use escaping for externalId
+        # self.__external_id = HtmlEscapeUtils.escape_html_tags(external_id)
+        self.__external_id = external_id
 
         return self
 
