@@ -282,7 +282,7 @@ class TmsListener(object):
 
     @adapter.hookimpl
     def add_work_item_id(self, test_work_item_id: str):
-        if self.__executable_test:
+        if not self.__executable_test:
             self.__executable_test.work_item_ids.append(test_work_item_id)
 
     @adapter.hookimpl
