@@ -1,6 +1,6 @@
 from setuptools import find_packages, setup
 
-VERSION = "3.11.0.post560"
+VERSION = "3.11.1.post560"
 
 setup(
     name='testit-python-commons',

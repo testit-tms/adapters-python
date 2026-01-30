@@ -1,4 +1,5 @@
 import asyncio
+import inspect
 import logging
 import types
 from functools import wraps
@@ -28,7 +29,7 @@ def inner(function):
         await function(*args, **kwargs)
 
     if isinstance(function, types.FunctionType):
-        if asyncio.iscoroutinefunction(function):
+        if inspect.iscoroutinefunction(function):
             return async_wrapper
 
         return sync_wrapper
