@@ -1,6 +1,6 @@
 from testit_api_client.models import (
-    AutoTestPostModel,
-    AutoTestPutModel,
+    AutoTestCreateApiModel,
+    AutoTestUpdateApiModel,
     AutoTestResultsForTestRunModel,
 )
 
@@ -16,8 +16,8 @@ from typing import Dict, List
 
 class ThreadsManager:
     def __init__(self):
-        self.__thread_for_create: Dict[str, AutoTestPostModel] = {}
-        self.__thread_for_update: Dict[str, AutoTestPutModel] = {}
+        self.__thread_for_create: Dict[str, AutoTestCreateApiModel] = {}
+        self.__thread_for_update: Dict[str, AutoTestUpdateApiModel] = {}
         self.__threads_results_for_created_autotests: List[Dict[str, AutoTestResultsForTestRunModel]] = []
         self.__threads_results_for_updated_autotests: List[Dict[str, AutoTestResultsForTestRunModel]] = []
         self.__thread_for_autotest_links_to_wi_for_update: Dict[str, List[str]] = {}

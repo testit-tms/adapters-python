@@ -7,14 +7,14 @@ from testit_api_client.apis import AttachmentsApi, AutoTestsApi, TestRunsApi, Te
 from testit_api_client.models import (
     ApiV2TestResultsSearchPostRequest,
     AutoTestApiResult,
-    AutoTestPostModel,
-    AutoTestPutModel,
+    AutoTestCreateApiModel,
+    AutoTestUpdateApiModel,
     AttachmentPutModel,
     TestResultResponse,
     TestResultShortResponse,
     TestRunV2ApiResult,
     LinkAutoTestToWorkItemRequest,
-    WorkItemIdentifierModel
+    AutoTestWorkItemIdentifierApiResult,
 )
 
 from testit_python_commons.client.client_configuration import ClientConfiguration
@@ -247,7 +247,7 @@ class ApiClientWorker:
     @adapter_logger
     def __prepare_list_of_work_item_uuids(
             self,
-            linked_work_items: List[WorkItemIdentifierModel],
+            linked_work_items: List[AutoTestWorkItemIdentifierApiResult],
             work_item_ids: List[str]) -> List[str]:
         work_item_uuids = []
 
@@ -287,7 +287,7 @@ class ApiClientWorker:
 
     @adapter_logger
     @retry
-    def __get_work_items_linked_to_autotest(self, autotest_global_id: str) -> List[WorkItemIdentifierModel]:
+    def __get_work_items_linked_to_autotest(self, autotest_global_id: str) -> List[AutoTestWorkItemIdentifierApiResult]:
         return self.__autotest_api.get_work_items_linked_to_auto_test(id=autotest_global_id)
 
     @adapter_logger
@@ -329,10 +329,10 @@ class ApiClientWorker:
 
     @adapter_logger
     @retry
-    def __create_tests(self, autotests_for_create: List[AutoTestPostModel]) -> None:
+    def __create_tests(self, autotests_for_create: List[AutoTestCreateApiModel]) -> None:
         logging.debug(f'Creating autotests: "{autotests_for_create}')
 
-        self.__autotest_api.create_multiple(auto_test_post_model=autotests_for_create)
+        self.__autotest_api.create_multiple(auto_test_create_api_model=autotests_for_create)
 
         logging.debug(f'Autotests were created')
 
@@ -352,10 +352,10 @@ class ApiClientWorker:
 
     @adapter_logger
     @retry
-    def __update_tests(self, autotests_for_update: List[AutoTestPutModel]) -> None:
+    def __update_tests(self, autotests_for_update: List[AutoTestUpdateApiModel]) -> None:
         logging.debug(f'Updating autotests: {autotests_for_update}')
 
-        self.__autotest_api.update_multiple(auto_test_put_model=autotests_for_update)
+        self.__autotest_api.update_multiple(auto_test_update_api_model=autotests_for_update)
 
         logging.debug(f'Autotests were updated')
 

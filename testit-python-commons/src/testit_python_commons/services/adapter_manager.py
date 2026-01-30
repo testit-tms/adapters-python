@@ -1,5 +1,6 @@
 import os
 import uuid
+import logging
 
 from testit_python_commons.client.api_client import ApiClientWorker
 from testit_python_commons.client.client_configuration import ClientConfiguration
@@ -80,8 +81,8 @@ class AdapterManager:
         test_result_id = self.__api_client.write_test(test_result)
       
         if (ext_id is None or test_result_id is None):
-            logger.warning("test_result got empty external_id or test_result_id")
-            logger.warning(test_result)
+            logging.warning("test_result got empty external_id or test_result_id")
+            logging.warning(test_result)
             return
 
         self.__test_result_map[ext_id] = test_result_id
