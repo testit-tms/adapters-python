@@ -24,7 +24,8 @@ from testit_api_client.models import (
     TestResultResponse,
     TestResultV2GetModel,
     AttachmentApiResult,
-    AttachmentUpdateRequest
+    AttachmentUpdateRequest,
+    AttachmentPutModel,
 )
 
 from testit_python_commons.models.link import Link
@@ -366,6 +367,24 @@ class Converter:
         return AttachmentUpdateRequest(id=attachment.id)
 
     @classmethod
+    @adapter_logger
+    def build_attachment_update_requests(
+            cls, attachments: List[AttachmentPutModel]) -> List[AttachmentUpdateRequest]:
+        put_model_attachments = []
+
+        for attachment in attachments:
+            put_model_attachments.append(
+                cls.build_attachment_update_request(attachment)
+            )
+
+        return put_model_attachments
+
+    @staticmethod
+    @adapter_logger
+    def build_attachment_update_request(attachment: AttachmentPutModel) -> AttachmentUpdateRequest:
+        return AttachmentUpdateRequest(id=attachment.id)
+
+    @classmethod
     # @adapter_logger
     def step_results_to_autotest_steps_model(
             cls, step_results: List[StepResult]) -> List[AutoTestStepModel]:
@@ -443,7 +462,7 @@ class Converter:
                     description=step_result.get_description(),
                     duration=step_result.get_duration(),
                     parameters=step_result.get_parameters(),
-                    attachments=step_result.get_attachments(),
+                    attachments=cls.build_attachment_update_requests(step_result.get_attachments()),
                     started_on=step_result.get_started_on(),
                     completed_on=step_result.get_completed_on(),
                     step_results=cls.step_results_to_auto_test_step_result_update_request(
