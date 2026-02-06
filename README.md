@@ -36,7 +36,7 @@ Status](https://img.shields.io/pypi/v/testit-python-commons?style=plastic)](http
 | 5.4     | 3.6.6.post540  | 3.6.6.post540  | 3.6.6.post540  | 3.6.6.post540  |
 | 5.5     | 3.10.1.post550 | 3.10.1.post550 | 3.10.1.post550 | 3.10.1.post550 |
 | 5.6     | 3.11.1.post560 | 3.11.1.post560 | 3.11.1.post560 | 3.11.1.post560 |
-| Cloud   | 3.10.4 +       | 3.10.4 +       | 3.10.4 +       | 3.10.4 +       |
+| Cloud   | 3.12.0 +       | 3.12.0 +       | 3.12.0 +       | 3.12.0 +       |
 
 1. For current versions, see the releases tab. 
 2. Starting with 5.2, we have added a TMS postscript, which means that the utility is compatible with a specific enterprise version. 
