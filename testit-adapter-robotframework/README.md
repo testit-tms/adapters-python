@@ -97,16 +97,31 @@ Description of tags:
 - `testit.title` - autotest name specified in the autotest card. If not specified, the name from the displayName method is used
 - `testit.description` - autotest description specified in the autotest card
 - `testit.links` - links listed in the autotest card
-- `testit.labels` - tags listed in the autotest card
+- `testit.tags` - tags listed in the autotest card
 - `testit.nameSpace` - directory in the TMS system (default - file's name of test)
 - `testit.className` - subdirectory in the TMS system (default - class's name of test)
 
-Description of methods:
+Description of scenario methods:
 - `Add Links` - links in the autotest result
 - `Add Link` - add one link in the autotest result
 - `Add Attachments` - uploading files in the autotest result
 - `Add Attachment` - upload given content with given filename in the autotest result
 - `Add Message` - information about autotest in the autotest result
+
+Description of methods:
+- `testit.addWorkItemIds` - a dynamic method that links autotests with manual tests. Receives the array of manual tests' IDs
+- `testit.addDisplayName` - a dynamic method for adding internal autotest name (used in Test IT)
+- `testit.addExternalId` - a dynamic method for adding unique internal autotest ID (used in Test IT)
+- `testit.addTitle` - a dynamic method for adding autotest name specified in the autotest card. If not specified, the name from the displayName method is used
+- `testit.addDescription` - a dynamic method for adding autotest description specified in the autotest card
+- `testit.addTags` - a dynamic method for adding tags listed in the autotest card
+- `testit.addLinks` - links in the autotest result
+- `testit.addAttachments` - uploading files in the autotest result
+- `testit.addMessage` - information about autotest in the autotest result
+- `testit.addNameSpace` - a dynamic method for adding directory in the TMS system (default - file's name of test)
+- `testit.addClassName` - a dynamic method for adding subdirectory in the TMS system (default - class's name of test)
+- `testit.addParameter` - a dynamic method for adding parameter in the autotest result
+- `testit.step` - usage in the "with" construct to designation a step in the body of the test
 
 ### Parallel execution
 

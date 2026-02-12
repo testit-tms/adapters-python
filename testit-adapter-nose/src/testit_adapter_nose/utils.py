@@ -83,7 +83,7 @@ def form_test(item, top_level_directory):
         'title': __get_title_from(item, function),
         'description': __get_description_from(item, function),
         'links': __get_links_from(item, function),
-        'labels': __get_labels_from(item, function),
+        'labels': __get_tags_from(item, function),
         'workItemsID': __get_work_item_ids_from(item, function),
         'message': None,
         'externalKey': __get_fullname(function, top_level_directory)
@@ -192,30 +192,31 @@ def __set_parameters_to_links(links, all_parameters):
     return links_with_parameters
 
 
-def __get_labels_from(item, function):
+def __get_tags_from(item, function) -> List[str]:
     test_labels = __search_attribute(function, 'test_labels')
+    test_tags = __search_attribute(function, 'test_tags')
 
-    if not test_labels:
+    return __collect_tags(item, test_labels) + __collect_tags(item, test_tags)
+
+
+def __collect_tags(item, test_tags) -> List[str]:
+    if not test_tags:
         return []
 
-    labels = []
+    tags = []
 
-    for label in test_labels:
+    for tag in test_tags:
         result = collect_parameters_in_mass_attribute(
-            label,
+            tag,
             get_all_parameters(item))
 
         if isinstance(result, __ARRAY_TYPES):
-            for label in result:
-                labels.append({
-                    'name': str(label)
-                })
+            for l in result:
+                tags.append(str(l))
         else:
-            labels.append({
-                'name': str(result)
-            })
+            tags.append(str(result))
 
-    return labels
+    return tags
 
 
 def __get_work_item_ids_from(item, function):
@@ -374,7 +375,7 @@ def convert_executable_test_to_test_result_model(executable_test: dict) -> TestR
         .set_description(executable_test['description'])\
         .set_links(executable_test['links'])\
         .set_result_links(executable_test['resultLinks'])\
-        .set_labels(executable_test['labels'])\
+        .set_tags(executable_test['labels'])\
         .set_work_item_ids(executable_test['workItemsID'])\
         .set_message(executable_test['message'])\
         .set_external_key(executable_test['externalKey'])

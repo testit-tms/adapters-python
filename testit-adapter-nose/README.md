@@ -94,7 +94,7 @@ Description of decorators:
 - `testit.externalId` - unique internal autotest ID (used in Test IT)
 - `testit.title` - autotest name specified in the autotest card. If not specified, the name from the displayName method is used
 - `testit.description` - autotest description specified in the autotest card
-- `testit.labels` - tags listed in the autotest card
+- `testit.tags` - tags listed in the autotest card
 - `testit.link` - links listed in the autotest card
 - `testit.step` - the designation of the step called in the body of the test or other step
 - `testit.nameSpace` - directory in the TMS system (default - file's name of test)
@@ -104,9 +104,18 @@ All decorators support the use of parameterization attributes
 
 Description of methods:
 
+- `testit.addWorkItemIds` - a dynamic method that links autotests with manual tests. Receives the array of manual tests' IDs
+- `testit.addDisplayName` - a dynamic method for adding internal autotest name (used in Test IT)
+- `testit.addExternalId` - a dynamic method for adding unique internal autotest ID (used in Test IT)
+- `testit.addTitle` - a dynamic method for adding autotest name specified in the autotest card. If not specified, the name from the displayName method is used
+- `testit.addDescription` - a dynamic method for adding autotest description specified in the autotest card
+- `testit.addTags` - a dynamic method for adding tags listed in the autotest card
 - `testit.addLinks` - links in the autotest result
 - `testit.addAttachments` - uploading files in the autotest result
 - `testit.addMessage` - information about autotest in the autotest result
+- `testit.addNameSpace` - a dynamic method for adding directory in the TMS system (default - file's name of test)
+- `testit.addClassName` - a dynamic method for adding subdirectory in the TMS system (default - class's name of test)
+- `testit.addParameter` - a dynamic method for adding parameter in the autotest result
 - `testit.step` - usage in the "with" construct to designation a step in the body of the test
 
 ### Examples
@@ -163,7 +172,7 @@ from nose2.tools import params
 @testit.displayName('param {num}')
 @testit.title('Test with params')
 @testit.description('E2E_autotest')
-@testit.labels('parameters', 'test')
+@testit.tags('parameters', 'test')
 @testit.links(url='https://dumps.example.com/module/JCP-777')
 @testit.links(url='https://dumps.example.com/module/JCP-777',
               title='JCP-777',

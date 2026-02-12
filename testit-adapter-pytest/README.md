@@ -106,7 +106,7 @@ Description of decorators:
 - `testit.externalId` - unique internal autotest ID (used in Test IT)
 - `testit.title` - autotest name specified in the autotest card. If not specified, the name from the displayName method is used
 - `testit.description` - autotest description specified in the autotest card
-- `testit.labels` - tags listed in the autotest card
+- `testit.tags` - tags listed in the autotest card
 - `testit.link` - links listed in the autotest card
 - `testit.step` - the designation of the step called in the body of the test or other step
 - `testit.nameSpace` - directory in the TMS system (default - file's name of test)
@@ -121,7 +121,7 @@ Description of methods:
 - `testit.addExternalId` - a dynamic method for adding unique internal autotest ID (used in Test IT)
 - `testit.addTitle` - a dynamic method for adding autotest name specified in the autotest card. If not specified, the name from the displayName method is used
 - `testit.addDescription` - a dynamic method for adding autotest description specified in the autotest card
-- `testit.addLabels` - a dynamic method for adding tags listed in the autotest card
+- `testit.addTags` - a dynamic method for adding tags listed in the autotest card
 - `testit.addLinks` - links in the autotest result
 - `testit.addAttachments` - uploading files in the autotest result
 - `testit.addMessage` - information about autotest in the autotest result
@@ -196,12 +196,12 @@ import testit
 @testit.externalId('Simple_autotest1_{name}')
 @testit.title('Authorization')
 @testit.description('E2E_autotest')
-@testit.labels('{labels}')
+@testit.tags('{tags}')
 @testit.links(links=[
     {'url': '{url}', 'type': '{link_type}', 'title': '{link_title}', 'description': '{link_desc}'},
     {'url': '{url}', 'type': '{link_type}', 'title': '{link_title}', 'description': '{link_desc}'}
 ])
-@pytest.mark.parametrize('name, labels, url, link_type, link_title, link_desc', [
+@pytest.mark.parametrize('name, tags, url, link_type, link_title, link_desc', [
     ('param 1', ['E2E', 'test'], 'https://dumps.example.com/module/JCP-777', testit.LinkType.DEFECT, 'JCP-777',
      'Desc of JCP-777'),
     ('param 2', (), 'https://dumps.example.com/module/docs', testit.LinkType.RELATED, 'Documentation',
@@ -212,7 +212,7 @@ import testit
     ('param 5', 'test', 'https://dumps.example.com/module/repository', testit.LinkType.REPOSITORY, 'Repository',
      'Desc of Repository')
 ])
-def test_1(name, labels, url, link_type, link_title, link_desc):
+def test_1(name, tags, url, link_type, link_title, link_desc):
     testit.addLinks(url='https://dumps.example.com/module/some_module_dump', title='component_dump.dmp',
                     type=testit.LinkType.RELATED, description='Description')
     testit.addLinks(url='https://dumps.example.com/module/some_module_dump')

@@ -124,10 +124,20 @@ def description(test_description: str):
     return outer
 
 
+@Utils.deprecated('Use "tags" instead.')
 @adapter_logger
 def labels(*test_labels: str):
     def outer(function):
         function.test_labels = test_labels
+        return inner(function)
+
+    return outer
+
+
+@adapter_logger
+def tags(*test_tags: str):
+    def outer(function):
+        function.test_tags = test_tags
         return inner(function)
 
     return outer
