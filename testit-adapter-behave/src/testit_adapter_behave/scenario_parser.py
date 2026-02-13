@@ -44,6 +44,7 @@ def parse_scenario(scenario):
         'title': None,
         'description': None,
         'links': [],
+        'labels': [],
         'tags': [],
         'workItemsID': [],
         "externalKey": get_scenario_name(scenario)
@@ -60,6 +61,9 @@ def parse_scenario(scenario):
 
     if TagType.LINKS in tags:
         executable_test['links'] = tags[TagType.LINKS]
+
+    if TagType.LABELS in tags:
+        executable_test['labels'] = tags[TagType.LABELS]
 
     if TagType.TAGS in tags:
         executable_test['tags'] = tags[TagType.TAGS]

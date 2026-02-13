@@ -106,6 +106,7 @@ Description of decorators:
 - `testit.externalId` - unique internal autotest ID (used in Test IT)
 - `testit.title` - autotest name specified in the autotest card. If not specified, the name from the displayName method is used
 - `testit.description` - autotest description specified in the autotest card
+- `testit.labels` - labels listed in the autotest card
 - `testit.tags` - tags listed in the autotest card
 - `testit.link` - links listed in the autotest card
 - `testit.step` - the designation of the step called in the body of the test or other step
@@ -121,6 +122,7 @@ Description of methods:
 - `testit.addExternalId` - a dynamic method for adding unique internal autotest ID (used in Test IT)
 - `testit.addTitle` - a dynamic method for adding autotest name specified in the autotest card. If not specified, the name from the displayName method is used
 - `testit.addDescription` - a dynamic method for adding autotest description specified in the autotest card
+- `testit.addLabels` - a dynamic method for adding labels listed in the autotest card
 - `testit.addTags` - a dynamic method for adding tags listed in the autotest card
 - `testit.addLinks` - links in the autotest result
 - `testit.addAttachments` - uploading files in the autotest result

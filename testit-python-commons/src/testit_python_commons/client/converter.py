@@ -158,6 +158,7 @@ class Converter:
             title=test_result.get_title(),
             description=test_result.get_description(),
             links=cls.links_to_links_create_api_model(test_result.get_links()),
+            labels=test_result.get_labels(),
             tags=test_result.get_tags(),
             should_create_work_item=test_result.get_automatic_creation_test_cases(),
             external_key=test_result.get_external_key()
@@ -184,6 +185,7 @@ class Converter:
             title=test_result.get_title(),
             description=test_result.get_description(),
             links=cls.links_to_links_create_api_model(test_result.get_links()),
+            labels=test_result.get_labels(),
             tags=test_result.get_tags(),
             should_create_work_item=test_result.get_automatic_creation_test_cases(),
             external_key=test_result.get_external_key()
@@ -211,6 +213,7 @@ class Converter:
                 title=test_result.get_title(),
                 description=test_result.get_description(),
                 links=cls.links_to_links_put_model(test_result.get_links()),
+                labels=test_result.get_labels(),
                 tags=test_result.get_tags(),
                 external_key=test_result.get_external_key()
             )
@@ -230,6 +233,7 @@ class Converter:
                 title=test_result.get_title(),
                 description=test_result.get_description(),
                 links=cls.links_to_links_put_model(test_result.get_links()),
+                labels=test_result.get_labels(),
                 tags=test_result.get_tags(),
                 external_key=test_result.get_external_key()
             )
@@ -256,6 +260,7 @@ class Converter:
                 title=test_result.get_title(),
                 description=test_result.get_description(),
                 links=cls.links_to_links_put_model(test_result.get_links()),
+                labels=test_result.get_labels(),
                 tags=test_result.get_tags(),
                 external_key=test_result.get_external_key()
             )
@@ -275,6 +280,7 @@ class Converter:
                 title=test_result.get_title(),
                 description=test_result.get_description(),
                 links=cls.links_to_links_put_model(test_result.get_links()),
+                labels=test_result.get_labels(),
                 tags=test_result.get_tags(),
                 external_key=test_result.get_external_key()
             )

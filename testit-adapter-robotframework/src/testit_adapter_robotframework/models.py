@@ -82,6 +82,7 @@ class Autotest(Default):
     title = attrib(default=None)
     description = attrib(default=None)
     links = attrib(default=Factory(list))
+    labels = attrib(default=Factory(list))
     tags = attrib(default=Factory(list))
     workItemsID = attrib(default=Factory(list))  # noqa: N815
     message = attrib(default="")
@@ -136,7 +137,13 @@ class Autotest(Default):
                                 .set_description(link.get('description', None)) for link in value if isinstance(link, dict)])
                     except ValueError as e:
                         logger.error(f"[TestIt] Link Error: {e}")
-                elif attr in ('labels', 'tags'):
+                elif attr == 'labels':
+                    value = ast.literal_eval(value)
+                    if isinstance(value, (str, int)):
+                        self.labels.append(Label(value))
+                    elif isinstance(value, list):
+                        self.labels.extend([Label(item) for item in value if isinstance(item, (str, int))])
+                elif attr == 'tags':
                     value = ast.literal_eval(value)
                     if isinstance(value, (str, int)):
                         self.tags.append(str(value))

@@ -1,3 +1,4 @@
+from .models.label import get_label_model
 from .models.tags import TagType
 from .models.url_link import get_url_to_link_model, get_dict_to_link_model
 
@@ -33,8 +34,8 @@ def parse_test_tags(tags):
             parsed_tags[TagType.DESCRIPTION] = __parse_space_in_tag(tag[len(TagType.DESCRIPTION):])
 
         elif TagType.LABELS in tag:
-            parsed_tags[TagType.TAGS].extend(
-                __parse_tags(
+            parsed_tags[TagType.LABELS].extend(
+                __parse_labels(
                     tag[len(TagType.LABELS):]))
 
         elif TagType.TAGS in tag:
@@ -53,6 +54,15 @@ def parse_test_tags(tags):
 
 def __parse_massive(tag: str):
     return tag.split(',')
+
+
+def __parse_labels(tag):
+    parsed_labels = []
+
+    for label in __parse_massive(tag):
+        parsed_labels.append(get_label_model(label))
+
+    return parsed_labels
 
 
 def __parse_tags(tag):

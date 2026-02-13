@@ -31,6 +31,7 @@ def form_test(item) -> ExecutableTest:
         title=__get_title_from(item),
         description=__get_description_from(item),
         links=__get_links_from(item),
+        labels=__get_labels_from(item),
         tags=__get_tags_from(item),
         work_item_ids=__get_work_item_ids_from(item),
         node_id=item.nodeid
@@ -173,14 +174,35 @@ def __set_parameters_to_links(links, all_parameters):
     return links_with_parameters
 
 
-def __get_tags_from(item) -> List[str]:
+def __get_labels_from(item) -> List[dict]:
     test_labels = __search_attribute(item, 'test_labels')
+
+    if not test_labels:
+        return []
+
+    labels = []
+
+    for label in test_labels:
+        result = collect_parameters_in_mass_attribute(
+            label,
+            get_all_parameters(item))
+
+        if isinstance(result, __ARRAY_TYPES):
+            for l in result:
+                labels.append({
+                    'name': str(l)
+                })
+        else:
+            labels.append({
+                'name': str(result)
+            })
+
+    return labels
+
+
+def __get_tags_from(item) -> List[str]:
     test_tags = __search_attribute(item, 'test_tags')
 
-    return __collect_tags(item, test_labels) + __collect_tags(item, test_tags)
-
-
-def __collect_tags(item, test_tags) -> List[str]:
     if not test_tags:
         return []
 
@@ -192,8 +214,8 @@ def __collect_tags(item, test_tags) -> List[str]:
             get_all_parameters(item))
 
         if isinstance(result, __ARRAY_TYPES):
-            for l in result:
-                tags.append(str(l))
+            for t in result:
+                tags.append(str(t))
         else:
             tags.append(str(result))
 

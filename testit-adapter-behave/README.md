@@ -104,8 +104,9 @@ Description of tags:
 - `ExternalId` - unique internal autotest ID (used in Test IT)
 - `Title` - autotest name specified in the autotest card. If not specified, the name from the displayName method is used
 - `Description` - autotest description specified in the autotest card
-- `Labels` - tags listed in the autotest card
-- `Tags` - links listed in the autotest card
+- `Labels` - labels listed in the autotest card
+- `Tags` - tags listed in the autotest card
+- `Links` - links listed in the autotest card
 - `NameSpace` - directory in the TMS system (default - file's name of test)
 - `ClassName` - subdirectory in the TMS system (default - class's name of test)
 
@@ -118,6 +119,7 @@ Description of methods:
 - `testit.addExternalId` - a dynamic method for adding unique internal autotest ID (used in Test IT)
 - `testit.addTitle` - a dynamic method for adding autotest name specified in the autotest card. If not specified, the name from the displayName method is used
 - `testit.addDescription` - a dynamic method for adding autotest description specified in the autotest card
+- `testit.addLabels` - a dynamic method for adding labels listed in the autotest card
 - `testit.addTags` - a dynamic method for adding tags listed in the autotest card
 - `testit.addLinks` - links in the autotest result
 - `testit.addAttachments` - uploading files in the autotest result
