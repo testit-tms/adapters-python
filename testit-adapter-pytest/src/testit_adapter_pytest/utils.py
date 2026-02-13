@@ -32,6 +32,7 @@ def form_test(item) -> ExecutableTest:
         description=__get_description_from(item),
         links=__get_links_from(item),
         labels=__get_labels_from(item),
+        tags=__get_tags_from(item),
         work_item_ids=__get_work_item_ids_from(item),
         node_id=item.nodeid
     )
@@ -173,7 +174,7 @@ def __set_parameters_to_links(links, all_parameters):
     return links_with_parameters
 
 
-def __get_labels_from(item):
+def __get_labels_from(item) -> List[dict]:
     test_labels = __search_attribute(item, 'test_labels')
 
     if not test_labels:
@@ -197,6 +198,28 @@ def __get_labels_from(item):
             })
 
     return labels
+
+
+def __get_tags_from(item) -> List[str]:
+    test_tags = __search_attribute(item, 'test_tags')
+
+    if not test_tags:
+        return []
+
+    tags = []
+
+    for tag in test_tags:
+        result = collect_parameters_in_mass_attribute(
+            tag,
+            get_all_parameters(item))
+
+        if isinstance(result, __ARRAY_TYPES):
+            for t in result:
+                tags.append(str(t))
+        else:
+            tags.append(str(result))
+
+    return tags
 
 
 def __get_work_item_ids_from(item):
@@ -324,7 +347,7 @@ def convert_executable_test_to_test_result_model(executable_test: ExecutableTest
         .set_description(executable_test.description)\
         .set_links(executable_test.links)\
         .set_result_links(executable_test.result_links)\
-        .set_labels(executable_test.labels)\
+        .set_tags(executable_test.tags)\
         .set_work_item_ids(executable_test.work_item_ids) \
         .set_message(executable_test.message) \
         .set_external_key(pytest_autotest_keys)

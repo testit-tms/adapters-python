@@ -166,6 +166,7 @@ def addDescription(test_description: str):
             .add_description(test_description=str(test_description))
 
 
+@Utils.deprecated('Use "addTags" instead.')
 @adapter_logger
 def addLabels(*test_labels: str):
     if not hasattr(TmsPluginManager.get_plugin_manager().hook, 'add_label'):
@@ -173,6 +174,16 @@ def addLabels(*test_labels: str):
 
     for test_label in test_labels:
         TmsPluginManager.get_plugin_manager().hook.add_label(test_label=str(test_label))
+
+
+@adapter_logger
+def addTags(*test_tags: str):
+    if not hasattr(TmsPluginManager.get_plugin_manager().hook, 'add_tag'):
+        return
+
+    for test_tag in test_tags:
+        TmsPluginManager.get_plugin_manager().hook.add_tag(test_tag=str(test_tag))
+
 
 @adapter_logger
 def addParameter(name: str, value: str):

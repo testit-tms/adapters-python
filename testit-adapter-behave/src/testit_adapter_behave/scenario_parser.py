@@ -4,7 +4,7 @@ from enum import Enum
 from testit_python_commons.models.outcome_type import OutcomeType
 
 from .models.tags import TagType
-from .tags_parser import parse_tags
+from .tags_parser import parse_test_tags
 
 STATUS = {
     'passed': OutcomeType.PASSED,
@@ -16,7 +16,7 @@ STATUS = {
 
 
 def parse_scenario(scenario):
-    tags = parse_tags(scenario.tags + scenario.feature.tags)
+    tags = parse_test_tags(scenario.tags + scenario.feature.tags)
 
     # TODO: Add model to python-commons; implement via attrs
     executable_test = {
@@ -45,6 +45,7 @@ def parse_scenario(scenario):
         'description': None,
         'links': [],
         'labels': [],
+        'tags': [],
         'workItemsID': [],
         "externalKey": get_scenario_name(scenario)
         # TODO: Add to python-commons
@@ -63,6 +64,9 @@ def parse_scenario(scenario):
 
     if TagType.LABELS in tags:
         executable_test['labels'] = tags[TagType.LABELS]
+
+    if TagType.TAGS in tags:
+        executable_test['tags'] = tags[TagType.TAGS]
 
     if TagType.NAMESPACE in tags:
         executable_test['namespace'] = tags[TagType.NAMESPACE]

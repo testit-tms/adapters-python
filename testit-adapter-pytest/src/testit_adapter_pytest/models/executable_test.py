@@ -26,6 +26,7 @@ class ExecutableTest:
     description = attrib(default=None)
     links = attrib(default=Factory(list))
     labels = attrib(default=Factory(list))
+    tags = attrib(default=Factory(list))
     work_item_ids = attrib(default=Factory(list))
     message = attrib(default=None)
     node_id = attrib(default=None)
