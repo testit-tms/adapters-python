@@ -9,7 +9,7 @@ from testit_python_commons.models.test_result import TestResult
 from .models.option import Option
 from .models.tags import TagType
 from .scenario_parser import get_scenario_external_id, get_scenario_parameters
-from .tags_parser import parse_tags
+from .tags_parser import parse_test_tags
 
 
 def parse_userdata(userdata):
@@ -82,7 +82,7 @@ def filter_out_scenarios(tests_for_launch, scenarios):
 
 
 def validate_scenario(scenario, tests_for_launch) -> bool:
-    tags = parse_tags(scenario.tags + scenario.feature.tags)
+    tags = parse_test_tags(scenario.tags + scenario.feature.tags)
     external_id = tags[TagType.EXTERNAL_ID] if \
         TagType.EXTERNAL_ID in tags and tags[TagType.EXTERNAL_ID] else get_scenario_external_id(scenario)
 
@@ -141,8 +141,9 @@ def convert_executable_test_to_test_result_model(executable_test: dict) -> TestR
         .set_title(executable_test['title'])\
         .set_description(executable_test['description'])\
         .set_links(executable_test['links'])\
-        .set_result_links(executable_test['resultLinks'])\
-        .set_labels(executable_test['labels'])\
+        .set_result_links(executable_test['resultLinks']) \
+        .set_labels(executable_test['labels']) \
+        .set_tags(executable_test['tags'])\
         .set_work_item_ids(executable_test['workItemsID'])\
         .set_message(executable_test['message'])\
         .set_external_key(executable_test['externalKey'])

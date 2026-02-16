@@ -83,6 +83,7 @@ class Autotest(Default):
     description = attrib(default=None)
     links = attrib(default=Factory(list))
     labels = attrib(default=Factory(list))
+    tags = attrib(default=Factory(list))
     workItemsID = attrib(default=Factory(list))  # noqa: N815
     message = attrib(default="")
     started_on = attrib(default=None)
@@ -142,6 +143,12 @@ class Autotest(Default):
                         self.labels.append(Label(value))
                     elif isinstance(value, list):
                         self.labels.extend([Label(item) for item in value if isinstance(item, (str, int))])
+                elif attr == 'tags':
+                    value = ast.literal_eval(value)
+                    if isinstance(value, (str, int)):
+                        self.tags.append(str(value))
+                    elif isinstance(value, list):
+                        self.tags.extend([str(item) for item in value if isinstance(item, (str, int))])
                 elif attr == 'namespace':
                     self.namespace = str(value).replace("'", "").replace('"', '')
                 elif attr == 'classname':

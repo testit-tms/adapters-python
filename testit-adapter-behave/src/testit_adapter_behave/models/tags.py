@@ -6,5 +6,6 @@ class TagType:
     WORK_ITEM_IDS = 'WorkItemIds='
     DESCRIPTION = 'Description='
     LABELS = 'Labels='
+    TAGS = 'Tags='
     NAMESPACE = 'NameSpace='
     CLASSNAME = 'ClassName='

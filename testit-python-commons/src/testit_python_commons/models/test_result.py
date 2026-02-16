@@ -26,6 +26,7 @@ class TestResult:
     __result_links: List[Link] = []
     __attachments: List[str] = []
     __labels: List[str] = []
+    __tags: List[str] = []
     __work_item_ids: List[str] = []
     __parameters: dict = {}
     __properties: dict = {}
@@ -218,11 +219,19 @@ class TestResult:
     def set_labels(self, labels: list):
         self.__labels = HtmlEscapeUtils.escape_html_in_object(labels)
 
-        return self
-
     @adapter_logger
     def get_labels(self) -> list:
         return self.__labels
+
+    @adapter_logger
+    def set_tags(self, tags: list):
+        self.__tags = HtmlEscapeUtils.escape_html_in_object(tags)
+
+        return self
+
+    @adapter_logger
+    def get_tags(self) -> list:
+        return self.__tags
 
     @adapter_logger
     def set_work_item_ids(self, work_item_ids: list):
