@@ -238,6 +238,29 @@ Test With Add Message
     [Teardown]  Teardown
 ```
 
+#### Parameterized test
+
+> [!WARNING]
+> When linking a parameterized autotest to a parameterized test case, please consider the problematic points:
+> - In TMS test cases have a table with parameters, but autotests do not. They are not equal entities, so there may be incompatibility in terms of parameters
+> - Running a parameterized test case, TMS expects the results of all related autotests with all the parameters specified in the test case table
+> - In TMS, the parameters are limited to the string type, so the adapter transmits absolutely all the autotest parameters as a string. This implies the following problematic point for the test case table
+> - TMS expects a complete **textual** match of the name and value of the parameters of the test case table with the autotest parameters
+
+```robotframework
+*** Variables ***
+${NUMBER}          1
+${VALUE}           String01
+
+Parametrized test success
+    [Tags]  testit.externalID:parametrized_test_${NUMBER}_${VALUE}_success
+    ...     testit.displayName:parametrized_test_${NUMBER}_${VALUE}_success_display_name
+    ...     testit.title:parametrized_test_${NUMBER}_${VALUE}_success_title
+    ...     testit.description:parametrized_test_${NUMBER}_${VALUE}_success
+    Get Parameters ${NUMBER} ${VALUE}
+    Return True
+```
+
 # Contributing
 
 You can help to develop the project. Any contributions are **greatly appreciated**.
