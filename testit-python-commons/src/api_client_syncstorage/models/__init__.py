@@ -1,0 +1,28 @@
+# flake8: noqa
+
+# import all models into this package
+# if you have many models here with many references from one model to another this may
+# raise a RecursionError
+# to avoid this, import only the models that you directly need like:
+# from api_client_syncstorage.model.pet import Pet
+# or import this package, but before doing it, use:
+# import sys
+# sys.setrecursionlimit(n)
+
+from api_client_syncstorage.model.attachment_put_model import AttachmentPutModel
+from api_client_syncstorage.model.attachment_put_model_auto_test_step_results_model import AttachmentPutModelAutoTestStepResultsModel
+from api_client_syncstorage.model.attachment_put_model_auto_test_step_results_model_parameters import AttachmentPutModelAutoTestStepResultsModelParameters
+from api_client_syncstorage.model.auto_test_results_for_test_run_model import AutoTestResultsForTestRunModel
+from api_client_syncstorage.model.auto_test_results_for_test_run_model_attachments_inner import AutoTestResultsForTestRunModelAttachmentsInner
+from api_client_syncstorage.model.auto_test_results_for_test_run_model_links_inner import AutoTestResultsForTestRunModelLinksInner
+from api_client_syncstorage.model.auto_test_results_for_test_run_model_properties import AutoTestResultsForTestRunModelProperties
+from api_client_syncstorage.model.auto_test_results_for_test_run_model_step_results_inner import AutoTestResultsForTestRunModelStepResultsInner
+from api_client_syncstorage.model.completion_response import CompletionResponse
+from api_client_syncstorage.model.health_status_response import HealthStatusResponse
+from api_client_syncstorage.model.link_post_model import LinkPostModel
+from api_client_syncstorage.model.models_completion_response import ModelsCompletionResponse
+from api_client_syncstorage.model.register_request import RegisterRequest
+from api_client_syncstorage.model.register_response import RegisterResponse
+from api_client_syncstorage.model.set_worker_status_request import SetWorkerStatusRequest
+from api_client_syncstorage.model.set_worker_status_response import SetWorkerStatusResponse
+from api_client_syncstorage.model.shutdown_response import ShutdownResponse
