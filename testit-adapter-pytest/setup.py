@@ -1,6 +1,6 @@
 from setuptools import find_packages, setup
 
-VERSION = "3.12.1"
+VERSION = "3.12.2"
 
 setup(
     name='testit-adapter-pytest',
