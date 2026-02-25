@@ -166,6 +166,7 @@ class TmsListener(object):
     @pytest.hookimpl(tryfirst=True)
     def pytest_runtest_protocol(self, item):
         self.__executable_test = utils.form_test(item)
+        self.__adapter_manager.on_running_started()
 
     @pytest.hookimpl(hookwrapper=True)
     def pytest_runtest_setup(self, item):
@@ -258,6 +259,7 @@ class TmsListener(object):
 
     @pytest.hookimpl
     def pytest_sessionfinish(self, session):
+        self.__adapter_manager.on_block_completed()
         self.__adapter_manager.write_tests()
 
     @adapter.hookimpl

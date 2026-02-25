@@ -159,13 +159,13 @@ class ApiClientWorker:
         autotests = self.__autotest_api.api_v2_auto_tests_search_post(api_v2_auto_tests_search_post_request=model)
 
         if autotests:
-            self.__update_test(test_result, autotests[0])
+            self.__update_auto_test(test_result, autotests[0])
 
             autotest_id = autotests[0].id
 
             self.__update_autotest_link_from_work_items(autotest_id, test_result.get_work_item_ids())
         else:
-            self.__create_test(test_result)
+            self.__create_auto_test(test_result)
 
         return self.__load_test_result(test_result)
 
@@ -310,7 +310,7 @@ class ApiClientWorker:
 
     @adapter_logger
     @retry
-    def __create_test(self, test_result: TestResult) -> str:
+    def __create_auto_test(self, test_result: TestResult) -> str:
         logging.debug(f'Autotest "{test_result.get_autotest_name()}" was not found')
 
         work_item_ids_for_link_with_auto_test = self.__get_work_item_uuids_for_link_with_auto_test(
@@ -338,7 +338,7 @@ class ApiClientWorker:
 
     @adapter_logger
     @retry
-    def __update_test(self, test_result: TestResult, autotest: AutoTestApiResult) -> None:
+    def __update_auto_test(self, test_result: TestResult, autotest: AutoTestApiResult) -> None:
         logging.debug(f'Autotest "{test_result.get_autotest_name()}" was found')
 
         model = Converter.prepare_to_update_autotest(test_result, autotest, self.__config.get_project_id())
@@ -436,3 +436,6 @@ class ApiClientWorker:
             else:
                 logging.error(f'File "{path}" was not found!')
         return attachments
+
+    def get_configuration_id(self):
+        return self.__config.get_configuration_id()

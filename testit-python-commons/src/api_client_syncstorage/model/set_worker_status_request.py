@@ -83,6 +83,7 @@ class SetWorkerStatusRequest(ModelNormal):
         return {
             'pid': (str,),  # noqa: E501
             'status': (str,),  # noqa: E501
+            'test_run_id': (str,),  # noqa: E501
         }
 
     @cached_property
@@ -93,6 +94,7 @@ class SetWorkerStatusRequest(ModelNormal):
     attribute_map = {
         'pid': 'pid',  # noqa: E501
         'status': 'status',  # noqa: E501
+        'test_run_id': 'testRunId',  # noqa: E501
     }
 
     read_only_vars = {
@@ -138,6 +140,7 @@ class SetWorkerStatusRequest(ModelNormal):
                                 _visited_composed_classes = (Animal,)
             pid (str): [optional]  # noqa: E501
             status (str): [optional]  # noqa: E501
+            test_run_id (str): [optional]  # noqa: E501
         """
 
         _check_type = kwargs.pop('_check_type', True)
@@ -225,6 +228,7 @@ class SetWorkerStatusRequest(ModelNormal):
                                 _visited_composed_classes = (Animal,)
             pid (str): [optional]  # noqa: E501
             status (str): [optional]  # noqa: E501
+            test_run_id (str): [optional]  # noqa: E501
         """
 
         _check_type = kwargs.pop('_check_type', True)

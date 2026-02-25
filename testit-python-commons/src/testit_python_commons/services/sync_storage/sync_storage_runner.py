@@ -2,10 +2,14 @@ import logging
 import os
 import platform
 import subprocess
-import tempfile
+
+# tempfile import removed as it's no longer used
 import threading
 import time
-from typing import Any, Dict, Optional
+import urllib.error
+import urllib.request
+from pathlib import Path
+from typing import Optional
 
 import urllib3
 from api_client_syncstorage.api.test_results_api import TestResultsApi
@@ -14,11 +18,14 @@ from api_client_syncstorage.api_client import ApiClient as SyncStorageApiClient
 from api_client_syncstorage.configuration import (
     Configuration as SyncStorageConfiguration,
 )
-from api_client_syncstorage.model.auto_test_results_for_test_run_model import (
-    AutoTestResultsForTestRunModel,
+from api_client_syncstorage.model.test_result_cut_api_model import (
+    TestResultCutApiModel,
 )
 from api_client_syncstorage.model.register_request import RegisterRequest
 from urllib3.exceptions import InsecureRequestWarning
+from api_client_syncstorage.model.set_worker_status_request import SetWorkerStatusRequest
+from testit_python_commons.models.test_result import TestResult
+
 
 # Disable SSL warnings
 urllib3.disable_warnings(InsecureRequestWarning)
@@ -34,11 +41,13 @@ class SyncStorageRunner:
     """
 
     DEFAULT_PORT = "49152"
-    SYNC_STORAGE_EXECUTABLE_NAME = "sync-storage"
-    SYNC_STORAGE_STARTUP_TIMEOUT = 30  # seconds
-    SYNC_STORAGE_DOWNLOAD_URL_TEMPLATE = (
-        "https://testit-sync-storage.s3.amazonaws.com/{version}/{os_arch}/sync-storage"
+    SYNC_STORAGE_VERSION = "v0.1.18"
+    SYNC_STORAGE_REPO_URL = (
+        "https://github.com/testit-tms/sync-storage-public/releases/download/"
     )
+    AMD64 = "amd64"
+    ARM64 = "arm64"
+    SYNC_STORAGE_STARTUP_TIMEOUT = 30  # seconds
 
     def __init__(
         self,
@@ -55,16 +64,17 @@ class SyncStorageRunner:
         :param base_url: Test IT server URL
         :param private_token: Authentication token for Test IT API
         """
-        self.test_run_id: str = test_run_id
-        self.port: str = port or self.DEFAULT_PORT
-        self.base_url: Optional[str] = base_url
-        self.private_token: Optional[str] = private_token
+        self.test_run_id = test_run_id
+        self.port = port or self.DEFAULT_PORT
+        self.base_url = base_url
+        self.private_token = private_token
 
         # Worker identification
-        self.pid: str = f"worker-{threading.get_ident()}-{int(time.time())}"
+        self.worker_pid: str = f"worker-{threading.get_ident()}-{int(time.time())}"
         self.is_master: bool = False
-        self.is_external_service: bool = False
-        self.already_in_progress: bool = False
+        self.is_already_in_progress: bool = False
+        self.is_running: bool = False
+        self.is_external: bool = False
 
         # Sync Storage process management
         self.sync_storage_process: Optional[subprocess.Popen] = None
@@ -84,59 +94,134 @@ class SyncStorageRunner:
 
         :return: True if successfully started and registered, False otherwise
         """
+        logger.info("Starting Sync Storage service!")
         try:
-            logger.info("Starting Sync Storage service")
+            if self.is_running:
+                logger.info("SyncStorage already running")
+                return True
+
+            logger.info("SyncStorage is not running")
 
             # Check if Sync Storage is already running
-            if self._is_sync_storage_running():
-                logger.info("Sync Storage is already running externally")
-                self.is_external_service = True
-            else:
-                logger.info("Sync Storage is not running, attempting to start it")
-                self.is_external_service = False
+            if self._is_sync_storage_already_running():
+                logger.info(
+                    f"SyncStorage already started {self.port}. Connecting to existing one..."
+                )
+                self.is_running = True
+                self.is_external = True
 
-                # Download and start Sync Storage process
-                if not self._download_and_start_sync_storage():
-                    logger.error("Failed to download and start Sync Storage")
-                    return False
+                try:
+                    self._register_worker_with_retry()
+                except Exception as e:
+                    logger.error(f"Error registering worker: {e}")
 
-            # Initialize API clients
-            self._initialize_api_clients()
+                return True
 
-            # Register worker
-            if not self._register_worker():
-                logger.error("Failed to register worker with Sync Storage")
-                return False
+            # Get executable file name for current platform
+            executable_filename = self._get_file_name_by_arch_and_os()
 
-            logger.info(
-                f"Successfully started Sync Storage runner. Is master: {self.is_master}"
+            # Prepare command to start Sync Storage
+            command = [executable_filename]
+
+            if self.test_run_id:
+                command.extend(["--testRunId", self.test_run_id])
+
+            if self.port:
+                command.extend(["--port", self.port])
+
+            if self.base_url:
+                command.extend(["--baseURL", self.base_url])
+
+            if self.private_token:
+                command.extend(["--privateToken", self.private_token])
+
+            # Prepare executable file (download if needed)
+            prepared_executable_path = self._prepare_executable_file(
+                executable_filename
             )
-            return True
+
+            # Update command with prepared path
+            command[0] = prepared_executable_path
+
+            logger.info(f"Starting SyncStorage with command: {' '.join(command)}")
+
+            # Start process
+            process_builder = subprocess.Popen(
+                command,
+                cwd=os.path.dirname(prepared_executable_path),
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                text=True,
+                bufsize=1,
+                universal_newlines=True,
+            )
+
+            self.sync_storage_process = process_builder
+
+            # Start output reader in background thread
+            self._start_output_reader()
+
+            # Wait for server startup
+            if self._wait_for_server_startup(self.SYNC_STORAGE_STARTUP_TIMEOUT):
+                self.is_running = True
+                logger.info(f"SyncStorage started successfully on port {self.port}")
+                time.sleep(2)  # Wait a bit more as in Java implementation
+
+                try:
+                    self._register_worker_with_retry()
+                except Exception as e:
+                    logger.error(f"Error registering worker: {e}")
+
+                return True
+            else:
+                raise RuntimeError("Cannot start the SyncStorage until timeout")
 
         except Exception as e:
-            logger.error(f"Error starting Sync Storage runner: {e}", exc_info=True)
+            logger.error(f"Error starting Sync Storage: {e}", exc_info=True)
             return False
 
-    def stop(self):
-        """
-        Stop the Sync Storage service if it was started by this runner.
-        """
-        try:
-            if self.sync_storage_process and not self.is_external_service:
-                logger.info("Stopping Sync Storage process")
-                self.sync_storage_process.terminate()
-                self.sync_storage_process.wait(timeout=5)
-                logger.info("Sync Storage process stopped")
-        except Exception as e:
-            logger.warning(f"Error stopping Sync Storage process: {e}")
-        finally:
-            self._cleanup_temp_files()
+    def get_worker_pid(self) -> str:
+        """Get the worker PID."""
+        return self.worker_pid
 
-    def send_in_progress_test_result(self, test_result: Dict[str, Any]) -> bool:
+    def get_test_run_id(self) -> str:
+        """Get the test run ID."""
+        return self.test_run_id
+
+    def is_master_worker(self) -> bool:
+        """Check if this is the master worker."""
+        return self.is_master
+
+    def is_already_in_progress_flag(self) -> bool:
+        """Check if already in progress flag is set."""
+        return self.is_already_in_progress
+
+    def set_is_already_in_progress(self, value: bool):
+        """Set the already in progress flag."""
+        self.is_already_in_progress = value
+
+    def is_running_status(self) -> bool:
+        """Check if Sync Storage is running."""
+        return self.is_running
+
+    def is_running_as_process(self) -> bool:
+        """Check if Sync Storage is running as a process."""
+        return (
+            self.sync_storage_process is not None
+            and self.sync_storage_process.poll() is None
+        )
+
+    def get_url(self) -> str:
+        """Get the Sync Storage URL."""
+        return f"http://localhost:{self.port}"
+
+    def send_in_progress_test_result(
+        self, model: TestResultCutApiModel
+    ) -> bool:
         """
         Send test result to Sync Storage if this worker is the master.
 
-        :param test_result: Serialized test result data
+        :param model: TestResultCutApiModel instance
         :return: True if successfully sent, False otherwise
         """
         try:
@@ -148,24 +233,22 @@ class SyncStorageRunner:
                 return False
 
             # Prevent duplicate sending
-            if self.already_in_progress:
+            if self.is_already_in_progress:
                 logger.debug("Test already in progress, skipping duplicate send")
                 return False
 
             logger.debug("Sending in-progress test result to Sync Storage")
 
-            # Convert dict to model
-            auto_test_result_model = AutoTestResultsForTestRunModel(**test_result)
 
-            # Send to Sync Storage
+            # Send to Sync Storage using API client
             if self.test_results_api is not None:
                 response = self.test_results_api.in_progress_test_result_post(
-                    test_run_id=self.test_run_id,
-                    auto_test_results_for_test_run_model=auto_test_result_model,
+                    self.test_run_id,
+                    model, # test_result_cut_api_model
                 )
 
                 # Mark as in progress to prevent duplicates
-                self.already_in_progress = True
+                self.is_already_in_progress = True
 
                 logger.debug(
                     f"Successfully sent test result to Sync Storage: {response}"
@@ -181,126 +264,188 @@ class SyncStorageRunner:
             )
             return False
 
-    def reset_in_progress_flag(self):
-        """
-        Reset the in-progress flag to allow sending the next test result.
-        """
-        self.already_in_progress = False
-        logger.debug("Reset in-progress flag")
-
-    def _is_sync_storage_running(self) -> bool:
+    def _is_sync_storage_already_running(self) -> bool:
         """
         Check if Sync Storage is already running on the specified port.
 
-        :return: True if running, False otherwise
-        """
-        try:
-            import requests
 
-            response = requests.get(
-                f"http://localhost:{self.port}/health", timeout=5, verify=False
-            )
-            return response.status_code == 200
-        except ImportError:
-            logger.warning("Requests library not available for health check")
-            return False
+        :return: True if running, False otherwise
+
+        """
+
+        try:
+            url = f"http://localhost:{self.port}/health"
+            req = urllib.request.Request(url)
+            with urllib.request.urlopen(req, timeout=5) as response:
+                return response.getcode() == 200
         except Exception:
             return False
 
-    def _download_and_start_sync_storage(self) -> bool:
+    def _register_worker_with_retry(self):
+        """Register worker with retry logic."""
+        self._register_worker()
+
+    def _start_output_reader(self):
+        """Start reading output from Sync Storage process in a background thread."""
+
+        def read_output():
+            try:
+                if self.sync_storage_process and self.sync_storage_process.stdout:
+                    # Read output with explicit encoding (e.g., 'utf-8' or 'latin-1')
+                    for line in iter(self.sync_storage_process.stdout.readline, ""):
+                        if line:
+                            # Decode the line explicitly to avoid encoding issues
+                            logger.info(f"SyncStorage: {line.rstrip()}")
+                    self.sync_storage_process.stdout.close()
+            except Exception as e:
+                logger.warning(f"Error reading SyncStorage output: {e}")
+
+        output_thread = threading.Thread(target=read_output, daemon=True)
+        output_thread.start()
+
+    def _wait_for_server_startup(self, timeout_seconds: int) -> bool:
         """
-        Download the appropriate Sync Storage executable and start the process.
+        Wait for Sync Storage server to start up.
 
-        :return: True if successfully downloaded and started, False otherwise
+        :param timeout_seconds: Timeout in seconds
+        :return: True if server started, False otherwise
         """
-        try:
-            # Determine OS and architecture
-            os_arch = self._get_os_architecture()
-            if not os_arch:
-                logger.error("Unsupported OS/architecture for Sync Storage")
-                return False
+        start_time = time.time()
+        while time.time() - start_time < timeout_seconds:
+            if self._is_sync_storage_already_running():
+                return True
+            time.sleep(1)
+        return False
 
-            # Create temporary directory for executable
-            temp_dir = tempfile.mkdtemp()
-            self.sync_storage_executable_path = os.path.join(
-                temp_dir, self.SYNC_STORAGE_EXECUTABLE_NAME
-            )
-
-            # Make executable on Unix-like systems
-            if platform.system() != "Windows":
-                self.sync_storage_executable_path += ".exe"
-
-            logger.info(
-                f"Downloading Sync Storage for {os_arch} to {self.sync_storage_executable_path}"
-            )
-
-            # TODO: Implement actual download logic
-            # For now, we'll just check if we can start a process
-            # In a real implementation, we would download the executable from the template URL
-
-            # Try to start the process (this would normally be the downloaded executable)
-            return self._start_sync_storage_process()
-
-        except Exception as e:
-            logger.error(
-                f"Error downloading and starting Sync Storage: {e}", exc_info=True
-            )
-            self._cleanup_temp_files()
-            return False
-
-    def _start_sync_storage_process(self) -> bool:
+    def _prepare_executable_file(self, original_executable_path: str) -> str:
         """
-        Start the Sync Storage process with the provided configuration.
+        Prepare executable file by downloading if needed.
 
-        :return: True if successfully started, False otherwise
+        :param original_executable_path: Original executable path
+        :return: Path to prepared executable
         """
         try:
-            # In a real implementation, we would start the downloaded executable
-            # For now, we'll simulate the process start
-            logger.info("Starting Sync Storage process")
+            current_dir = os.getcwd()
+            caches_dir = os.path.join(current_dir, "build", ".caches")
 
-            # Wait for service to start
-            start_time = time.time()
-            while time.time() - start_time < self.SYNC_STORAGE_STARTUP_TIMEOUT:
-                if self._is_sync_storage_running():
-                    logger.info("Sync Storage process started successfully")
-                    return True
-                time.sleep(1)
+            # Create caches directory if it doesn't exist
+            os.makedirs(caches_dir, exist_ok=True)
 
-            logger.error("Sync Storage failed to start within timeout period")
-            return False
+            original_path = Path(original_executable_path)
+            file_name = original_path.name
+            target_path = os.path.join(caches_dir, file_name)
+
+            if os.path.exists(target_path):
+                logger.info(f"Using existing file: {target_path}")
+
+                # Make file executable for Unix-based systems
+                if not platform.system().lower().startswith("windows"):
+                    os.chmod(target_path, 0o755)
+
+                return target_path
+
+            logger.info("File not present, downloading from GitHub Releases")
+            self._download_executable_from_github(target_path)
+
+            return target_path
+        except Exception as e:
+            logger.error(f"Error preparing executable file: {e}")
+            raise
+
+    def _download_executable_from_github(self, target_path: str):
+        """
+        Download Sync Storage executable from GitHub.
+
+        :param target_path: Target path to save the executable
+        """
+        try:
+            # Determine download URL
+            download_url = self._get_download_url_for_current_platform()
+
+            logger.info(f"Downloading file from: {download_url}")
+            logger.info(f"Saving in: {target_path}")
+
+            # Download file
+            req = urllib.request.Request(download_url)
+            req.add_header("User-Agent", "TestIT Python Adapter")
+
+            with urllib.request.urlopen(req, timeout=30) as response:
+                with open(target_path, "wb") as f:
+                    while True:
+                        chunk = response.read(8192)
+                        if not chunk:
+                            break
+                        f.write(chunk)
+
+            logger.info(f"File downloaded successfully: {target_path}")
+
+            # Make file executable for Unix-based systems
+            if not platform.system().lower().startswith("windows"):
+                os.chmod(target_path, 0o755)
 
         except Exception as e:
-            logger.error(f"Error starting Sync Storage process: {e}", exc_info=True)
-            return False
+            logger.error(f"Error downloading file: {e}")
+            raise
 
-    def _get_os_architecture(self) -> Optional[str]:
+    def _get_file_name_by_arch_and_os(self) -> str:
         """
-        Determine the OS and architecture for downloading the correct Sync Storage executable.
+        Get executable file name based on OS and architecture.
 
-        :return: String representing OS/architecture combination, or None if unsupported
+        :return: File name
         """
-        system = platform.system().lower()
-        machine = platform.machine().lower()
+        os_name = platform.system().lower()
+        os_arch = platform.machine().lower()
 
-        # Normalize architecture names
-        if machine in ["x86_64", "amd64"]:
-            machine = "x64"
-        elif machine in ["aarch64", "arm64"]:
-            machine = "arm64"
-        elif machine in ["i386", "i686"]:
-            machine = "x86"
+        # Determine OS part
+        if "win" in os_name:
+            os_part = "windows"
+        elif "mac" in os_name or "darwin" in os_name:
+            os_part = "darwin"
+        elif "linux" in os_name:
+            os_part = "linux"
+        else:
+            raise RuntimeError(f"Unsupported OS, please contact dev team: {os_name}")
 
-        # Map to supported combinations
-        if system == "windows" and machine == "x64":
-            return "windows-x64"
-        elif system == "linux" and machine == "x64":
-            return "linux-x64"
-        elif system == "darwin" and machine in ["x64", "arm64"]:
-            return f"macos-{machine}"
+        return self._make_file_name(os_arch, os_part)
 
-        logger.warning(f"Unsupported OS/architecture: {system}-{machine}")
-        return None
+    def _is_mac_os(self, os_name: str) -> bool:
+        """Check if OS is macOS."""
+        return "mac" in os_name or "darwin" in os_name
+
+    def _is_linux(self, os_name: str) -> bool:
+        """Check if OS is Linux."""
+        return "linux" in os_name
+
+    def _get_download_url_for_current_platform(self) -> str:
+        """
+        Get download URL for current platform.
+
+        :return: Download URL
+        """
+        file_name = self._get_file_name_by_arch_and_os()
+        return f"{self.SYNC_STORAGE_REPO_URL}{self.SYNC_STORAGE_VERSION}/{file_name}"
+
+    def _make_file_name(self, os_arch: str, os_part: str) -> str:
+        """
+        Make file name based on OS architecture and platform.
+
+        :param os_arch: OS architecture
+        :param os_part: OS part
+        :return: File name
+        """
+        # Determine architecture part
+        if self.AMD64 in os_arch or "x86_64" in os_arch:
+            arch_part = self.AMD64
+        elif self.ARM64 in os_arch or "aarch64" in os_arch:
+            arch_part = self.ARM64
+        else:
+            raise RuntimeError(f"Unsupported architecture: {os_arch}")
+
+        # Form file name
+        file_name = f"syncstorage-{self.SYNC_STORAGE_VERSION}-{os_part}_{arch_part}"
+        if os_part == "windows":
+            file_name += ".exe"
+        return file_name
 
     def _initialize_api_clients(self):
         """
@@ -331,58 +476,63 @@ class SyncStorageRunner:
         :return: True if successfully registered, False otherwise
         """
         try:
+            # Initialize API clients if not already done
+
+            if self.workers_api is None:
+                self._initialize_api_clients()
+
             if self.workers_api is None:
                 logger.error("WorkersApi not initialized")
                 return False
 
             logger.info(
-                f"Registering worker {self.pid} with test run {self.test_run_id}"
+                f"Registering worker {self.worker_pid} with test run {self.test_run_id}"
             )
 
             # Create registration request
+
             register_request = RegisterRequest(
-                pid=self.pid, test_run_id=self.test_run_id
+                pid=self.worker_pid, test_run_id=self.test_run_id
             )
 
             # Send registration request
+
             response = self.workers_api.register_post(register_request=register_request)
 
             # Check if this worker is the master
+
             self.is_master = getattr(response, "is_master", False)
 
-            logger.info(f"Worker registered successfully. Is master: {self.is_master}")
+            if self.is_master:
+                logger.info(f"Master worker registered, PID: {self.worker_pid}")
+
+            else:
+                logger.info(f"Worker registered successfully, PID: {self.worker_pid}")
+
             return True
 
         except Exception as e:
             logger.error(f"Error registering worker: {e}", exc_info=True)
+
             return False
 
-    def _cleanup_temp_files(self):
-        """
-        Clean up temporary files created during Sync Storage setup.
-        """
+    def set_worker_status(self, status: str):
+        if self.workers_api is None:
+            self._initialize_api_clients()
         try:
-            if self.sync_storage_executable_path:
-                temp_dir = os.path.dirname(self.sync_storage_executable_path)
-                if os.path.exists(temp_dir):
-                    import shutil
-
-                    shutil.rmtree(temp_dir)
-                    logger.debug(f"Cleaned up temporary directory: {temp_dir}")
+            request = SetWorkerStatusRequest(pid=self.worker_pid, status=status, test_run_id=self.test_run_id)
+            self.workers_api.set_worker_status_post(set_worker_status_request=request)
+            logging.info(f"Successfully set worker {self.worker_pid} status to {status}")
         except Exception as e:
-            logger.warning(f"Error cleaning up temporary files: {e}")
+            logger.error(f"Error setting worker status: {e}", exc_info=False)
 
-    def _is_process_running(self, pid: int) -> bool:
-        """
-        Check if a process with the given PID is running.
 
-        :param pid: Process ID to check
-        :return: True if running, False otherwise
-        """
-        try:
-            import psutil
-
-            process = psutil.Process(pid)
-            return process.is_running()
-        except (ImportError, Exception):
-            return False
+    @classmethod
+    def test_result_to_test_result_cut_api_model(
+            cls,
+            test_result: TestResult) -> TestResultCutApiModel:
+        return TestResultCutApiModel(
+            auto_test_external_id=test_result.get_external_id(),
+            status_code=test_result.get_outcome(),
+            started_on=test_result.get_started_on(),
+        )

@@ -90,8 +90,8 @@ jobs:
        run: |
          dotnet build --configuration Debug --property WarningLevel=0 api-validator-dotnet
          pip3 install -r python-examples/${{ matrix.project_name }}/requirements_ci.txt
-         pip3 install ./testit-python-commons
          pip3 install ./${{ matrix.adapter_name }}
+         pip3 install ./testit-python-commons
      - name: Test
        run: |
          cd python-examples/${{ matrix.project_name }}

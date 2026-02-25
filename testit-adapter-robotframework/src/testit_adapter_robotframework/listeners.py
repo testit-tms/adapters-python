@@ -10,6 +10,9 @@ from .utils import STATUSES, convert_time, convert_executable_test_to_test_resul
 class AutotestAdapter:
     ROBOT_LISTENER_API_VERSION = 2
 
+    # self.adapter_manager.on_block_completed()
+    # self.adapter_manager.on_running_started()
+
     def __init__(self, adapter_manager):
         self.adapter_manager = adapter_manager
         self.active_test = None
@@ -37,6 +40,7 @@ class AutotestAdapter:
         self.active_test = Autotest(autoTestName=name)
         self.active_test.add_attributes(attributes)
         BuiltIn().remove_tags("testit*")
+        self.adapter_manager.on_running_started()
 
     def start_keyword(self, name, attributes):
         if self.active_test:
@@ -71,6 +75,7 @@ class AutotestAdapter:
                 convert_executable_test_to_test_result_model(self.active_test.order()))
 
     def close(self):
+        self.adapter_manager.on_block_completed()
         self.adapter_manager.write_tests()
 
 

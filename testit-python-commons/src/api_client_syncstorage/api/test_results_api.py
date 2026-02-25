@@ -21,7 +21,8 @@ from api_client_syncstorage.model_utils import (  # noqa: F401
     none_type,
     validate_and_convert_types
 )
-from api_client_syncstorage.model.auto_test_results_for_test_run_model import AutoTestResultsForTestRunModel
+from api_client_syncstorage.model.test_result_cut_api_model import TestResultCutApiModel
+from api_client_syncstorage.model.test_result_save_response import TestResultSaveResponse
 
 
 class TestResultsApi(object):
@@ -37,7 +38,7 @@ class TestResultsApi(object):
         self.api_client = api_client
         self.in_progress_test_result_post_endpoint = _Endpoint(
             settings={
-                'response_type': (str,),
+                'response_type': (TestResultSaveResponse,),
                 'auth': [],
                 'endpoint_path': '/in_progress_test_result',
                 'operation_id': 'in_progress_test_result_post',
@@ -47,11 +48,11 @@ class TestResultsApi(object):
             params_map={
                 'all': [
                     'test_run_id',
-                    'auto_test_results_for_test_run_model',
+                    'test_result_cut_api_model',
                 ],
                 'required': [
                     'test_run_id',
-                    'auto_test_results_for_test_run_model',
+                    'test_result_cut_api_model',
                 ],
                 'nullable': [
                 ],
@@ -68,22 +69,22 @@ class TestResultsApi(object):
                 'openapi_types': {
                     'test_run_id':
                         (str,),
-                    'auto_test_results_for_test_run_model':
-                        (AutoTestResultsForTestRunModel,),
+                    'test_result_cut_api_model':
+                        (TestResultCutApiModel,),
                 },
                 'attribute_map': {
                     'test_run_id': 'testRunId',
                 },
                 'location_map': {
                     'test_run_id': 'query',
-                    'auto_test_results_for_test_run_model': 'body',
+                    'test_result_cut_api_model': 'body',
                 },
                 'collection_format_map': {
                 }
             },
             headers_map={
                 'accept': [
-                    'text/plain'
+                    'application/json'
                 ],
                 'content_type': [
                     'application/json'
@@ -95,7 +96,7 @@ class TestResultsApi(object):
     def in_progress_test_result_post(
         self,
         test_run_id,
-        auto_test_results_for_test_run_model,
+        test_result_cut_api_model,
         **kwargs
     ):
         """Save in-progress test result  # noqa: E501
@@ -104,12 +105,12 @@ class TestResultsApi(object):
         This method makes a synchronous HTTP request by default. To make an
         asynchronous HTTP request, please pass async_req=True
 
-        >>> thread = api.in_progress_test_result_post(test_run_id, auto_test_results_for_test_run_model, async_req=True)
+        >>> thread = api.in_progress_test_result_post(test_run_id, test_result_cut_api_model, async_req=True)
         >>> result = thread.get()
 
         Args:
             test_run_id (str): Test Run ID
-            auto_test_results_for_test_run_model (AutoTestResultsForTestRunModel):
+            test_result_cut_api_model (TestResultCutApiModel):
 
         Keyword Args:
             _return_http_data_only (bool): response data without head status
@@ -144,7 +145,7 @@ class TestResultsApi(object):
             async_req (bool): execute request asynchronously
 
         Returns:
-            str
+            TestResultSaveResponse
                 If the method is called asynchronously, returns the request
                 thread.
         """
@@ -175,7 +176,7 @@ class TestResultsApi(object):
         kwargs['_request_auths'] = kwargs.get('_request_auths', None)
         kwargs['test_run_id'] = \
             test_run_id
-        kwargs['auto_test_results_for_test_run_model'] = \
-            auto_test_results_for_test_run_model
+        kwargs['test_result_cut_api_model'] = \
+            test_result_cut_api_model
         return self.in_progress_test_result_post_endpoint.call_with_http_info(**kwargs)
 
