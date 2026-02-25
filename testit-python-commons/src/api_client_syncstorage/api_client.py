@@ -21,9 +21,9 @@ from urllib3.fields import RequestField
 
 
 from api_client_syncstorage import rest
-from tesit_python_common.api_client_syncstorage.configuration import Configuration
-from tesit_python_common.api_client_syncstorage.exceptions import ApiTypeError, ApiValueError, ApiException
-from tesit_python_common.api_client_syncstorage.model_utils import (
+from api_client_syncstorage.configuration import Configuration
+from api_client_syncstorage.exceptions import ApiTypeError, ApiValueError, ApiException
+from api_client_syncstorage.model_utils import (
     ModelNormal,
     ModelSimple,
     ModelComposed,

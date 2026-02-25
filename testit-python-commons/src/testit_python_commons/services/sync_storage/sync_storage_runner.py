@@ -3,7 +3,6 @@ import os
 import platform
 import subprocess
 
-# tempfile import removed as it's no longer used
 import threading
 import time
 import urllib.error
@@ -12,18 +11,18 @@ from pathlib import Path
 from typing import Optional
 
 import urllib3
-from tesit_python_common.api_client_syncstorage.api.test_results_api import TestResultsApi
-from tesit_python_common.api_client_syncstorage.api.workers_api import WorkersApi
-from tesit_python_common.api_client_syncstorage.api_client import ApiClient as SyncStorageApiClient
-from tesit_python_common.api_client_syncstorage.configuration import (
+from api_client_syncstorage.api.test_results_api import TestResultsApi
+from api_client_syncstorage.api.workers_api import WorkersApi
+from api_client_syncstorage.api_client import ApiClient as SyncStorageApiClient
+from api_client_syncstorage.configuration import (
     Configuration as SyncStorageConfiguration,
 )
-from tesit_python_common.api_client_syncstorage.model.test_result_cut_api_model import (
+from api_client_syncstorage.model.test_result_cut_api_model import (
     TestResultCutApiModel,
 )
-from tesit_python_common.api_client_syncstorage.model.register_request import RegisterRequest
+from api_client_syncstorage.model.register_request import RegisterRequest
 from urllib3.exceptions import InsecureRequestWarning
-from tesit_python_common.api_client_syncstorage.model.set_worker_status_request import SetWorkerStatusRequest
+from api_client_syncstorage.model.set_worker_status_request import SetWorkerStatusRequest
 from testit_python_commons.models.test_result import TestResult
 
 

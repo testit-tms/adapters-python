@@ -58,7 +58,6 @@ jobs:
      TMS_CONFIGURATION_ID: ${{ secrets[matrix.configuration_id] }}
      TMS_PROJECT_ID: ${{ secrets[matrix.project_id] }}
      TMS_TEST_RUN_NAME: ${{ matrix.project_name }} TestRun
-     TMS_OVERWRITE_EXPECTED: false
    steps:
      - name: Checkout adapters-python
        uses: actions/checkout@v4

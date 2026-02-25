@@ -5,6 +5,7 @@ from testit_python_commons.decorators import (
     externalID,
     externalId,
     labels,
+    tags,
     link,
     links,
     nameSpace,
@@ -25,6 +26,7 @@ from testit_python_commons.dynamic_methods import (
     addTitle,
     addDescription,
     addLabels,
+    addTags,
     addParameter,
     attachments,
     message
@@ -43,6 +45,7 @@ __all__ = [
     'title',
     'description',
     'labels',
+    'tags',
     'link',
     'links',
     'addLink',
@@ -59,6 +62,7 @@ __all__ = [
     'addTitle',
     'addDescription',
     'addLabels',
+    'addTags',
     'addParameter',
     'step',
     'LinkType'

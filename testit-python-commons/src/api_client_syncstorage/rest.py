@@ -19,7 +19,7 @@ from urllib.request import proxy_bypass_environment
 import urllib3
 import ipaddress
 
-from tesit_python_common.api_client_syncstorage.exceptions import ApiException, UnauthorizedException, ForbiddenException, NotFoundException, ServiceException, ApiValueError
+from api_client_syncstorage.exceptions import ApiException, UnauthorizedException, ForbiddenException, NotFoundException, ServiceException, ApiValueError
 
 
 logger = logging.getLogger(__name__)

@@ -219,6 +219,8 @@ class TestResult:
     def set_labels(self, labels: list):
         self.__labels = HtmlEscapeUtils.escape_html_in_object(labels)
 
+        return self
+
     @adapter_logger
     def get_labels(self) -> list:
         return self.__labels
