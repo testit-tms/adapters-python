@@ -20,7 +20,7 @@ import uuid
 
 from dateutil.parser import parse
 
-from api_client_syncstorage.exceptions import (
+from tesit_python_common.api_client_syncstorage.exceptions import (
     ApiKeyError,
     ApiAttributeError,
     ApiTypeError,

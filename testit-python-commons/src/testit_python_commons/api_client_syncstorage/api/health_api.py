@@ -11,8 +11,8 @@
 import re  # noqa: F401
 import sys  # noqa: F401
 
-from api_client_syncstorage.api_client import ApiClient, Endpoint as _Endpoint
-from api_client_syncstorage.model_utils import (  # noqa: F401
+from tesit_python_common.api_client_syncstorage.api_client import ApiClient, Endpoint as _Endpoint
+from tesit_python_common.api_client_syncstorage.model_utils import (  # noqa: F401
     check_allowed_values,
     check_validations,
     date,
@@ -21,7 +21,7 @@ from api_client_syncstorage.model_utils import (  # noqa: F401
     none_type,
     validate_and_convert_types
 )
-from api_client_syncstorage.model.health_status_response import HealthStatusResponse
+from tesit_python_common.api_client_syncstorage.model.health_status_response import HealthStatusResponse
 
 
 class HealthApi(object):

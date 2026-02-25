@@ -15,7 +15,7 @@ import sys
 import urllib3
 
 from http import client as http_client
-from api_client_syncstorage.exceptions import ApiValueError
+from tesit_python_common.api_client_syncstorage.exceptions import ApiValueError
 
 
 JSON_SCHEMA_VALIDATION_KEYWORDS = {

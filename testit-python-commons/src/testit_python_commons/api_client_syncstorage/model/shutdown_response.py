@@ -11,7 +11,7 @@
 import re  # noqa: F401
 import sys  # noqa: F401
 
-from api_client_syncstorage.model_utils import (  # noqa: F401
+from tesit_python_common.api_client_syncstorage.model_utils import (  # noqa: F401
     ApiTypeError,
     ModelComposed,
     ModelNormal,
@@ -26,7 +26,7 @@ from api_client_syncstorage.model_utils import (  # noqa: F401
     validate_get_composed_info,
     OpenApiModel
 )
-from api_client_syncstorage.exceptions import ApiAttributeError
+from tesit_python_common.api_client_syncstorage.exceptions import ApiAttributeError
 
 
 
