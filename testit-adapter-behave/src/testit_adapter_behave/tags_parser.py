@@ -5,9 +5,16 @@ from .models.url_link import get_url_to_link_model, get_dict_to_link_model
 
 def parse_test_tags(tags):
     parsed_tags = {
+        TagType.EXTERNAL_ID: None,
+        TagType.DISPLAY_NAME: None,
         TagType.LINKS: [],
+        TagType.TITLE: None,
+        TagType.WORK_ITEM_IDS: [],
+        TagType.DESCRIPTION: None,
+        TagType.LABELS: [],
         TagType.TAGS: [],
-        TagType.WORK_ITEM_IDS: []
+        TagType.NAMESPACE: None,
+        TagType.CLASSNAME: None,
     }
 
     for tag in tags:
@@ -19,29 +26,25 @@ def parse_test_tags(tags):
 
         elif TagType.LINKS in tag:
             parsed_tags[TagType.LINKS].extend(
-                __parse_links(
-                    tag[len(TagType.LINKS):]))
+                __parse_links(tag[len(TagType.LINKS):]))
 
         elif TagType.TITLE in tag:
             parsed_tags[TagType.TITLE] = __parse_space_in_tag(tag[len(TagType.TITLE):])
 
         elif TagType.WORK_ITEM_IDS in tag:
             parsed_tags[TagType.WORK_ITEM_IDS].extend(
-                __parse_massive(
-                    tag[len(TagType.WORK_ITEM_IDS):]))
+                __parse_massive(tag[len(TagType.WORK_ITEM_IDS):]))
 
         elif TagType.DESCRIPTION in tag:
             parsed_tags[TagType.DESCRIPTION] = __parse_space_in_tag(tag[len(TagType.DESCRIPTION):])
 
         elif TagType.LABELS in tag:
             parsed_tags[TagType.LABELS].extend(
-                __parse_labels(
-                    tag[len(TagType.LABELS):]))
+                __parse_labels(tag[len(TagType.LABELS):]))
 
         elif TagType.TAGS in tag:
             parsed_tags[TagType.TAGS].extend(
-                __parse_tags(
-                    tag[len(TagType.TAGS):]))
+                __parse_tags(tag[len(TagType.TAGS):]))
 
         elif TagType.NAMESPACE in tag:
             parsed_tags[TagType.NAMESPACE] = __parse_space_in_tag(tag[len(TagType.NAMESPACE):])

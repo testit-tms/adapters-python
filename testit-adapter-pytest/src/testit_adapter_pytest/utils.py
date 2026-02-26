@@ -346,8 +346,8 @@ def convert_executable_test_to_test_result_model(executable_test: ExecutableTest
         .set_title(executable_test.title)\
         .set_description(executable_test.description)\
         .set_links(executable_test.links)\
-        .set_result_links(executable_test.result_links) \
-        .set_labels(executable_test.labels) \
+        .set_result_links(executable_test.result_links)\
+        .set_labels(executable_test.labels)\
         .set_tags(executable_test.tags)\
         .set_work_item_ids(executable_test.work_item_ids) \
         .set_message(executable_test.message) \
