@@ -21,11 +21,14 @@ class AdapterListener(object):
         test_run_id = self.__adapter_manager.get_test_run_id()
 
         self.__adapter_manager.set_test_run_id(test_run_id)
+        self.__adapter_manager.on_running_started()
 
     def stop_launch(self):
+        self.__adapter_manager.on_block_completed()
         self.__adapter_manager.write_tests()
 
     def get_tests_for_launch(self):
+        self.__adapter_manager.on_running_started()
         return self.__adapter_manager.get_autotests_for_launch()
 
     def start_test(self, test):

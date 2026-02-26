@@ -1,5 +1,6 @@
 pytest~=8.3.3
 pytest-xdist
+pytest-mock
 
 flake8
 flake8-builtins
@@ -12,3 +13,9 @@ attrs~=24.2.0
 pluggy~=1.5.0
 tomli~=2.2.1
 setuptools~=75.6.0
+
+# Sync Storage dependencies
+requests~=2.31.0
+urllib3~=2.0.4
+psutil~=5.9.5
+
