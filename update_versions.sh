@@ -1,14 +1,14 @@
 #!/bin/bash
 
-NEW_VERSION="3.12.3"
-TESTIT_API_CLIENT_VERSION="7.5.0"
+NEW_VERSION="3.13.0"
+TESTIT_API_CLIENT_VERSION="7.5.2"
 
 echo "Updating all adapters to version: $NEW_VERSION"
 echo "Updating testit-api-client to version: $TESTIT_API_CLIENT_VERSION"
 
 # Get the directory where the script is located
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+PROJECT_ROOT="$SCRIPT_DIR"
 
 echo "Project root: $PROJECT_ROOT"
 

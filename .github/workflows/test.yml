@@ -90,12 +90,33 @@ jobs:
        run: |
          dotnet build --configuration Debug --property WarningLevel=0 api-validator-dotnet
          pip3 install -r python-examples/${{ matrix.project_name }}/requirements_ci.txt
-         pip3 install ./${{ matrix.adapter_name }}
          pip3 install ./testit-python-commons
+         pip3 install ./${{ matrix.adapter_name }}
+         
      - name: Test
        run: |
+         export SYNC_STORAGE_VERSION=$(grep -o 'SYNC_STORAGE_VERSION = "[^"]*"' testit-python-commons/src/testit_python_commons/services/sync_storage/sync_storage_runner.py | cut -d'"' -f2)
+         echo $SYNC_STORAGE_VERSION
+         # current location - /adapters-python/
          cd python-examples/${{ matrix.project_name }}
-         eval "${{ matrix.test_command }}" || exit 0
+         
+         mkdir -p .caches
+         wget -O .caches/syncstorage-linux-amd64 \
+         "https://github.com/testit-tms/sync-storage-public/releases/download/${SYNC_STORAGE_VERSION}/syncstorage-${SYNC_STORAGE_VERSION}-linux_amd64"
+         chmod +x .caches/syncstorage-linux-amd64
+         nohup .caches/syncstorage-linux-amd64 --testRunId ${{ env.TMS_TEST_RUN_ID }} --port 49152 \
+         --baseURL ${{ env.TMS_URL }} --privateToken ${{ env.TMS_PRIVATE_TOKEN }}  > service.log 2>&1 & 
+          
+         sleep 1
+          
+         curl -v http://127.0.0.1:49152/health || true
+         
+         eval "${{ matrix.test_command }}" || true #ignore error code
+         
+         sleep 1
+         cat service.log
+         curl -v http://127.0.0.1:49152/wait-completion?testRunId=${{ env.TMS_TEST_RUN_ID }} || true
+
      - name: Validate
        run: |
          dotnet test --configuration Debug --no-build --logger:"console;verbosity=detailed" api-validator-dotnet
