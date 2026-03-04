@@ -44,6 +44,7 @@ class AdapterListener(object):
         self.__adapter_manager.on_running_started()
 
     def set_scenario(self):
+        self.__adapter_manager.on_block_completed()
         self.__adapter_manager.write_test(
             convert_executable_test_to_test_result_model(self.__executable_test))
 
