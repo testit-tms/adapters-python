@@ -56,7 +56,7 @@ class AdapterListener(object):
         logging.debug("BEHAVE set_scenario")
         self.__adapter_manager.write_test(
             convert_executable_test_to_test_result_model(self.__executable_test))
-        self.__adapter_manager.on_block_completed()
+        # self.__adapter_manager.on_block_completed()
 
     def get_step_parameters(self, match):
         scope = self.get_scope()

@@ -152,7 +152,7 @@ class BulkAutotestHelper:
 
     @adapter_logger
     def __create_tests(self, autotests_for_create: List[AutoTestCreateApiModel]):
-        logging.debug(f'Creating autotests: "{autotests_for_create}')
+        # logging.debug(f'Creating autotests: "{autotests_for_create}')
 
         autotests_for_create = HtmlEscapeUtils.escape_html_in_object(autotests_for_create)
         self.__autotests_api.create_multiple(auto_test_create_api_model=autotests_for_create)
@@ -161,7 +161,7 @@ class BulkAutotestHelper:
 
     @adapter_logger
     def __update_tests(self, autotests_for_update: List[AutoTestUpdateApiModel]):
-        logging.debug(f'Updating autotests: {autotests_for_update}')
+        # logging.debug(f'Updating autotests: {autotests_for_update}')
 
         autotests_for_update = HtmlEscapeUtils.escape_html_in_object(autotests_for_update)
         self.__autotests_api.update_multiple(auto_test_update_api_model=autotests_for_update)
@@ -170,7 +170,7 @@ class BulkAutotestHelper:
 
     @adapter_logger
     def __load_test_results(self, test_results: List[AutoTestResultsForTestRunModel]):
-        logging.debug(f'Loading test results: {test_results}')
+        # logging.debug(f'Loading test results: {test_results}')
 
         test_results = HtmlEscapeUtils.escape_html_in_object(test_results)
         self.__test_runs_api.set_auto_test_results_for_test_run(

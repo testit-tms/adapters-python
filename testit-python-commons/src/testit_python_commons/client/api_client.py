@@ -281,7 +281,7 @@ class ApiClientWorker:
         try:
             work_item = self.__work_items_api.get_work_item_by_id(id=work_item_id)
 
-            logging.debug(f'Got workitem {work_item}')
+            # logging.debug(f'Got workitem {work_item}')
 
             return work_item.id
         except Exception as exc:
@@ -356,7 +356,7 @@ class ApiClientWorker:
     @adapter_logger
     @retry
     def __update_tests(self, autotests_for_update: List[AutoTestUpdateApiModel]) -> None:
-        logging.debug(f'Updating autotests: {autotests_for_update}')
+        # logging.debug(f'Updating autotests: {autotests_for_update}')
 
         self.__autotest_api.update_multiple(auto_test_update_api_model=autotests_for_update)
 
