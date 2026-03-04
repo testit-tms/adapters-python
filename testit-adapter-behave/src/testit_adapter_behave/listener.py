@@ -26,6 +26,7 @@ class AdapterListener(object):
         test_run_id = self.__adapter_manager.get_test_run_id()
 
         self.__adapter_manager.set_test_run_id(test_run_id)
+        print("start_launch")
         self.__adapter_manager.on_running_started()
 
     def stop_launch(self):
@@ -34,6 +35,7 @@ class AdapterListener(object):
 
 
     def get_tests_for_launch(self):
+        print("get_tests_for_launch")
         self.__adapter_manager.on_running_started()
         return self.__adapter_manager.get_autotests_for_launch()
 
@@ -41,9 +43,11 @@ class AdapterListener(object):
         self.__executable_test = parse_scenario(scenario)
         self.__background_steps_count = len(scenario.background_steps)
         self.__steps_count = len(scenario.steps)
-        self.__adapter_manager.on_running_started()
+        print("get_scenario")
+        # self.__adapter_manager.on_running_started()
 
     def set_scenario(self):
+        print("set_scenario")
         self.__adapter_manager.on_block_completed()
         self.__adapter_manager.write_test(
             convert_executable_test_to_test_result_model(self.__executable_test))
