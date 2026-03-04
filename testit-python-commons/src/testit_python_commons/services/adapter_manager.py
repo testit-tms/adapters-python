@@ -285,6 +285,9 @@ class AdapterManager:
 
         self.__sync_storage_runner.set_worker_status(status)
 
+    def is_realtime(self):
+        return self.__config.should_import_realtime()
+
     def __is_active_syncstorage_instance(self):
         return (self.__sync_storage_runner
                 and self.__sync_storage_runner.is_running_status()
