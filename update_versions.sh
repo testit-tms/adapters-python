@@ -8,7 +8,7 @@ echo "Updating testit-api-client to version: $TESTIT_API_CLIENT_VERSION"
 
 # Get the directory where the script is located
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$SCRIPT_DIR"
+PROJECT_ROOT=$SCRIPT_DIR
 
 echo "Project root: $PROJECT_ROOT"
 
