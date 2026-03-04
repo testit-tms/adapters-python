@@ -24,7 +24,7 @@ env:
   TEMP_FILE: tmp/output.txt
   TMS_ADAPTER_MODE: 1
   TMS_CERT_VALIDATION: false
-  TMS_IMPORT_REALTIME: true
+  TMS_IMPORT_REALTIME: false
   TMS_PRIVATE_TOKEN: ${{ secrets.TESTIT_PRIVATE_TOKEN }}
   TMS_URL: ${{ secrets.TESTIT_URL }}
 jobs:
