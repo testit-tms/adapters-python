@@ -237,7 +237,8 @@ class AppProperties:
             properties['automaticupdationlinkstotestcases'] = 'false'
 
         if not cls.__check_property_value(properties.get('importrealtime')):
-            properties['importrealtime'] = 'true'
+            # import realtime false by default
+            properties['importrealtime'] = 'false'
 
     @classmethod
     def __load_file_properties_from_toml(cls) -> dict:

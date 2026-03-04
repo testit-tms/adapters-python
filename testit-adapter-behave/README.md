@@ -75,6 +75,11 @@ tmsCertValidation=CERT_VALIDATION -D tmsAutomaticCreationTestCases=AUTOMATIC_CRE
 tmsAutomaticUpdationLinksToTestCases=AUTOMATIC_UPDATION_LINKS_TO_TEST_CASES -D tmsImportRealtime=IMPORT_REALTIME
 ```
 
+Logging level:
+```
+$ behave ... --logging-level=DEBUG
+```
+
 If you want to enable debug mode then
 see [How to enable debug logging?](https://github.com/testit-tms/adapters-python/tree/main/testit-python-commons)
 

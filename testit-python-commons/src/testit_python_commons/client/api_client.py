@@ -171,6 +171,7 @@ class ApiClientWorker:
 
     @adapter_logger
     def write_tests(self, test_results: List[TestResult], fixture_containers: dict) -> None:
+        logging.debug("call __write_tests")
         bulk_autotest_helper = BulkAutotestHelper(self.__autotest_api, self.__test_run_api, self.__config)
 
         for test_result in test_results:
@@ -236,6 +237,7 @@ class ApiClientWorker:
             work_item_ids: List[str],
             autotest_global_id: str = None) -> List[str]:
         linked_work_items = []
+        logging.debug("call __get_work_item_uuids_for_link_with_auto_test")
 
         if autotest_global_id:
             linked_work_items = self.__get_work_items_linked_to_autotest(autotest_global_id)
@@ -286,7 +288,7 @@ class ApiClientWorker:
             logging.error(f'Getting workitem by id {work_item_id} status: {exc}')
 
     @adapter_logger
-    @retry
+    #@retry # disabled
     def __get_work_items_linked_to_autotest(self, autotest_global_id: str) -> List[AutoTestWorkItemIdentifierApiResult]:
         return self.__autotest_api.get_work_items_linked_to_auto_test(id=autotest_global_id)
 
@@ -313,6 +315,7 @@ class ApiClientWorker:
     def __create_auto_test(self, test_result: TestResult) -> str:
         logging.debug(f'Autotest "{test_result.get_autotest_name()}" was not found')
 
+        logging.debug("call __create_auto_test")
         work_item_ids_for_link_with_auto_test = self.__get_work_item_uuids_for_link_with_auto_test(
             test_result.get_work_item_ids())
 

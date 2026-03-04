@@ -24,6 +24,7 @@ env:
   TEMP_FILE: tmp/output.txt
   TMS_ADAPTER_MODE: 1
   TMS_CERT_VALIDATION: false
+  TMS_IMPORT_REALTIME: true
   TMS_PRIVATE_TOKEN: ${{ secrets.TESTIT_PRIVATE_TOKEN }}
   TMS_URL: ${{ secrets.TESTIT_URL }}
 jobs:
@@ -95,26 +96,24 @@ jobs:
          
      - name: Test
        run: |
-         export SYNC_STORAGE_VERSION=$(grep -o 'SYNC_STORAGE_VERSION = "[^"]*"' testit-python-commons/src/testit_python_commons/services/sync_storage/sync_storage_runner.py | cut -d'"' -f2)
-         echo $SYNC_STORAGE_VERSION
+         chmod +x ./scripts/get_sync_storage_version.sh
+         chmod +x ./scripts/get_sync_storage.sh
+
+         export SYNC_STORAGE_VERSION=$(./scripts/get_sync_storage_version.sh)
          # current location - /adapters-python/
          cd python-examples/${{ matrix.project_name }}
          
-         mkdir -p .caches
-         wget -O .caches/syncstorage-linux-amd64 \
-         "https://github.com/testit-tms/sync-storage-public/releases/download/${SYNC_STORAGE_VERSION}/syncstorage-${SYNC_STORAGE_VERSION}-linux_amd64"
-         chmod +x .caches/syncstorage-linux-amd64
-         nohup .caches/syncstorage-linux-amd64 --testRunId ${{ env.TMS_TEST_RUN_ID }} --port 49152 \
-         --baseURL ${{ env.TMS_URL }} --privateToken ${{ env.TMS_PRIVATE_TOKEN }}  > service.log 2>&1 & 
-          
-         sleep 1
-          
+         # 2 levels above
+         ../../scripts/get_sync_storage.sh $SYNC_STORAGE_VERSION
+         #nohup .caches/syncstorage-linux-amd64 --testRunId ${{ env.TMS_TEST_RUN_ID }} --port 49152 \
+         #--baseURL ${{ env.TMS_URL }} --privateToken ${{ env.TMS_PRIVATE_TOKEN }}  > service.log 2>&1 & 
+           
          curl -v http://127.0.0.1:49152/health || true
          
          eval "${{ matrix.test_command }}" || true #ignore error code
          
          sleep 1
-         cat service.log
+         #cat service.log
          curl -v http://127.0.0.1:49152/wait-completion?testRunId=${{ env.TMS_TEST_RUN_ID }} || true
 
      - name: Validate
