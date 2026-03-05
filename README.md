@@ -47,6 +47,7 @@ Status](https://img.shields.io/pypi/v/testit-python-commons?style=plastic)](http
 
 - New logic with a fix for test results loading
 - Added sync-storage subprocess usage for worker synchronization on port **49152** by defailt.
+- importRealtime=false is a default mode (previously true)
 
 - **limitations**: 
 - The current 4.0.0 version is not compatible with `adapterMode=2` when using parallelization (e.g., `pytest --testit -n 4`). Please use `adapterMode=1`.
