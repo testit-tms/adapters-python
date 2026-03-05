@@ -39,7 +39,6 @@ class SyncStorageRunner:
     across multiple workers.
     """
 
-    DEFAULT_PORT = "49152"
     SYNC_STORAGE_VERSION = "v0.1.18"
     SYNC_STORAGE_REPO_URL = (
         "https://github.com/testit-tms/sync-storage-public/releases/download/"
@@ -64,7 +63,7 @@ class SyncStorageRunner:
         :param private_token: Authentication token for Test IT API
         """
         self.test_run_id = test_run_id
-        self.port = port or self.DEFAULT_PORT
+        self.port = port
         self.base_url = base_url
         self.private_token = private_token
 

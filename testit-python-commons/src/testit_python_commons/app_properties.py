@@ -8,6 +8,7 @@ from urllib.parse import urlparse
 import tomli
 
 from testit_python_commons.models.adapter_mode import AdapterMode
+from testit_python_commons.configurations.properties_names import PropertiesNames, ENV_TO_PROPERTY, OPTION_TO_PROPERTY
 
 
 class AppProperties:
@@ -18,7 +19,7 @@ class AppProperties:
     __properties_file = __tms_config_file
     __available_extensions = [__toml_extension, __ini_extension]
 
-    __env_prefix = 'TMS'
+    ENV_CONFIG_FILE = 'TMS_CONFIG_FILE'
     __config_section_name = 'testit'
     __debug_section_name = 'debug'
 
@@ -30,7 +31,7 @@ class AppProperties:
         AppProperties.__check_token_property(properties)
 
         properties.update(AppProperties.load_env_properties())
-
+        
         if option:
             properties.update(AppProperties.load_cli_properties(option))
 
@@ -56,9 +57,9 @@ class AppProperties:
         if os.path.isfile(path):
             cls.__properties_file = cls.__tms_config_file
 
-        if os.environ.get(f'{cls.__env_prefix}_CONFIG_FILE'):
+        if os.environ.get(cls.ENV_CONFIG_FILE):
             cls.__properties_file = cls.__tms_config_file
-            path = os.environ.get(f'{cls.__env_prefix}_CONFIG_FILE')
+            path = os.environ.get(cls.ENV_CONFIG_FILE)
 
         if cli_file_path:
             cls.__properties_file = cls.__tms_config_file
@@ -77,113 +78,33 @@ class AppProperties:
 
     @classmethod
     def load_cli_properties(cls, option):
-        cli_properties = {}
+        # Формируем словарь `cli_properties` с помощью генератора
+        return {
+            prop: getattr(option, option_attr)
+            for option_attr, prop in OPTION_TO_PROPERTY.items()
+            if hasattr(option, option_attr) and cls.__check_property_value(getattr(option, option_attr))
+        }
 
-        if hasattr(option, 'set_url') and cls.__check_property_value(option.set_url):
-            cli_properties['url'] = option.set_url
-
-        if hasattr(option, 'set_private_token') and cls.__check_property_value(option.set_private_token):
-            cli_properties['privatetoken'] = option.set_private_token
-
-        if hasattr(option, 'set_project_id') and cls.__check_property_value(option.set_project_id):
-            cli_properties['projectid'] = option.set_project_id
-
-        if hasattr(option, 'set_configuration_id') and cls.__check_property_value(option.set_configuration_id):
-            cli_properties['configurationid'] = option.set_configuration_id
-
-        if hasattr(option, 'set_test_run_id') and cls.__check_property_value(option.set_test_run_id):
-            cli_properties['testrunid'] = option.set_test_run_id
-
-        if hasattr(option, 'set_test_run_name') and cls.__check_property_value(option.set_test_run_name):
-            cli_properties['testrunname'] = option.set_test_run_name
-
-        if hasattr(option, 'set_tms_proxy') and cls.__check_property_value(option.set_tms_proxy):
-            cli_properties['tmsproxy'] = option.set_tms_proxy
-
-        if hasattr(option, 'set_adapter_mode') and cls.__check_property_value(option.set_adapter_mode):
-            cli_properties['adaptermode'] = option.set_adapter_mode
-
-        if hasattr(option, 'set_cert_validation') and cls.__check_property_value(option.set_cert_validation):
-            cli_properties['certvalidation'] = option.set_cert_validation
-
-        if hasattr(option, 'set_automatic_creation_test_cases') and cls.__check_property_value(
-                option.set_automatic_creation_test_cases):
-            cli_properties['automaticcreationtestcases'] = option.set_automatic_creation_test_cases
-
-        if hasattr(option, 'set_automatic_updation_links_to_test_cases') and cls.__check_property_value(
-                option.set_automatic_updation_links_to_test_cases):
-            cli_properties['automaticupdationlinkstotestcases'] = option.set_automatic_updation_links_to_test_cases
-
-        if hasattr(option, 'set_import_realtime') and cls.__check_property_value(
-                option.set_import_realtime):
-            cli_properties['importrealtime'] = option.set_import_realtime
-
-        return cli_properties
+    @classmethod
+    def map_env_to_properties(cls) -> dict:
+        env_properties = {}
+        for env_key, property_name in ENV_TO_PROPERTY.items():
+            if env_key in os.environ and cls.__check_property_value(os.environ.get(env_key)):
+                env_properties[property_name] = os.environ.get(env_key)
+        return env_properties
 
     @classmethod
     def load_env_properties(cls):
-        env_properties = {}
-
-        if f'{cls.__env_prefix}_URL' in os.environ.keys() and cls.__check_property_value(
-                os.environ.get(f'{cls.__env_prefix}_URL')):
-            env_properties['url'] = os.environ.get(f'{cls.__env_prefix}_URL')
-
-        if f'{cls.__env_prefix}_PRIVATE_TOKEN' in os.environ.keys() and cls.__check_property_value(
-                os.environ.get(f'{cls.__env_prefix}_PRIVATE_TOKEN')):
-            env_properties['privatetoken'] = os.environ.get(f'{cls.__env_prefix}_PRIVATE_TOKEN')
-
-        if f'{cls.__env_prefix}_PROJECT_ID' in os.environ.keys() and cls.__check_property_value(
-                os.environ.get(f'{cls.__env_prefix}_PROJECT_ID')):
-            env_properties['projectid'] = os.environ.get(f'{cls.__env_prefix}_PROJECT_ID')
-
-        if f'{cls.__env_prefix}_CONFIGURATION_ID' in os.environ.keys() and cls.__check_property_value(
-                os.environ.get(f'{cls.__env_prefix}_CONFIGURATION_ID')):
-            env_properties['configurationid'] = os.environ.get(f'{cls.__env_prefix}_CONFIGURATION_ID')
-
-        if f'{cls.__env_prefix}_TEST_RUN_ID' in os.environ.keys() and cls.__check_property_value(
-                os.environ.get(f'{cls.__env_prefix}_TEST_RUN_ID')):
-            env_properties['testrunid'] = os.environ.get(f'{cls.__env_prefix}_TEST_RUN_ID')
-
-        if f'{cls.__env_prefix}_TEST_RUN_NAME' in os.environ.keys() and cls.__check_property_value(
-                os.environ.get(f'{cls.__env_prefix}_TEST_RUN_NAME')):
-            env_properties['testrunname'] = os.environ.get(f'{cls.__env_prefix}_TEST_RUN_NAME')
-
-        if f'{cls.__env_prefix}_PROXY' in os.environ.keys() and cls.__check_property_value(
-                os.environ.get(f'{cls.__env_prefix}_PROXY')):
-            env_properties['tmsproxy'] = os.environ.get(f'{cls.__env_prefix}_PROXY')
-
-        if f'{cls.__env_prefix}_ADAPTER_MODE' in os.environ.keys() and cls.__check_property_value(
-                os.environ.get(f'{cls.__env_prefix}_ADAPTER_MODE')):
-            env_properties['adaptermode'] = os.environ.get(f'{cls.__env_prefix}_ADAPTER_MODE')
-
-        if f'{cls.__env_prefix}_CERT_VALIDATION' in os.environ.keys() and cls.__check_property_value(
-                os.environ.get(f'{cls.__env_prefix}_CERT_VALIDATION')):
-            env_properties['certvalidation'] = os.environ.get(f'{cls.__env_prefix}_CERT_VALIDATION')
-
-        if f'{cls.__env_prefix}_AUTOMATIC_CREATION_TEST_CASES' in os.environ.keys() and cls.__check_property_value(
-                os.environ.get(f'{cls.__env_prefix}_AUTOMATIC_CREATION_TEST_CASES')):
-            env_properties['automaticcreationtestcases'] = os.environ.get(
-                f'{cls.__env_prefix}_AUTOMATIC_CREATION_TEST_CASES')
-
-        if f'{cls.__env_prefix}_AUTOMATIC_UPDATION_LINKS_TO_TEST_CASES' in os.environ.keys() and cls.__check_property_value(
-                os.environ.get(f'{cls.__env_prefix}_AUTOMATIC_UPDATION_LINKS_TO_TEST_CASES')):
-            env_properties['automaticupdationlinkstotestcases'] = os.environ.get(
-                f'{cls.__env_prefix}_AUTOMATIC_UPDATION_LINKS_TO_TEST_CASES')
-
-        if f'{cls.__env_prefix}_IMPORT_REALTIME' in os.environ.keys() and cls.__check_property_value(
-                os.environ.get(f'{cls.__env_prefix}_IMPORT_REALTIME')):
-            env_properties['importrealtime'] = os.environ.get(
-                f'{cls.__env_prefix}_IMPORT_REALTIME')
-
+        env_properties = cls.map_env_to_properties()
         return env_properties
 
     @classmethod
     def __check_properties(cls, properties: dict):
-        adapter_mode = properties.get('adaptermode')
+        adapter_mode = properties.get(PropertiesNames.ADAPTER_MODE)
 
         if adapter_mode == AdapterMode.NEW_TEST_RUN:
             try:
-                uuid.UUID(str(properties.get('testrunid')))
+                uuid.UUID(str(properties.get(PropertiesNames.TEST_RUN_ID)))
                 logging.error('Adapter mode "2" is enabled. Config should not contains test run id!')
                 raise SystemExit
             except ValueError:
@@ -194,7 +115,7 @@ class AppProperties:
                 AdapterMode.USE_FILTER,
                 None):
             try:
-                uuid.UUID(str(properties.get('testrunid')))
+                uuid.UUID(str(properties.get(PropertiesNames.TEST_RUN_ID)))
             except ValueError:
                 logging.error(f'Adapter mode "{adapter_mode if adapter_mode else "0"}" is enabled. '
                               f'The test run ID is needed, but it was not found!')
@@ -204,41 +125,46 @@ class AppProperties:
             raise SystemExit
 
         try:
-            uuid.UUID(str(properties.get('projectid')))
+            uuid.UUID(str(properties.get(PropertiesNames.PROJECT_ID)))
         except ValueError:
             logging.error('Project ID was not found!')
             raise SystemExit
 
         try:
-            url = urlparse(properties.get('url'))
+            url = urlparse(properties.get(PropertiesNames.URL))
             if not all([url.scheme, url.netloc]):
                 raise AttributeError
         except AttributeError:
             logging.error('URL is invalid!')
             raise SystemExit
 
-        if not cls.__check_property_value(properties.get('privatetoken')):
+        if not cls.__check_property_value(properties.get(PropertiesNames.PRIVATE_TOKEN)):
             logging.error('Private token was not found!')
             raise SystemExit
 
         try:
-            uuid.UUID(str(properties.get('configurationid')))
+            uuid.UUID(str(properties.get(PropertiesNames.CONFIGURATION_ID)))
         except ValueError:
             logging.error('Configuration ID was not found!')
             raise SystemExit
 
-        if not cls.__check_property_value(properties.get('certvalidation')):
-            properties['certvalidation'] = 'true'
+        if not cls.__check_property_value(properties.get(PropertiesNames.CERT_VALIDATION)):
+            properties[PropertiesNames.CERT_VALIDATION] = 'true'
 
-        if not cls.__check_property_value(properties.get('automaticcreationtestcases')):
-            properties['automaticcreationtestcases'] = 'false'
+        if not cls.__check_property_value(properties.get(PropertiesNames.AUTOMATIC_CREATION_TEST_CASES)):
+            properties[PropertiesNames.AUTOMATIC_CREATION_TEST_CASES] = 'false'
 
-        if not cls.__check_property_value(properties.get('automaticupdationlinkstotestcases')):
-            properties['automaticupdationlinkstotestcases'] = 'false'
+        if not cls.__check_property_value(properties.get(PropertiesNames.AUTOMATIC_UPDATION_LINKS_TO_TEST_CASES)):
+            properties[PropertiesNames.AUTOMATIC_UPDATION_LINKS_TO_TEST_CASES] = 'false'
 
-        if not cls.__check_property_value(properties.get('importrealtime')):
+        if not cls.__check_property_value(properties.get(PropertiesNames.IMPORT_REALTIME)):
             # import realtime false by default
-            properties['importrealtime'] = 'false'
+            properties[PropertiesNames.IMPORT_REALTIME] = 'false'
+
+        print(f'sync storage value {properties.get(PropertiesNames.SYNC_STORAGE_PORT)}')
+        if not cls.__check_property_value(properties.get(PropertiesNames.SYNC_STORAGE_PORT)):
+            # import realtime false by default
+            properties[PropertiesNames.SYNC_STORAGE_PORT] = '49152'
 
     @classmethod
     def __load_file_properties_from_toml(cls) -> dict:
@@ -260,8 +186,8 @@ class AppProperties:
                 debug_section = toml_dict.get(cls.__debug_section_name)
 
                 for key, value in debug_section.items():
-                    if key == 'tmsproxy':
-                        properties['tmsproxy'] = cls.__search_in_environ(str(value))
+                    if key == PropertiesNames.TMS_PROXY:
+                        properties[PropertiesNames.TMS_PROXY] = cls.__search_in_environ(str(value))
 
                     if key == '__dev':
                         properties['logs'] = cls.__search_in_environ(str(value)).lower()
@@ -280,9 +206,9 @@ class AppProperties:
                 properties[key] = cls.__search_in_environ(value)
 
         if parser.has_section('debug'):
-            if parser.has_option('debug', 'tmsproxy'):
-                properties['tmsproxy'] = cls.__search_in_environ(
-                    parser.get('debug', 'tmsproxy'))
+            if parser.has_option('debug', PropertiesNames.TMS_PROXY):
+                properties[PropertiesNames.TMS_PROXY] = cls.__search_in_environ(
+                    parser.get('debug', PropertiesNames.TMS_PROXY))
 
             if parser.has_option('debug', '__dev'):
                 properties['logs'] = cls.__search_in_environ(
@@ -315,7 +241,7 @@ class AppProperties:
 
     @staticmethod
     def __check_token_property(properties: dict):
-        if 'privatetoken' in properties:
+        if PropertiesNames.PRIVATE_TOKEN in properties:
             warnings.warn(
                 'The configuration file specifies a private token. It is not safe.'
                 ' Use TMS_PRIVATE_TOKEN environment variable',

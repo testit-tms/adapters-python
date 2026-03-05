@@ -13,7 +13,6 @@ from testit_python_commons.services.fixture_manager import FixtureManager
 from testit_python_commons.services.logger import adapter_logger
 from testit_python_commons.services.utils import Utils
 
-from testit_python_commons.services.sync_storage.config import SyncStorageConfig
 from testit_python_commons.services.sync_storage.sync_storage_runner import (
     SyncStorageRunner,
 )
@@ -45,7 +44,7 @@ class AdapterManager:
             )
 
 
-    def _initialize_sync_storage(self, client_configuration):
+    def _initialize_sync_storage(self, client_configuration: ClientConfiguration):
         """Initialize Sync Storage runner if enabled."""
         try:
             # Get test run ID - create one if needed
@@ -60,13 +59,10 @@ class AdapterManager:
                 self.__api_client.set_test_run_id(test_run_id)
 
             # Extract configuration properties
-            url = getattr(client_configuration, "_ClientConfiguration__url", None)
-            private_token = getattr(
-                client_configuration, "_ClientConfiguration__private_token", None
-            )
-
-            # Port defaults to 49152
-            port = "49152"
+            url = client_configuration.get_url()
+            private_token = client_configuration.get_private_token()
+            port = client_configuration.get_sync_storage_port()
+            print(f'sync storage port: {url} {private_token} {port}')
 
             # Create and start Sync Storage runner
             if SYNC_STORAGE_AVAILABLE:
