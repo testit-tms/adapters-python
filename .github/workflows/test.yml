@@ -102,7 +102,7 @@ jobs:
          export SYNC_STORAGE_VERSION=$(./scripts/get_sync_storage_version.sh)
          cd python-examples/${{ matrix.project_name }}
          
-         # enabled starting of sync storage before all
+         # start sync storage before all other processes
          ../../scripts/get_sync_storage.sh $SYNC_STORAGE_VERSION
          nohup .caches/syncstorage-linux-amd64 --testRunId ${{ env.TMS_TEST_RUN_ID }} --port 49152 \
          --baseURL ${{ env.TMS_URL }} --privateToken ${{ env.TMS_PRIVATE_TOKEN }}  > service.log 2>&1 &  
