@@ -1,6 +1,6 @@
 #!/bin/bash
 
-NEW_VERSION="3.12.4"
+NEW_VERSION="4.0.0"
 TESTIT_API_CLIENT_VERSION="7.5.3"
 
 echo "Updating all adapters to version: $NEW_VERSION"

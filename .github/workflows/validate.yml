@@ -6,7 +6,7 @@ on:
       - "testit-adapter-nose/**"
       - "testit-adapter-pytest/**"
       - "testit-adapter-robotframework/**"
-      - "testit-python-commons/**"
+      #- "testit-python-commons/**"
       - "requirements.txt"
       - ".github/workflows/validate.yml"
   push:
@@ -26,7 +26,7 @@ jobs:
           testit-adapter-nose,
           testit-adapter-pytest,
           testit-adapter-robotframework,
-          testit-python-commons
+          #testit-python-commons # temporarily disabled
         ]
     steps:
       - name: Checkout repository

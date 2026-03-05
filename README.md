@@ -42,6 +42,46 @@ Status](https://img.shields.io/pypi/v/testit-python-commons?style=plastic)](http
 2. Starting with 5.2, we have added a TMS postscript, which means that the utility is compatible with a specific enterprise version. 
 3. If you are in doubt about which version to use, check with the support staff. support@yoonion.ru
 
+
+## What's new in 4.0.0?
+
+- New logic with a fix for test results loading
+- Added sync-storage subprocess usage for worker synchronization on port **49152** by defailt.
+
+- **limitations**: 
+- The current 4.0.0 version is not compatible with `adapterMode=2` when using parallelization (e.g., `pytest --testit -n 4`). Please use `adapterMode=1`.
+
+### How to run 4.0+ locally?
+
+You can change nothing, it's full compatible with previous versions of adapters for local run on all OS.
+
+
+### How to run 4.0+ with CI/CD?
+
+For CI/CD pipelines, we recommend starting the sync-storage instance before the adapter and waiting for its completion within the same job.
+
+You can see how we implement this [here.](https://github.com/testit-tms/adapters-python/tree/main/.github/workflows/test.yml#106) 
+
+- to get the latest version of sync-storage, please use our [script](https://github.com/testit-tms/adapters-python/tree/main/scripts/curl_last_version.sh)
+
+- To download a specific version of sync-storage, use our [script](https://github.com/testit-tms/adapters-python/tree/main/scripts/get_sync_storage.sh) and pass the desired version number as the first parameter. Sync-storage will be downloaded as `.caches/syncstorage-linux-amd64`
+
+1. Create an empty test run using `testit-cli` or use an existing one, and save the `testRunId`.
+2. Start **sync-storage** with the correct parameters as a background process (alternatives to nohup can be used). Stream the log output to the `service.log` file:
+```bash
+nohup .caches/syncstorage-linux-amd64 --testRunId ${{ env.TMS_TEST_RUN_ID }} --port 49152 \
+    --baseURL ${{ env.TMS_URL }} --privateToken ${{ env.TMS_PRIVATE_TOKEN }}  > service.log 2>&1 & 
+```
+3. Start the adapter using adapterMode=1 or adapterMode=0 for the selected testRunId.
+4. Wait for sync-storage to complete background jobs by calling:
+```bash
+curl -v http://127.0.0.1:49152/wait-completion?testRunId=${{ env.TMS_TEST_RUN_ID }} || true
+```
+5. You can read the sync-storage logs from the service.log file.
+
+
+### General
+
 Supported test frameworks:
  1. [Pytest](https://github.com/testit-tms/adapters-python/tree/main/testit-adapter-pytest)
  2. [Behave](https://github.com/testit-tms/adapters-python/tree/main/testit-adapter-behave)

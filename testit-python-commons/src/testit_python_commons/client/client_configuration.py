@@ -1,26 +1,27 @@
 from testit_python_commons.services.logger import adapter_logger
 from testit_python_commons.services.utils import Utils
-
+from testit_python_commons.configurations.properties_names import PropertiesNames
 
 class ClientConfiguration:
     __project_id = None
     __test_run_id = None
 
     def __init__(self, app_properties: dict):
-        if app_properties.get('projectid'):
-            self.__project_id = Utils.uuid_check(app_properties.get('projectid'))
+        if app_properties.get(PropertiesNames.PROJECT_ID):
+            self.__project_id = Utils.uuid_check(app_properties.get(PropertiesNames.PROJECT_ID))
 
-        if app_properties.get('testrunid'):
-            self.__test_run_id = Utils.uuid_check(app_properties.get('testrunid'))
+        if app_properties.get(PropertiesNames.TEST_RUN_ID):
+            self.__test_run_id = Utils.uuid_check(app_properties.get(PropertiesNames.TEST_RUN_ID))
 
-        self.__url = Utils.url_check(app_properties.get('url'))
-        self.__private_token = app_properties.get('privatetoken')
-        self.__configuration_id = Utils.uuid_check(app_properties.get('configurationid'))
-        self.__tms_proxy = app_properties.get('tmsproxy')
-        self.__adapter_mode = app_properties.get('adaptermode')
-        self.__cert_validation = Utils.convert_value_str_to_bool(app_properties.get('certvalidation').lower())
+        self.__url = Utils.url_check(app_properties.get(PropertiesNames.URL))
+        self.__private_token = app_properties.get(PropertiesNames.PRIVATE_TOKEN)
+        self.__configuration_id = Utils.uuid_check(app_properties.get(PropertiesNames.CONFIGURATION_ID))
+        self.__tms_proxy = app_properties.get(PropertiesNames.TMS_PROXY)
+        self.__adapter_mode = app_properties.get(PropertiesNames.ADAPTER_MODE)
+        self.__cert_validation = Utils.convert_value_str_to_bool(app_properties.get(PropertiesNames.CERT_VALIDATION).lower())
         self.__automatic_updation_links_to_test_cases = Utils.convert_value_str_to_bool(
-            app_properties.get('automaticupdationlinkstotestcases').lower())
+            app_properties.get(PropertiesNames.AUTOMATIC_UPDATION_LINKS_TO_TEST_CASES).lower())
+        self.__sync_storage_port = app_properties.get(PropertiesNames.SYNC_STORAGE_PORT)
 
     @adapter_logger
     def get_url(self):
@@ -63,3 +64,6 @@ class ClientConfiguration:
 
     def get_automatic_updation_links_to_test_cases(self) -> bool:
         return self.__automatic_updation_links_to_test_cases
+
+    def get_sync_storage_port(self) -> str:
+        return self.__sync_storage_port

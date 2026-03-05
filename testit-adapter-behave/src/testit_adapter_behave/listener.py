@@ -11,7 +11,10 @@ from .scenario_parser import (
 from .utils import (
     convert_step_to_step_result_model,
     convert_executable_test_to_test_result_model)
+import logging
 
+# on_block_completed must be called AFTER other actions
+# on_running_started must be called BEFORE other actions
 
 class AdapterListener(object):
     __executable_test = None
@@ -23,24 +26,40 @@ class AdapterListener(object):
         self.__step_manager = step_manager
 
     def start_launch(self):
+        self.__adapter_manager.on_running_started()
         test_run_id = self.__adapter_manager.get_test_run_id()
 
         self.__adapter_manager.set_test_run_id(test_run_id)
+        logging.debug("start_launch")
 
     def stop_launch(self):
+        logging.debug("BEHAVE stop_launch")
         self.__adapter_manager.write_tests()
+        self.__adapter_manager.on_block_completed()
+
 
     def get_tests_for_launch(self):
+        logging.debug("get_tests_for_launch")
+        self.__adapter_manager.on_running_started()
         return self.__adapter_manager.get_autotests_for_launch()
 
     def get_scenario(self, scenario):
+        logging.debug("get_scenario")
+        self.__adapter_manager.on_running_started()
         self.__executable_test = parse_scenario(scenario)
         self.__background_steps_count = len(scenario.background_steps)
         self.__steps_count = len(scenario.steps)
+        
+        
 
     def set_scenario(self):
+        logging.debug("BEHAVE set_scenario")
         self.__adapter_manager.write_test(
             convert_executable_test_to_test_result_model(self.__executable_test))
+        # must depend on the current adapter mode
+        # if it's realtime -> call
+        if self.__adapter_manager.is_realtime():
+            self.__adapter_manager.on_block_completed()
 
     def get_step_parameters(self, match):
         scope = self.get_scope()
@@ -55,6 +74,8 @@ class AdapterListener(object):
         self.__executable_test[scope].append(executable_step)
 
     def get_step_result(self, result):
+        logging.debug("get_step_result")
+        self.__adapter_manager.on_running_started()
         scope = self.get_scope()
         outcome = parse_status(result.status)
 
@@ -90,6 +111,7 @@ class AdapterListener(object):
             self.set_scenario()
 
     def get_scope(self):
+        self.__adapter_manager.on_running_started()
         if self.__background_steps_count != 0:
             return 'setUp'
 

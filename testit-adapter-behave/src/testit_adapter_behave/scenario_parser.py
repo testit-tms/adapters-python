@@ -9,6 +9,7 @@ from .tags_parser import parse_test_tags
 STATUS = {
     'passed': OutcomeType.PASSED,
     'failed': OutcomeType.FAILED,
+    'error': OutcomeType.FAILED,
     'skipped': OutcomeType.SKIPPED,
     'untested': OutcomeType.SKIPPED,
     'undefined': OutcomeType.BLOCKED

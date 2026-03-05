@@ -24,6 +24,7 @@ env:
   TEMP_FILE: tmp/output.txt
   TMS_ADAPTER_MODE: 1
   TMS_CERT_VALIDATION: false
+  TMS_IMPORT_REALTIME: true
   TMS_PRIVATE_TOKEN: ${{ secrets.TESTIT_PRIVATE_TOKEN }}
   TMS_URL: ${{ secrets.TESTIT_URL }}
 jobs:
@@ -92,10 +93,27 @@ jobs:
          pip3 install -r python-examples/${{ matrix.project_name }}/requirements_ci.txt
          pip3 install ./testit-python-commons
          pip3 install ./${{ matrix.adapter_name }}
+         
      - name: Test
        run: |
+         chmod +x ./scripts/get_sync_storage_version.sh
+         chmod +x ./scripts/get_sync_storage.sh
+
+         export SYNC_STORAGE_VERSION=$(./scripts/get_sync_storage_version.sh)
          cd python-examples/${{ matrix.project_name }}
-         eval "${{ matrix.test_command }}" || exit 0
+         
+         # start sync storage before all other processes
+         ../../scripts/get_sync_storage.sh $SYNC_STORAGE_VERSION
+         nohup .caches/syncstorage-linux-amd64 --testRunId ${{ env.TMS_TEST_RUN_ID }} --port 49152 \
+         --baseURL ${{ env.TMS_URL }} --privateToken ${{ env.TMS_PRIVATE_TOKEN }}  > service.log 2>&1 &  
+         curl -v http://127.0.0.1:49152/health || true
+         
+         eval "${{ matrix.test_command }}" || true #ignore error code
+         
+         sleep 1
+         curl -v http://127.0.0.1:49152/wait-completion?testRunId=${{ env.TMS_TEST_RUN_ID }} || true
+         # cat service.log
+         
      - name: Validate
        run: |
          dotnet test --configuration Debug --no-build --logger:"console;verbosity=detailed" api-validator-dotnet

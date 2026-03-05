@@ -159,18 +159,19 @@ class ApiClientWorker:
         autotests = self.__autotest_api.api_v2_auto_tests_search_post(api_v2_auto_tests_search_post_request=model)
 
         if autotests:
-            self.__update_test(test_result, autotests[0])
+            self.__update_auto_test(test_result, autotests[0])
 
             autotest_id = autotests[0].id
 
             self.__update_autotest_link_from_work_items(autotest_id, test_result.get_work_item_ids())
         else:
-            self.__create_test(test_result)
+            self.__create_auto_test(test_result)
 
         return self.__load_test_result(test_result)
 
     @adapter_logger
     def write_tests(self, test_results: List[TestResult], fixture_containers: dict) -> None:
+        logging.debug("call __write_tests")
         bulk_autotest_helper = BulkAutotestHelper(self.__autotest_api, self.__test_run_api, self.__config)
 
         for test_result in test_results:
@@ -236,6 +237,7 @@ class ApiClientWorker:
             work_item_ids: List[str],
             autotest_global_id: str = None) -> List[str]:
         linked_work_items = []
+        logging.debug("call __get_work_item_uuids_for_link_with_auto_test")
 
         if autotest_global_id:
             linked_work_items = self.__get_work_items_linked_to_autotest(autotest_global_id)
@@ -279,14 +281,14 @@ class ApiClientWorker:
         try:
             work_item = self.__work_items_api.get_work_item_by_id(id=work_item_id)
 
-            logging.debug(f'Got workitem {work_item}')
+            # logging.debug(f'Got workitem {work_item}')
 
             return work_item.id
         except Exception as exc:
             logging.error(f'Getting workitem by id {work_item_id} status: {exc}')
 
     @adapter_logger
-    @retry
+    #@retry # disabled
     def __get_work_items_linked_to_autotest(self, autotest_global_id: str) -> List[AutoTestWorkItemIdentifierApiResult]:
         return self.__autotest_api.get_work_items_linked_to_auto_test(id=autotest_global_id)
 
@@ -310,9 +312,10 @@ class ApiClientWorker:
 
     @adapter_logger
     @retry
-    def __create_test(self, test_result: TestResult) -> str:
+    def __create_auto_test(self, test_result: TestResult) -> str:
         logging.debug(f'Autotest "{test_result.get_autotest_name()}" was not found')
 
+        logging.debug("call __create_auto_test")
         work_item_ids_for_link_with_auto_test = self.__get_work_item_uuids_for_link_with_auto_test(
             test_result.get_work_item_ids())
 
@@ -338,7 +341,7 @@ class ApiClientWorker:
 
     @adapter_logger
     @retry
-    def __update_test(self, test_result: TestResult, autotest: AutoTestApiResult) -> None:
+    def __update_auto_test(self, test_result: TestResult, autotest: AutoTestApiResult) -> None:
         logging.debug(f'Autotest "{test_result.get_autotest_name()}" was found')
 
         model = Converter.prepare_to_update_autotest(test_result, autotest, self.__config.get_project_id())
@@ -353,7 +356,7 @@ class ApiClientWorker:
     @adapter_logger
     @retry
     def __update_tests(self, autotests_for_update: List[AutoTestUpdateApiModel]) -> None:
-        logging.debug(f'Updating autotests: {autotests_for_update}')
+        # logging.debug(f'Updating autotests: {autotests_for_update}')
 
         self.__autotest_api.update_multiple(auto_test_update_api_model=autotests_for_update)
 
@@ -436,3 +439,6 @@ class ApiClientWorker:
             else:
                 logging.error(f'File "{path}" was not found!')
         return attachments
+
+    def get_configuration_id(self):
+        return self.__config.get_configuration_id()

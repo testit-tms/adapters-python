@@ -35,7 +35,7 @@ class Utils:
         def deprecated_decorator(func):  # noqa: N802
             def deprecated_func(*args, **kwargs):
                 warnings.warn(
-                    '"{}" is no longer acceptable to compute time between versions.\n{}'.format(func.__name__, message),
+                    '"{}" is deprecated.\n{}'.format(func.__name__, message),
                     category=DeprecationWarning,
                     stacklevel=2)
                 warnings.simplefilter('default', DeprecationWarning)

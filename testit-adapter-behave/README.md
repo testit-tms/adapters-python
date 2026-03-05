@@ -34,6 +34,7 @@ pip install testit-adapter-behave
 | Mode of import type selection when launching autotests (**It's optional**). Default value - true. The adapter supports following modes:<br/>true - in this mode, the adapter will create/update each autotest in real time<br/>false - in this mode, the adapter will create/update multiple autotests                                                                                                                           | importRealtime                    | TMS_IMPORT_REALTIME                        | tmsImportRealtime                    |
 | Url of proxy server (**It's optional**)                                                                                                                                                                                                                                                                                                                                                                                          | tmsProxy                          | TMS_PROXY                                  | tmsProxy                             |
 | Name (**including extension**) of the configuration file If it is not provided, it is used default file name (**It's optional**)                                                                                                                                                                                                                                                                                                 | -                                 | TMS_CONFIG_FILE                            | tmsConfigFile                        |
+| Sync storage port (**It's optional, 49152 by default**)                                                                                                                                                                                                                                                                                                                                                                          | syncStoragePort                   | TMS_SYNC_STORAGE_PORT                      | syncStoragePort                      |
 
 #### File
 
@@ -51,6 +52,7 @@ certValidation = CERT_VALIDATION
 automaticCreationTestCases = AUTOMATIC_CREATION_TEST_CASES
 automaticUpdationLinksToTestCases = AUTOMATIC_UPDATION_LINKS_TO_TEST_CASES
 importRealtime = IMPORT_REALTIME
+syncStoragePort = 49152
 
 # This section are optional. It enables debug mode.
 [debug]
@@ -73,6 +75,11 @@ tmsProjectId=PROJECT_ID -D tmsConfigurationId=CONFIGURATION_ID -D tmsTestRunId=T
 tmsTestRunName=TEST_RUN_NAME -D tmsProxy='{"http":"http://localhost:8888","https":"http://localhost:8888"}' -D
 tmsCertValidation=CERT_VALIDATION -D tmsAutomaticCreationTestCases=AUTOMATIC_CREATION_TEST_CASES -D 
 tmsAutomaticUpdationLinksToTestCases=AUTOMATIC_UPDATION_LINKS_TO_TEST_CASES -D tmsImportRealtime=IMPORT_REALTIME
+```
+
+Logging level:
+```
+$ behave ... --logging-level=DEBUG
 ```
 
 If you want to enable debug mode then
