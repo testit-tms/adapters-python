@@ -3,7 +3,15 @@ import os
 from datetime import datetime
 
 from testit_api_client import ApiClient, Configuration
-from testit_api_client.apis import AttachmentsApi, AutoTestsApi, TestRunsApi, TestResultsApi, WorkItemsApi
+from testit_api_client.apis import (
+    AttachmentsApi,
+    AutoTestsApi,
+    TestRunsApi,
+    TestResultsApi,
+    WorkItemsApi,
+    ProjectsApi,
+    WorkflowsApi,
+)
 from testit_api_client.models import (
     ApiV2TestResultsSearchPostRequest,
     AutoTestApiResult,
@@ -15,6 +23,8 @@ from testit_api_client.models import (
     TestRunV2ApiResult,
     LinkAutoTestToWorkItemRequest,
     AutoTestWorkItemIdentifierApiResult,
+    ProjectModel,
+    WorkflowApiResult,
 )
 
 from testit_python_commons.client.client_configuration import ClientConfiguration
@@ -41,7 +51,10 @@ class ApiClientWorker:
         self.__attachments_api = AttachmentsApi(api_client=api_client)
         self.__test_results_api = TestResultsApi(api_client=api_client)
         self.__work_items_api = WorkItemsApi(api_client=api_client)
+        self.__projects_api = ProjectsApi(api_client=api_client)
+        self.__workflows_api = WorkflowsApi(api_client=api_client)
         self.__config = config
+        self.__status_codes = self.__get_status_codes()
 
     @staticmethod
     @adapter_logger
@@ -179,7 +192,8 @@ class ApiClientWorker:
 
             test_result_model = Converter.test_result_to_testrun_result_post_model(
                 test_result,
-                self.__config.get_configuration_id())
+                self.__config.get_configuration_id(),
+                self.__status_codes)
 
             work_item_ids_for_link_with_auto_test = self.__get_work_item_uuids_for_link_with_auto_test(
                 test_result.get_work_item_ids())
@@ -385,7 +399,8 @@ class ApiClientWorker:
     def __load_test_result(self, test_result: TestResult) -> str:
         model = Converter.test_result_to_testrun_result_post_model(
             test_result,
-            self.__config.get_configuration_id())
+            self.__config.get_configuration_id(),
+            self.__status_codes)
 
         response = self.__test_run_api.set_auto_test_results_for_test_run(
             id=self.__config.get_test_run_id(),
@@ -407,8 +422,8 @@ class ApiClientWorker:
             fixtures_containers, test_result_ids)
 
         for test_result in test_results:
-            model = Converter.convert_test_result_model_to_test_results_id_put_request(
-                self.get_test_result_by_id(test_result.get_test_result_id()))
+            test_result_response = self.get_test_result_by_id(test_result.get_test_result_id())
+            model = Converter.convert_test_result_model_to_test_results_id_put_request(test_result_response)
 
             model.setup_results = Converter.step_results_to_auto_test_step_result_update_request(
                     test_result.get_setup_results())
@@ -442,3 +457,18 @@ class ApiClientWorker:
 
     def get_configuration_id(self):
         return self.__config.get_configuration_id()
+
+    @adapter_logger
+    def __get_project(self) -> ProjectModel:
+        return self.__projects_api.get_project_by_id(id=self.__config.get_project_id())
+
+    @adapter_logger
+    def __get_workflow_by_id(self, workflow_id: str) -> WorkflowApiResult:
+        return self.__workflows_api.api_v2_workflows_id_get(id=workflow_id)
+
+    @adapter_logger
+    def __get_status_codes(self) -> List[str]:
+        project: ProjectModel = self.__get_project()
+        workflow: WorkflowApiResult = self.__get_workflow_by_id(project.workflow_id)
+
+        return [status.code for status in workflow.statuses]

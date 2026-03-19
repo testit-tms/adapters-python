@@ -7,7 +7,8 @@ from testit_python_commons.services import (
 from .models.test_result_step import get_test_result_step_model
 from .scenario_parser import (
     parse_scenario,
-    parse_status)
+    parse_step_status,
+    parse_status_type)
 from .utils import (
     convert_step_to_step_result_model,
     convert_executable_test_to_test_result_model)
@@ -77,7 +78,7 @@ class AdapterListener(object):
         logging.debug("get_step_result")
         self.__adapter_manager.on_running_started()
         scope = self.get_scope()
-        outcome = parse_status(result.status)
+        outcome = parse_step_status(result.status)
 
         self.__executable_test[scope][-1]['title'] = result.name
         self.__executable_test[scope][-1]['outcome'] = outcome
@@ -96,7 +97,8 @@ class AdapterListener(object):
 
         if outcome != OutcomeType.PASSED:
             self.__executable_test['traces'] = result.error_message
-            self.__executable_test['outcome'] = outcome
+            self.__executable_test['outcome'] = result.status
+            self.__executable_test['status_type'] = parse_status_type(result.status)
             self.set_scenario()
             return
 
@@ -107,7 +109,8 @@ class AdapterListener(object):
         self.__steps_count -= 1
 
         if self.__steps_count == 0:
-            self.__executable_test['outcome'] = outcome
+            self.__executable_test['outcome'] = result.status
+            self.__executable_test['status_type'] = parse_status_type(result.status)
             self.set_scenario()
 
     def get_scope(self):
