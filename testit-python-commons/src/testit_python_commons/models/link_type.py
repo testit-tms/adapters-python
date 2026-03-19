@@ -1,4 +1,7 @@
 class LinkType:
+    """
+    Test IT link type
+    """
     RELATED = 'Related'
     BLOCKED_BY = 'BlockedBy'
     DEFECT = 'Defect'
