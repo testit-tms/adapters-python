@@ -97,7 +97,7 @@ Description of decorators:
 - `testit.description` - autotest description specified in the autotest card
 - `testit.labels` - labels listed in the autotest card
 - `testit.tags` - tags listed in the autotest card
-- `testit.link` - links listed in the autotest card
+- `testit.links` - links listed in the autotest card
 - `testit.step` - the designation of the step called in the body of the test or other step
 - `testit.nameSpace` - directory in the TMS system (default - file's name of test)
 - `testit.className` - subdirectory in the TMS system (default - class's name of test)
