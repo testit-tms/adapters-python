@@ -32,7 +32,8 @@ from testit_api_client.models import (
     LinkApiResult,
     UpdateLinkApiModel,
     AssignAttachmentApiModel,
-TestStatusType
+    TestStatusType,
+    TestStatusApiType,
 )
 
 from testit_python_commons.models.link import Link
@@ -110,7 +111,7 @@ class Converter:
         return ApiV2TestResultsSearchPostRequest(
             test_run_ids=[testrun_id],
             configuration_ids=[configuration_id],
-            status_codes=["InProgress"])
+            status_types=[TestStatusApiType("InProgress")])
 
     @staticmethod
     @adapter_logger
@@ -254,7 +255,7 @@ class Converter:
         model = AutoTestResultsForTestRunModel(
             configuration_id=configuration_id,
             auto_test_external_id=test_result.get_external_id(),
-            status_type=test_result.get_status_type(),
+            status_type=TestStatusType(test_result.get_status_type()),
             step_results=cls.step_results_to_attachment_put_model_autotest_step_results_model(
                 test_result.get_step_results()),
             setup_results=cls.step_results_to_attachment_put_model_autotest_step_results_model(
@@ -273,7 +274,7 @@ class Converter:
             completed_on=test_result.get_completed_on()
         )
 
-        if test_result.get_outcome() in status_codes:
+        if test_result.get_outcome().upper() in status_codes:
             model.status_code = test_result.get_outcome()
 
         return model
