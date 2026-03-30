@@ -64,7 +64,7 @@ class AutotestAdapter:
             self.active_test.status_type = STATUS_TYPES[attributes['status']]
             self.active_test.started_on = convert_time(attributes['starttime'])
             self.active_test.completed_on = convert_time(attributes['endtime'])
-            if not self.active_test.message and self.active_test.outcome == 'Failed':
+            if not self.active_test.message and self.active_test.outcome == 'FAIL':
                 for step in (self.active_test.setUpResults + self.active_test.stepResults +
                              self.active_test.tearDownResults):
                     if step.outcome == 'Failed':
