@@ -97,7 +97,7 @@ class AdapterListener(object):
 
         if outcome != OutcomeType.PASSED:
             self.__executable_test['traces'] = result.error_message
-            self.__executable_test['outcome'] = str(result.status)
+            self.__executable_test['outcome'] = result.status.name
             self.__executable_test['status_type'] = parse_status_type(result.status)
             self.set_scenario()
             return
@@ -109,7 +109,7 @@ class AdapterListener(object):
         self.__steps_count -= 1
 
         if self.__steps_count == 0:
-            self.__executable_test['outcome'] = str(result.status)
+            self.__executable_test['outcome'] = result.status.name
             self.__executable_test['status_type'] = parse_status_type(result.status)
             self.set_scenario()
 
