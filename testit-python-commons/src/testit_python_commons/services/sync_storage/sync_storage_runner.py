@@ -39,7 +39,7 @@ class SyncStorageRunner:
     across multiple workers.
     """
 
-    SYNC_STORAGE_VERSION = "v0.1.26"
+    SYNC_STORAGE_VERSION = "v0.1.27"
     SYNC_STORAGE_REPO_URL = (
         "https://github.com/testit-tms/sync-storage-public/releases/download/"
     )
@@ -528,10 +528,11 @@ class SyncStorageRunner:
     @classmethod
     def test_result_to_test_result_cut_api_model(
             cls,
-            test_result: TestResult) -> TestResultCutApiModel:
+            test_result: TestResult, project_id: str) -> TestResultCutApiModel:
         return TestResultCutApiModel(
+            project_id=project_id,
             auto_test_external_id=test_result.get_external_id(),
             status_type=test_result.get_status_type(),
-            status_code="",
+            status_code=test_result.get_outcome(),
             started_on=test_result.get_started_on(),
         )

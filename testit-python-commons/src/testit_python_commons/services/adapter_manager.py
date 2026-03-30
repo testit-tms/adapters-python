@@ -161,8 +161,10 @@ class AdapterManager:
     @adapter_logger
     def on_master_no_already_in_progress(self, test_result: TestResult) -> bool:
         # Convert TestResult to TestResultCutApiModel
+
+        project_id = self.__config.get_project_id()
         tr_cut_api_model = SyncStorageRunner.test_result_to_test_result_cut_api_model(
-            test_result
+            test_result, project_id
         )
         logging.warning("Set as in progress status_code, auto_test_external_id: "
                         + tr_cut_api_model.status_code + " " + tr_cut_api_model.auto_test_external_id)
