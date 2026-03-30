@@ -166,6 +166,7 @@ class AdapterManager:
         )
         logging.warning("Set as in progress status_code, auto_test_external_id: "
                         + tr_cut_api_model.status_code + " " + tr_cut_api_model.auto_test_external_id)
+        logging.warning("Started_on: " + str(test_result.get_started_on()))
 
         # Send test result to Sync Storage
         success = self.__sync_storage_runner.send_in_progress_test_result(

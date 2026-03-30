@@ -39,13 +39,13 @@ class SyncStorageRunner:
     across multiple workers.
     """
 
-    SYNC_STORAGE_VERSION = "v0.1.22"
+    SYNC_STORAGE_VERSION = "v0.1.23"
     SYNC_STORAGE_REPO_URL = (
         "https://github.com/testit-tms/sync-storage-public/releases/download/"
     )
     AMD64 = "amd64"
     ARM64 = "arm64"
-    SYNC_STORAGE_STARTUP_TIMEOUT = 30  # seconds
+    SYNC_STORAGE_STARTUP_TIMEOUT = 5  # seconds
 
     def __init__(
         self,
