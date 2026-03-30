@@ -12,6 +12,7 @@ from _pytest.mark import Mark
 from testit_python_commons.models.link import Link
 from testit_python_commons.models.test_result import TestResult
 from testit_python_commons.models.test_result_with_all_fixture_step_results_model import TestResultWithAllFixtureStepResults
+from testit_python_commons.models.outcome_type import OutcomeType
 
 from testit_adapter_pytest.models.executable_test import ExecutableTest
 
@@ -47,6 +48,8 @@ def __set_outcome_and_message_from_markers(executable_test: ExecutableTest, mark
     for marker in markers:
         if marker.name in ('skip', 'skipif'):
             executable_test.outcome = 'Skipped'
+        if marker.name == 'xfail':
+            executable_test.outcome = 'Xfailed'
         if marker.name in ('skip', 'skipif', 'xfail'):
             if len(marker.args) == 1 and isinstance(marker.args, str):
                 executable_test.message = marker.args[0]
@@ -337,6 +340,7 @@ def convert_executable_test_to_test_result_model(executable_test: ExecutableTest
         .set_teardown_results(executable_test.teardown_step_results)\
         .set_duration(executable_test.duration)\
         .set_outcome(executable_test.outcome)\
+        .set_status_type(executable_test.status_type)\
         .set_traces(executable_test.traces)\
         .set_attachments(executable_test.attachments)\
         .set_parameters(executable_test.parameters)\
@@ -404,10 +408,10 @@ def fixtures_containers_to_test_results_with_all_fixture_step_results(
 def get_status(exception):
     if exception:
         if isinstance(exception, pytest.skip.Exception):
-            return "Skipped"
-        return "Failed"
+            return OutcomeType.SKIPPED
+        return OutcomeType.FAILED
     else:
-        return "Passed"
+        return OutcomeType.PASSED
 
 
 def get_outcome_status(outcome):

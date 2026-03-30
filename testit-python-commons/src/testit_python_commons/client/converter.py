@@ -32,6 +32,8 @@ from testit_api_client.models import (
     LinkApiResult,
     UpdateLinkApiModel,
     AssignAttachmentApiModel,
+    TestStatusType,
+    TestStatusApiType,
 )
 
 from testit_python_commons.models.link import Link
@@ -109,7 +111,7 @@ class Converter:
         return ApiV2TestResultsSearchPostRequest(
             test_run_ids=[testrun_id],
             configuration_ids=[configuration_id],
-            status_codes=["InProgress"])
+            status_types=[TestStatusApiType("InProgress")])
 
     @staticmethod
     @adapter_logger
@@ -197,46 +199,25 @@ class Converter:
             cls,
             test_result: TestResult,
             project_id: str) -> AutoTestUpdateApiModel:
-        if test_result.get_outcome() == 'Passed':
-            return AutoTestUpdateApiModel(
-                external_id=test_result.get_external_id(),
-                project_id=project_id,
-                name=test_result.get_autotest_name(),
-                steps=cls.step_results_to_autotest_steps_model(
-                    test_result.get_step_results()),
-                setup=cls.step_results_to_autotest_steps_model(
-                    test_result.get_setup_results()),
-                teardown=cls.step_results_to_autotest_steps_model(
-                    test_result.get_teardown_results()),
-                namespace=test_result.get_namespace(),
-                classname=test_result.get_classname(),
-                title=test_result.get_title(),
-                description=test_result.get_description(),
-                links=cls.links_to_links_put_model(test_result.get_links()),
-                labels=test_result.get_labels(),
-                tags=test_result.get_tags(),
-                external_key=test_result.get_external_key()
-            )
-        else:
-            return AutoTestUpdateApiModel(
-                external_id=test_result.get_external_id(),
-                project_id=project_id,
-                name=test_result.get_autotest_name(),
-                steps=cls.step_results_to_autotest_steps_model(
-                    test_result.get_step_results()),
-                setup=cls.step_results_to_autotest_steps_model(
-                    test_result.get_setup_results()),
-                teardown=cls.step_results_to_autotest_steps_model(
-                    test_result.get_teardown_results()),
-                namespace=test_result.get_namespace(),
-                classname=test_result.get_classname(),
-                title=test_result.get_title(),
-                description=test_result.get_description(),
-                links=cls.links_to_links_put_model(test_result.get_links()),
-                labels=test_result.get_labels(),
-                tags=test_result.get_tags(),
-                external_key=test_result.get_external_key()
-            )
+        return AutoTestUpdateApiModel(
+            external_id=test_result.get_external_id(),
+            project_id=project_id,
+            name=test_result.get_autotest_name(),
+            steps=cls.step_results_to_autotest_steps_model(
+                test_result.get_step_results()),
+            setup=cls.step_results_to_autotest_steps_model(
+                test_result.get_setup_results()),
+            teardown=cls.step_results_to_autotest_steps_model(
+                test_result.get_teardown_results()),
+            namespace=test_result.get_namespace(),
+            classname=test_result.get_classname(),
+            title=test_result.get_title(),
+            description=test_result.get_description(),
+            links=cls.links_to_links_put_model(test_result.get_links()),
+            labels=test_result.get_labels(),
+            tags=test_result.get_tags(),
+            external_key=test_result.get_external_key()
+        )
 
     @classmethod
     @adapter_logger
@@ -244,57 +225,37 @@ class Converter:
             cls,
             test_result: TestResult,
             project_id: str) -> UpdateAutoTestRequest:
-        if test_result.get_outcome() == 'Passed':
-            return UpdateAutoTestRequest(
-                external_id=test_result.get_external_id(),
-                project_id=project_id,
-                name=test_result.get_autotest_name(),
-                steps=cls.step_results_to_autotest_steps_model(
-                    test_result.get_step_results()),
-                setup=cls.step_results_to_autotest_steps_model(
-                    test_result.get_setup_results()),
-                teardown=cls.step_results_to_autotest_steps_model(
-                    test_result.get_teardown_results()),
-                namespace=test_result.get_namespace(),
-                classname=test_result.get_classname(),
-                title=test_result.get_title(),
-                description=test_result.get_description(),
-                links=cls.links_to_links_put_model(test_result.get_links()),
-                labels=test_result.get_labels(),
-                tags=test_result.get_tags(),
-                external_key=test_result.get_external_key()
-            )
-        else:
-            return UpdateAutoTestRequest(
-                external_id=test_result.get_external_id(),
-                project_id=project_id,
-                name=test_result.get_autotest_name(),
-                steps=cls.step_results_to_autotest_steps_model(
-                    test_result.get_step_results()),
-                setup=cls.step_results_to_autotest_steps_model(
-                    test_result.get_setup_results()),
-                teardown=cls.step_results_to_autotest_steps_model(
-                    test_result.get_teardown_results()),
-                namespace=test_result.get_namespace(),
-                classname=test_result.get_classname(),
-                title=test_result.get_title(),
-                description=test_result.get_description(),
-                links=cls.links_to_links_put_model(test_result.get_links()),
-                labels=test_result.get_labels(),
-                tags=test_result.get_tags(),
-                external_key=test_result.get_external_key()
-            )
+        return UpdateAutoTestRequest(
+            external_id=test_result.get_external_id(),
+            project_id=project_id,
+            name=test_result.get_autotest_name(),
+            steps=cls.step_results_to_autotest_steps_model(
+                test_result.get_step_results()),
+            setup=cls.step_results_to_autotest_steps_model(
+                test_result.get_setup_results()),
+            teardown=cls.step_results_to_autotest_steps_model(
+                test_result.get_teardown_results()),
+            namespace=test_result.get_namespace(),
+            classname=test_result.get_classname(),
+            title=test_result.get_title(),
+            description=test_result.get_description(),
+            links=cls.links_to_links_put_model(test_result.get_links()),
+            labels=test_result.get_labels(),
+            tags=test_result.get_tags(),
+            external_key=test_result.get_external_key()
+        )
 
     @classmethod
     @adapter_logger
     def test_result_to_testrun_result_post_model(
             cls,
             test_result: TestResult,
-            configuration_id: str) -> AutoTestResultsForTestRunModel:
-        return AutoTestResultsForTestRunModel(
+            configuration_id: str,
+            status_codes: List[str]) -> AutoTestResultsForTestRunModel:
+        model = AutoTestResultsForTestRunModel(
             configuration_id=configuration_id,
             auto_test_external_id=test_result.get_external_id(),
-            status_code=test_result.get_outcome(),
+            status_type=TestStatusType(test_result.get_status_type()),
             step_results=cls.step_results_to_attachment_put_model_autotest_step_results_model(
                 test_result.get_step_results()),
             setup_results=cls.step_results_to_attachment_put_model_autotest_step_results_model(
@@ -312,6 +273,11 @@ class Converter:
             started_on=test_result.get_started_on(),
             completed_on=test_result.get_completed_on()
         )
+
+        if test_result.get_outcome().upper() in status_codes:
+            model.status_code = test_result.get_outcome()
+
+        return model
 
     @classmethod
     @adapter_logger

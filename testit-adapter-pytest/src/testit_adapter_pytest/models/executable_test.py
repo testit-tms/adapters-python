@@ -15,6 +15,7 @@ class ExecutableTest:
     result_links = attrib(default=Factory(list))
     duration = attrib(default=None)
     outcome = attrib(default=None)
+    status_type = attrib(default=None)
     failure_reason_names = attrib(default=Factory(list))
     traces = attrib(default=None)
     attachments = attrib(default=Factory(list))

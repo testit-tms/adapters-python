@@ -4,6 +4,8 @@ from typing import List
 
 from testit_python_commons.models.step_result import StepResult
 from testit_python_commons.models.test_result import TestResult
+from testit_python_commons.models.outcome_type import OutcomeType
+from testit_python_commons.models.status_type import StatusType
 
 
 def convert_time(time):
@@ -24,6 +26,7 @@ def convert_executable_test_to_test_result_model(executable_test: dict) -> TestR
             step_results_to_autotest_steps_model(executable_test['tearDownResults']))\
         .set_duration(executable_test['duration'])\
         .set_outcome(executable_test['outcome'])\
+        .set_status_type(executable_test['status_type'])\
         .set_traces(executable_test['traces'])\
         .set_attachments(executable_test['attachments'])\
         .set_parameters(executable_test['parameters'])\
@@ -33,7 +36,7 @@ def convert_executable_test_to_test_result_model(executable_test: dict) -> TestR
         .set_title(executable_test['title'])\
         .set_description(executable_test['description'])\
         .set_links(executable_test['links'])\
-        .set_result_links(executable_test['resultLinks']) \
+        .set_result_links(executable_test['resultLinks'])\
         .set_labels(executable_test['labels']) \
         .set_tags(executable_test['tags'])\
         .set_work_item_ids(executable_test['workItemsID'])\
@@ -69,4 +72,15 @@ def get_hash(value: str):
     return md.hexdigest()
 
 
-STATUSES = {'FAIL': 'Failed', 'PASS': 'Passed', 'SKIP': 'Skipped', 'NOT RUN': 'Skipped'}
+STEP_STATUSES = {
+    'FAIL': OutcomeType.FAILED,
+    'PASS': OutcomeType.PASSED,
+    'SKIP': OutcomeType.SKIPPED,
+    'NOT RUN': OutcomeType.SKIPPED
+}
+STATUS_TYPES = {
+    'FAIL': StatusType.FAILED,
+    'PASS': StatusType.SUCCEEDED,
+    'SKIP': StatusType.INCOMPLETE,
+    'NOT RUN': StatusType.INCOMPLETE
+}

@@ -5,7 +5,8 @@ from testit_python_commons.services import (
 from .utils import (
     form_test,
     get_outcome,
-    convert_executable_test_to_test_result_model
+    convert_executable_test_to_test_result_model,
+    STATUS_TYPE,
 )
 
 
@@ -38,6 +39,7 @@ class AdapterListener(object):
         outcome, message, trace = get_outcome(event)
 
         self.__executable_test['outcome'] = outcome
+        self.__executable_test['status_type'] = STATUS_TYPE[outcome]
         self.__executable_test['traces'] = trace
 
         if not self.__executable_test['message']:
