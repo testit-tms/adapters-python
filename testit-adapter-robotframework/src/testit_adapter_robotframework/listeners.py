@@ -4,7 +4,7 @@ from robot.api import SuiteVisitor, logger
 from robot.libraries.BuiltIn import BuiltIn
 
 from .models import Autotest
-from .utils import STATUSES, convert_time, convert_executable_test_to_test_result_model, get_hash
+from .utils import STEP_STATUSES, STATUS_TYPES, convert_time, convert_executable_test_to_test_result_model, get_hash
 
 
 class AutotestAdapter:
@@ -54,16 +54,17 @@ class AutotestAdapter:
             start = convert_time(attributes['starttime'])
             end = convert_time(attributes['endtime'])
             duration = attributes['elapsedtime']
-            outcome = STATUSES[attributes['status']]
+            outcome = STEP_STATUSES[attributes['status']]
             self.active_test.add_step_result(title, start, end, duration, outcome, self.active_test.attachments)
             self.active_test.attachments = []
 
     def end_test(self, name, attributes):
         if self.active_test:
-            self.active_test.outcome = STATUSES[attributes['status']]
+            self.active_test.outcome = attributes['status']
+            self.active_test.status_type = STATUS_TYPES[attributes['status']]
             self.active_test.started_on = convert_time(attributes['starttime'])
             self.active_test.completed_on = convert_time(attributes['endtime'])
-            if not self.active_test.message and self.active_test.outcome == 'Failed':
+            if not self.active_test.message and self.active_test.outcome == 'FAIL':
                 for step in (self.active_test.setUpResults + self.active_test.stepResults +
                              self.active_test.tearDownResults):
                     if step.outcome == 'Failed':

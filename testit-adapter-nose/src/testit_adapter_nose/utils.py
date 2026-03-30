@@ -12,11 +12,16 @@ import inspect
 
 from testit_python_commons.models.link import Link
 from testit_python_commons.models.test_result import TestResult
-from testit_python_commons.models.outcome_type import OutcomeType
+from testit_python_commons.models.status_type import StatusType
 
 
 __ARRAY_TYPES = (frozenset, list, set, tuple,)
-
+STATUS_TYPE = {
+    result.PASS: StatusType.SUCCEEDED,
+    result.FAIL: StatusType.FAILED,
+    result.ERROR: StatusType.FAILED,
+    result.SKIP: StatusType.INCOMPLETE,
+}
 
 def status_details(event):
     message, trace = None, None
@@ -31,23 +36,17 @@ def status_details(event):
 
 
 def get_outcome(event):
-    outcome = None
+    outcome = event.outcome
     message = None
     trace = None
 
-    if event.outcome == result.PASS and event.expected:
-        outcome = OutcomeType.PASSED
-    elif event.outcome == result.PASS and not event.expected:
-        outcome = OutcomeType.PASSED
+    if outcome == result.PASS and not event.expected:
         message = "test passes unexpectedly"
-    elif event.outcome == result.FAIL and not event.expected:
-        outcome = OutcomeType.FAILED
+    elif outcome == result.FAIL and not event.expected:
         message, trace = status_details(event)
-    elif event.outcome == result.ERROR:
-        outcome = OutcomeType.BLOCKED
+    elif outcome == result.ERROR:
         message, trace = status_details(event)
-    elif event.outcome == result.SKIP:
-        outcome = OutcomeType.SKIPPED
+    elif outcome == result.SKIP:
         message, trace = status_details(event)
 
     return outcome, message, trace
@@ -73,6 +72,7 @@ def form_test(item, top_level_directory):
         'resultLinks': [],
         'duration': 0,
         'outcome': None,
+        'status_type': None,
         'failureReasonName': None,
         'traces': None,
         'attachments': [],
@@ -387,6 +387,7 @@ def convert_executable_test_to_test_result_model(executable_test: dict) -> TestR
         .set_teardown_results(executable_test['tearDownResults'])\
         .set_duration(executable_test['duration'])\
         .set_outcome(executable_test['outcome'])\
+        .set_status_type(executable_test['status_type'])\
         .set_traces(executable_test['traces'])\
         .set_attachments(executable_test['attachments'])\
         .set_parameters(executable_test['parameters'])\
@@ -396,8 +397,8 @@ def convert_executable_test_to_test_result_model(executable_test: dict) -> TestR
         .set_title(executable_test['title'])\
         .set_description(executable_test['description'])\
         .set_links(executable_test['links'])\
-        .set_result_links(executable_test['resultLinks']) \
-        .set_labels(executable_test['labels']) \
+        .set_result_links(executable_test['resultLinks'])\
+        .set_labels(executable_test['labels'])\
         .set_tags(executable_test['tags'])\
         .set_work_item_ids(executable_test['workItemsID'])\
         .set_message(executable_test['message'])\

@@ -39,13 +39,13 @@ class SyncStorageRunner:
     across multiple workers.
     """
 
-    SYNC_STORAGE_VERSION = "v0.1.18"
+    SYNC_STORAGE_VERSION = "v0.1.27"
     SYNC_STORAGE_REPO_URL = (
         "https://github.com/testit-tms/sync-storage-public/releases/download/"
     )
     AMD64 = "amd64"
     ARM64 = "arm64"
-    SYNC_STORAGE_STARTUP_TIMEOUT = 30  # seconds
+    SYNC_STORAGE_STARTUP_TIMEOUT = 5  # seconds
 
     def __init__(
         self,
@@ -528,9 +528,11 @@ class SyncStorageRunner:
     @classmethod
     def test_result_to_test_result_cut_api_model(
             cls,
-            test_result: TestResult) -> TestResultCutApiModel:
+            test_result: TestResult, project_id: str) -> TestResultCutApiModel:
         return TestResultCutApiModel(
+            project_id=project_id,
             auto_test_external_id=test_result.get_external_id(),
+            status_type=test_result.get_status_type(),
             status_code=test_result.get_outcome(),
             started_on=test_result.get_started_on(),
         )

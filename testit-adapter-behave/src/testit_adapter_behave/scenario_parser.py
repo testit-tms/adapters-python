@@ -2,11 +2,20 @@ import traceback
 from enum import Enum
 
 from testit_python_commons.models.outcome_type import OutcomeType
+from testit_python_commons.models.status_type import StatusType
 
 from .models.tags import TagType
 from .tags_parser import parse_test_tags
 
-STATUS = {
+STATUS_TYPE = {
+    'passed': StatusType.SUCCEEDED,
+    'failed': StatusType.FAILED,
+    'error': StatusType.FAILED,
+    'skipped': StatusType.INCOMPLETE,
+    'untested': StatusType.INCOMPLETE,
+    'undefined': StatusType.INCOMPLETE
+}
+STEP_STATUS = {
     'passed': OutcomeType.PASSED,
     'failed': OutcomeType.FAILED,
     'error': OutcomeType.FAILED,
@@ -26,6 +35,7 @@ def parse_scenario(scenario):
         'autoTestName': tags[TagType.DISPLAY_NAME] if
         TagType.DISPLAY_NAME in tags and tags[TagType.DISPLAY_NAME] else get_scenario_name(scenario),
         'outcome': None,
+        'status_type': None,
         'steps': [],
         'stepResults': [],
         'setUp': [],
@@ -82,8 +92,12 @@ def parse_scenario(scenario):
     return executable_test
 
 
-def parse_status(status):
-    return STATUS[status.name]
+def parse_step_status(status):
+    return STEP_STATUS[status.name]
+
+
+def parse_status_type(status):
+    return STATUS_TYPE[status.name]
 
 
 def get_scenario_name(scenario):
@@ -124,9 +138,9 @@ def get_step_status(result):
         return get_status(result.exception)
     else:
         if isinstance(result.status, Enum):
-            return STATUS.get(result.status.name, None)
+            return STEP_STATUS.get(result.status.name, None)
         else:
-            return STATUS.get(result.status, None)
+            return STEP_STATUS.get(result.status, None)
 
 
 def get_status(exception):

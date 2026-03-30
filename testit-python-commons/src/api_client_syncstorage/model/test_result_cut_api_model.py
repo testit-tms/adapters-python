@@ -81,8 +81,10 @@ class TestResultCutApiModel(ModelNormal):
                 and the value is attribute type.
         """
         return {
+            'project_id': (str,),  # noqa: E501
             'auto_test_external_id': (str,),  # noqa: E501
             'status_code': (str,),  # noqa: E501
+            'status_type': (str,),  # noqa: E501
             'started_on': (datetime, none_type,),  # noqa: E501
         }
 
@@ -92,8 +94,10 @@ class TestResultCutApiModel(ModelNormal):
 
 
     attribute_map = {
+        'project_id': 'projectId',  # noqa: E501
         'auto_test_external_id': 'autoTestExternalId',  # noqa: E501
         'status_code': 'statusCode',  # noqa: E501
+        'status_type': 'statusType',  # noqa: E501
         'started_on': 'startedOn',  # noqa: E501
     }
 
@@ -138,8 +142,10 @@ class TestResultCutApiModel(ModelNormal):
                                 Animal class but this time we won't travel
                                 through its discriminator because we passed in
                                 _visited_composed_classes = (Animal,)
+            project_id (str): [optional]  # noqa: E501
             auto_test_external_id (str): [optional]  # noqa: E501
             status_code (str): [optional]  # noqa: E501
+            status_type (str): [optional]  # noqa: E501
             started_on (datetime, none_type): [optional]  # noqa: E501
         """
 
@@ -226,8 +232,10 @@ class TestResultCutApiModel(ModelNormal):
                                 Animal class but this time we won't travel
                                 through its discriminator because we passed in
                                 _visited_composed_classes = (Animal,)
+            project_id (str): [optional]  # noqa: E501
             auto_test_external_id (str): [optional]  # noqa: E501
             status_code (str): [optional]  # noqa: E501
+            status_type (str): [optional]  # noqa: E501
             started_on (datetime, none_type): [optional]  # noqa: E501
         """
 

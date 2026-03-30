@@ -8,6 +8,7 @@ import pytest
 
 import testit_python_commons.services as adapter
 from testit_python_commons.models.outcome_type import OutcomeType
+from testit_python_commons.models.status_type import StatusType
 from testit_python_commons.models.fixture import FixtureResult, FixturesContainer
 from testit_python_commons.services import AdapterManager, StepManager, FixtureManager
 from testit_python_commons.services.logger import adapter_logger
@@ -15,10 +16,17 @@ from testit_python_commons.services.logger import adapter_logger
 import testit_adapter_pytest.utils as utils
 from testit_adapter_pytest.fixture_context import FixtureContext
 
-STATUS = {
+
+STATUS_TYPE = {
+    'passed': StatusType.SUCCEEDED,
+    'failed': StatusType.FAILED,
+    'xfailed': StatusType.FAILED,
+    'skipped': StatusType.INCOMPLETE,
+}
+STEP_STATUS = {
     'passed': OutcomeType.PASSED,
     'failed': OutcomeType.FAILED,
-    'skipped': OutcomeType.SKIPPED
+    'skipped': OutcomeType.SKIPPED,
 }
 
 
@@ -233,16 +241,25 @@ class TmsListener(object):
     def pytest_runtest_logreport(self, report):
         if self.__executable_test:
             if report.when == 'setup':
-                self.__executable_test.outcome = STATUS.get(report.outcome, None)
+                self.__executable_test.outcome = report.outcome
+                self.__executable_test.status_type = STATUS_TYPE.get(report.outcome, None)
                 if report.longreprtext:
                     self.__executable_test.message = report.longreprtext
 
             if report.when == 'call':
-                self.__executable_test.outcome = STATUS.get(report.outcome, None)
+                self.__executable_test.outcome = report.outcome
+                self.__executable_test.status_type = STATUS_TYPE.get(report.outcome, None)
 
-            if report.failed or hasattr(report, 'wasxfail') \
-                    and not report.passed or report.outcome == 'rerun':
-                self.__executable_test.outcome = STATUS.get('failed', None)
+            if report.failed or report.outcome == 'rerun':
+                self.__executable_test.outcome = 'failed'
+                self.__executable_test.status_type = STATUS_TYPE.get('failed', None)
+
+                if report.longreprtext:
+                    self.__executable_test.traces = report.longreprtext
+
+            if hasattr(report, 'wasxfail') and not report.passed:
+                self.__executable_test.outcome = 'xfailed'
+                self.__executable_test.status_type = STATUS_TYPE.get('xfailed', None)
 
                 if report.longreprtext:
                     self.__executable_test.traces = report.longreprtext

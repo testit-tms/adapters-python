@@ -10,6 +10,7 @@ class TestResult:
     __external_id: str = None
     __autotest_name: str = None
     __outcome: str = None
+    __status_type: str = None
     __title: str = None
     __description: str = None
     __duration: int = None
@@ -64,6 +65,16 @@ class TestResult:
     @adapter_logger
     def get_outcome(self) -> str:
         return self.__outcome
+
+    @adapter_logger
+    def set_status_type(self, status_type: str):
+        self.__status_type = HtmlEscapeUtils.escape_html_tags(status_type)
+
+        return self
+
+    @adapter_logger
+    def get_status_type(self) -> str:
+        return self.__status_type
 
     @adapter_logger
     def set_title(self, title: str):

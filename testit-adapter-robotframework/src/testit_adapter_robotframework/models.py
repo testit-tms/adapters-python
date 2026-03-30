@@ -74,6 +74,7 @@ class Autotest(Default):
     failureReasonNames = attrib(default=Factory(list))  # noqa: N815
     traces = attrib(default=None)
     outcome = attrib(default=None)
+    status_type = attrib(default=None)
     namespace = attrib(default=None)
     attachments = attrib(default=Factory(list))
     parameters = attrib(default=Factory(dict))
