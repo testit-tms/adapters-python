@@ -83,6 +83,7 @@ class TestResultCutApiModel(ModelNormal):
         return {
             'auto_test_external_id': (str,),  # noqa: E501
             'status_code': (str,),  # noqa: E501
+            'status_type': (str,),  # noqa: E501
             'started_on': (datetime, none_type,),  # noqa: E501
         }
 
@@ -94,6 +95,7 @@ class TestResultCutApiModel(ModelNormal):
     attribute_map = {
         'auto_test_external_id': 'autoTestExternalId',  # noqa: E501
         'status_code': 'statusCode',  # noqa: E501
+        'status_type': 'statusType',  # noqa: E501
         'started_on': 'startedOn',  # noqa: E501
     }
 
@@ -140,6 +142,7 @@ class TestResultCutApiModel(ModelNormal):
                                 _visited_composed_classes = (Animal,)
             auto_test_external_id (str): [optional]  # noqa: E501
             status_code (str): [optional]  # noqa: E501
+            status_type (str): [optional]  # noqa: E501
             started_on (datetime, none_type): [optional]  # noqa: E501
         """
 
@@ -228,6 +231,7 @@ class TestResultCutApiModel(ModelNormal):
                                 _visited_composed_classes = (Animal,)
             auto_test_external_id (str): [optional]  # noqa: E501
             status_code (str): [optional]  # noqa: E501
+            status_type (str): [optional]  # noqa: E501
             started_on (datetime, none_type): [optional]  # noqa: E501
         """
 
