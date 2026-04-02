@@ -10,6 +10,15 @@ class SampleData:
         self.tags = ["<tag>", "normal_tag"]
 
 
+class SampleExternalIdsData:
+    def __init__(self):
+        self.external_id = "<test>"
+        self.externalId = "<test-camel>"
+        self.auto_test_external_id = "<auto-test>"
+        self.autoTestExternalId = "<auto-test-camel>"
+        self.description = "<script>alert('xss')</script>"
+
+
 class TestHtmlEscapeUtils(unittest.TestCase):
 
     def test_escape_html_tags_basic(self):
@@ -69,6 +78,17 @@ class TestHtmlEscapeUtils(unittest.TestCase):
         self.assertEqual(result.description, "&lt;script&gt;alert('xss')&lt;/script&gt;")  # Escaped
         self.assertEqual(result.tags[0], "&lt;tag&gt;")  # Escaped
         self.assertEqual(result.tags[1], "normal_tag")  # No escaping needed
+
+    def test_escape_html_in_object_skips_external_id_fields(self):
+        """Test that externalId fields are not escaped"""
+        test_obj = SampleExternalIdsData()
+        result = HtmlEscapeUtils.escape_html_in_object(test_obj)
+
+        self.assertEqual(result.external_id, "<test>")
+        self.assertEqual(result.externalId, "<test-camel>")
+        self.assertEqual(result.auto_test_external_id, "<auto-test>")
+        self.assertEqual(result.autoTestExternalId, "<auto-test-camel>")
+        self.assertEqual(result.description, "&lt;script&gt;alert('xss')&lt;/script&gt;")
 
     def test_escape_html_in_object_list(self):
         """Test HTML escaping in list of objects"""
