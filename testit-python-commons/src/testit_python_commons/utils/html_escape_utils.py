@@ -123,7 +123,12 @@ class HtmlEscapeUtils:
                 # Skip private/protected attributes and methods
                 if attr_name.startswith('_') or callable(getattr(obj, attr_name, None)):
                     continue
-                if attr_name.startswith("external_id") or attr_name.startswith("externalId"):
+                if (
+                    attr_name.startswith("external_id")
+                    or attr_name.startswith("externalId")
+                    or attr_name.startswith("auto_test_external_id")
+                    or attr_name.startswith("autoTestExternalId")
+                ):
                     continue
                     
                 try:
