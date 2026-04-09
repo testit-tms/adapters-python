@@ -39,7 +39,7 @@ class SyncStorageRunner:
     across multiple workers.
     """
 
-    SYNC_STORAGE_VERSION = "v0.2.0-tms-5.7"
+    SYNC_STORAGE_VERSION = "v0.2.3-tms-5.7"
     SYNC_STORAGE_REPO_URL = (
         "https://github.com/testit-tms/sync-storage-public/releases/download/"
     )
@@ -490,7 +490,7 @@ class SyncStorageRunner:
             # Create registration request
 
             register_request = RegisterRequest(
-                pid=self.worker_pid, test_run_id=self.test_run_id
+                pid=self.worker_pid, test_run_id=self.test_run_id, base_url=self.base_url, private_token=self.private_token
             )
 
             # Send registration request

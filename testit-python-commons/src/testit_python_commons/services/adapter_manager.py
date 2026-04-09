@@ -247,6 +247,11 @@ class AdapterManager:
 
         fixtures = self.__fixture_manager.get_all_items()
 
+        # Ensure this option is propagated for each buffered test result in bulk mode.
+        should_create_work_item = self.__config.should_automatic_creation_test_cases()
+        for test_result in self.__test_results:
+            test_result.set_automatic_creation_test_cases(should_create_work_item)
+
         self.__api_client.write_tests(self.__test_results, fixtures)
 
     @adapter_logger

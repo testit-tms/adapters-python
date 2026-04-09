@@ -170,14 +170,29 @@ class ApiClientWorker:
             test_result.get_external_id())
 
         autotests = self.__autotest_api.api_v2_auto_tests_search_post(api_v2_auto_tests_search_post_request=model)
+        should_create_work_item = test_result.get_automatic_creation_test_cases()
 
         if autotests:
+            logging.info(
+                'Autotest "%s" already exists (external_id="%s"), using update path. '
+                "automaticCreationTestCases=%s applies only on create path.",
+                test_result.get_autotest_name(),
+                test_result.get_external_id(),
+                should_create_work_item,
+            )
             self.__update_auto_test(test_result, autotests[0])
 
             autotest_id = autotests[0].id
 
             self.__update_autotest_link_from_work_items(autotest_id, test_result.get_work_item_ids())
         else:
+            logging.info(
+                'Autotest "%s" not found (external_id="%s"), using create path with '
+                "automaticCreationTestCases=%s.",
+                test_result.get_autotest_name(),
+                test_result.get_external_id(),
+                should_create_work_item,
+            )
             self.__create_auto_test(test_result)
 
         return self.__load_test_result(test_result)
@@ -186,9 +201,12 @@ class ApiClientWorker:
     def write_tests(self, test_results: List[TestResult], fixture_containers: dict) -> None:
         logging.debug("call __write_tests")
         bulk_autotest_helper = BulkAutotestHelper(self.__autotest_api, self.__test_run_api, self.__config)
+        create_count = 0
+        update_count = 0
 
         for test_result in test_results:
             test_result = self.__add_fixtures_to_test_result(test_result, fixture_containers)
+            should_create_work_item = test_result.get_automatic_creation_test_cases()
 
             test_result_model = Converter.test_result_to_testrun_result_post_model(
                 test_result,
@@ -201,6 +219,13 @@ class ApiClientWorker:
             autotests = self.__get_autotests_by_external_id(test_result.get_external_id())
 
             if autotests:
+                update_count += 1
+                logging.debug(
+                    'Bulk update path for external_id="%s", automaticCreationTestCases=%s '
+                    "(manual work item auto-creation is create-path behavior).",
+                    test_result.get_external_id(),
+                    should_create_work_item,
+                )
                 autotest_links_to_wi_for_update = {}
                 autotest_for_update = Converter.prepare_to_mass_update_autotest(
                     test_result,
@@ -215,6 +240,12 @@ class ApiClientWorker:
                     test_result_model,
                     autotest_links_to_wi_for_update)
             else:
+                create_count += 1
+                logging.debug(
+                    'Bulk create path for external_id="%s", automaticCreationTestCases=%s.',
+                    test_result.get_external_id(),
+                    should_create_work_item,
+                )
                 autotest_for_create = Converter.prepare_to_mass_create_autotest(
                     test_result,
                     self.__config.get_project_id(),
@@ -222,6 +253,12 @@ class ApiClientWorker:
 
                 bulk_autotest_helper.add_for_create(autotest_for_create, test_result_model)
 
+        logging.info(
+            "Bulk write summary: create=%d, update=%d, total=%d",
+            create_count,
+            update_count,
+            len(test_results),
+        )
         bulk_autotest_helper.teardown()
 
     @staticmethod
