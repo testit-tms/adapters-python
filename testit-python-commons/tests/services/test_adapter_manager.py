@@ -28,7 +28,12 @@ class TestAdapterManager:
         return mock.return_value
 
     @pytest.fixture
-    def adapter_manager(self, mock_adapter_config, mock_client_config, mock_fixture_manager, mock_api_client_worker):
+    def adapter_manager(self, mocker, mock_adapter_config, mock_client_config, mock_fixture_manager, mock_api_client_worker):
+        mocker.patch.object(
+            AdapterManager,
+            "_initialize_sync_storage",
+            return_value=None
+        )
         manager = AdapterManager(
             adapter_configuration=mock_adapter_config,
             client_configuration=mock_client_config,
@@ -46,6 +51,7 @@ class TestAdapterManager:
     def test_get_test_run_id_new_test_run_mode(self, adapter_manager, mock_adapter_config, mock_api_client_worker):
         test_run_id = str(uuid.uuid4())
         mock_adapter_config.get_mode.return_value = AdapterMode.NEW_TEST_RUN
+        mock_adapter_config.get_test_run_id.return_value = None
         mock_api_client_worker.create_test_run.return_value = test_run_id
 
         test_run_result_id = adapter_manager.get_test_run_id()
@@ -53,7 +59,7 @@ class TestAdapterManager:
         assert test_run_id == test_run_result_id
         mock_adapter_config.get_mode.assert_called_once()
         mock_api_client_worker.create_test_run.assert_called_once()
-        mock_adapter_config.get_test_run_id.assert_not_called()
+        mock_adapter_config.get_test_run_id.assert_called_once()
 
     def test_get_autotests_for_launch_use_filter_mode(self, adapter_manager, mock_adapter_config, mock_api_client_worker):
         mock_adapter_config.get_mode.return_value = AdapterMode.USE_FILTER
@@ -91,6 +97,59 @@ class TestAdapterManager:
 
         assert result == expected_result
         mock_api_client_worker.load_attachments.assert_called_once_with(attach_paths)
+
+    def test_write_tests_sets_automatic_creation_for_all_buffered_results(
+            self,
+            adapter_manager,
+            mock_adapter_config,
+            mock_api_client_worker,
+            mock_fixture_manager,
+            mocker):
+        mock_adapter_config.should_import_realtime.return_value = False
+        mock_adapter_config.should_automatic_creation_test_cases.return_value = True
+        fixtures = {"fixture": "value"}
+        mock_fixture_manager.get_all_items.return_value = fixtures
+
+        test_result_1 = mocker.Mock()
+        test_result_2 = mocker.Mock()
+        adapter_manager._AdapterManager__test_results = [test_result_1, test_result_2]
+
+        adapter_manager.write_tests()
+
+        test_result_1.set_automatic_creation_test_cases.assert_called_once_with(True)
+        test_result_2.set_automatic_creation_test_cases.assert_called_once_with(True)
+        mock_api_client_worker.write_tests.assert_called_once_with(
+            [test_result_1, test_result_2],
+            fixtures,
+        )
+
+    def test_write_test_realtime_sets_automatic_creation_for_each_test(
+            self,
+            adapter_manager,
+            mock_adapter_config,
+            mock_api_client_worker,
+            mocker):
+        mock_adapter_config.should_import_realtime.return_value = True
+        mock_adapter_config.should_automatic_creation_test_cases.return_value = True
+        mock_api_client_worker.write_test.side_effect = ["tr-1", "tr-2"]
+        adapter_manager._AdapterManager__sync_storage_runner = mocker.Mock(
+            is_already_in_progress_flag=mocker.Mock(return_value=False),
+            is_running_status=mocker.Mock(return_value=False),
+        )
+
+        test_result_1 = mocker.Mock()
+        test_result_1.get_external_id.return_value = "ext-1"
+        test_result_2 = mocker.Mock()
+        test_result_2.get_external_id.return_value = "ext-2"
+
+        adapter_manager.write_test(test_result_1)
+        adapter_manager.write_test(test_result_2)
+
+        test_result_1.set_automatic_creation_test_cases.assert_called_once_with(True)
+        test_result_2.set_automatic_creation_test_cases.assert_called_once_with(True)
+        assert mock_api_client_worker.write_test.call_count == 2
+        assert adapter_manager._AdapterManager__test_result_map["ext-1"] == "tr-1"
+        assert adapter_manager._AdapterManager__test_result_map["ext-2"] == "tr-2"
 
     def test_create_attachment_with_name(self, adapter_manager, mock_api_client_worker, mocker):
         mock_os_path_join = mocker.patch("os.path.join")
