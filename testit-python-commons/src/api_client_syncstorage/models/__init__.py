@@ -9,6 +9,7 @@
 # import sys
 # sys.setrecursionlimit(n)
 
+from api_client_syncstorage.model.completion_response import CompletionResponse
 from api_client_syncstorage.model.health_status_response import HealthStatusResponse
 from api_client_syncstorage.model.register_request import RegisterRequest
 from api_client_syncstorage.model.register_response import RegisterResponse

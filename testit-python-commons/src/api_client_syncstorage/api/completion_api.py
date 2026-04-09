@@ -21,6 +21,7 @@ from api_client_syncstorage.model_utils import (  # noqa: F401
     none_type,
     validate_and_convert_types
 )
+from api_client_syncstorage.model.completion_response import CompletionResponse
 
 
 class CompletionApi(object):
@@ -36,7 +37,7 @@ class CompletionApi(object):
         self.api_client = api_client
         self.force_completion_get_endpoint = _Endpoint(
             settings={
-                'response_type': (bool, date, datetime, dict, float, int, list, str, none_type,),
+                'response_type': (CompletionResponse,),
                 'auth': [],
                 'endpoint_path': '/force-completion',
                 'operation_id': 'force_completion_get',
@@ -85,7 +86,7 @@ class CompletionApi(object):
         )
         self.wait_completion_get_endpoint = _Endpoint(
             settings={
-                'response_type': (bool, date, datetime, dict, float, int, list, str, none_type,),
+                'response_type': (CompletionResponse,),
                 'auth': [],
                 'endpoint_path': '/wait-completion',
                 'operation_id': 'wait_completion_get',
@@ -183,7 +184,7 @@ class CompletionApi(object):
             async_req (bool): execute request asynchronously
 
         Returns:
-            bool, date, datetime, dict, float, int, list, str, none_type
+            CompletionResponse
                 If the method is called asynchronously, returns the request
                 thread.
         """
@@ -266,7 +267,7 @@ class CompletionApi(object):
             async_req (bool): execute request asynchronously
 
         Returns:
-            bool, date, datetime, dict, float, int, list, str, none_type
+            CompletionResponse
                 If the method is called asynchronously, returns the request
                 thread.
         """
