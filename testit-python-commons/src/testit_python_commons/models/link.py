@@ -31,6 +31,9 @@ class Link:
 
     @adapter_logger
     def set_link_type(self, link_type: LinkType):
+        if link_type is None:
+            link_type = LinkType.ISSUE
+
         self.__link_type = link_type
 
         return self

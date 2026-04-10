@@ -128,13 +128,13 @@ class Autotest(Default):
                             self.links.append(Link()\
                                 .set_url(value['url'])\
                                 .set_title(value.get('title', None))\
-                                .set_link_type(value.get('type', None))\
+                                .set_link_type(value.get('type', LinkType.ISSUE))\
                                 .set_description(value.get('description', None)))
                         elif isinstance(value, list):
                             self.links.extend([Link()\
                                 .set_url(link['url'])\
                                 .set_title(link.get('title', None))\
-                                .set_link_type(link.get('type', None))\
+                                .set_link_type(link.get('type', LinkType.ISSUE))\
                                 .set_description(link.get('description', None)) for link in value if isinstance(link, dict)])
                     except ValueError as e:
                         logger.error(f"[TestIt] Link Error: {e}")

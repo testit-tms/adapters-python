@@ -101,7 +101,7 @@ class Utils:
             link_model.set_title(link_dict['title'])
 
         if 'type' in link_dict:
-            link_model.set_link_type(link_dict['type'])
+            link_model.set_link_type(link_dict.get('type', LinkType.ISSUE))
 
         if 'description' in link_dict:
             link_model.set_description(link_dict['description'])

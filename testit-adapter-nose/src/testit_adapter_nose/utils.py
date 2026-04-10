@@ -184,7 +184,7 @@ def __set_parameters_to_links(links, all_parameters):
             .set_link_type(
                 collect_parameters_in_string_attribute(
                     link.get_link_type(),
-                    all_parameters) if link.get_link_type() else None)
+                    all_parameters) if link.get_link_type() else LinkType.ISSUE)
             .set_description(
                 collect_parameters_in_string_attribute(
                     link.get_description(),
