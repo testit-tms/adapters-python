@@ -151,6 +151,19 @@ class TestAdapterManager:
         assert adapter_manager._AdapterManager__test_result_map["ext-1"] == "tr-1"
         assert adapter_manager._AdapterManager__test_result_map["ext-2"] == "tr-2"
 
+    def test_write_test_without_sync_storage_runner_does_not_crash(
+            self,
+            adapter_manager,
+            mock_adapter_config,
+            mocker):
+        mock_adapter_config.should_import_realtime.return_value = False
+        adapter_manager._AdapterManager__sync_storage_runner = None
+        test_result = mocker.Mock()
+
+        adapter_manager.write_test(test_result)
+
+        assert adapter_manager._AdapterManager__test_results == [test_result]
+
     def test_create_attachment_with_name(self, adapter_manager, mock_api_client_worker, mocker):
         mock_os_path_join = mocker.patch("os.path.join")
         mock_os_path_abspath = mocker.patch("os.path.abspath", return_value="/abs/path")
