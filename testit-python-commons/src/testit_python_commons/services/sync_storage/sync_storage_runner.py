@@ -39,7 +39,7 @@ class SyncStorageRunner:
     across multiple workers.
     """
 
-    SYNC_STORAGE_VERSION = "v0.2.9"
+    SYNC_STORAGE_VERSION = "v0.2.11"
     SYNC_STORAGE_REPO_URL = (
         "https://github.com/testit-tms/sync-storage-public/releases/download/"
     )
@@ -394,11 +394,11 @@ class SyncStorageRunner:
         os_name = platform.system().lower()
         os_arch = platform.machine().lower()
 
-        # Determine OS part
-        if "win" in os_name:
-            os_part = "windows"
-        elif "mac" in os_name or "darwin" in os_name:
+        # Determine OS part. Check darwin first because "darwin" contains "win".
+        if "mac" in os_name or "darwin" in os_name:
             os_part = "darwin"
+        elif os_name.startswith("win"):
+            os_part = "windows"
         elif "linux" in os_name:
             os_part = "linux"
         else:

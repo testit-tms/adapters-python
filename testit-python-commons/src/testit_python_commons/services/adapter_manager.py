@@ -146,7 +146,7 @@ class AdapterManager:
 
         # for realtime false
         # if
-        logging.warning("Is already in progress: " + str(self.__sync_storage_runner.is_already_in_progress_flag()))
+        logging.warning("Is already in progress: " + str(self.__is_already_in_progress()))
         # Handle Sync Storage integration if available
         # Check if current worker is master and no test is in progress
         if self.__is_active_syncstorage_instance() and self.__is_master_and_no_in_progress():
@@ -199,7 +199,7 @@ class AdapterManager:
     @adapter_logger
     def __write_test_realtime(self, test_result: TestResult) -> None:
 
-        logging.warning("Is already in progress: " + str(self.__sync_storage_runner.is_already_in_progress_flag()))
+        logging.warning("Is already in progress: " + str(self.__is_already_in_progress()))
 
         # Handle Sync Storage integration if available
         if self.__is_active_syncstorage_instance() and self.__is_master_and_no_in_progress():
@@ -299,5 +299,14 @@ class AdapterManager:
                 )
 
     def __is_master_and_no_in_progress(self) -> bool:
-        return (self.__sync_storage_runner.is_master_worker() and
-                not self.__sync_storage_runner.is_already_in_progress_flag())
+        return (
+            self.__sync_storage_runner is not None
+            and self.__sync_storage_runner.is_master_worker()
+            and not self.__sync_storage_runner.is_already_in_progress_flag()
+        )
+
+    def __is_already_in_progress(self) -> bool:
+        return (
+            self.__sync_storage_runner is not None
+            and self.__sync_storage_runner.is_already_in_progress_flag()
+        )
