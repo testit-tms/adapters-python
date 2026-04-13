@@ -61,24 +61,24 @@ jobs:
      TMS_TEST_RUN_NAME: ${{ matrix.project_name }} TestRun
    steps:
      - name: Checkout adapters-python
-       uses: actions/checkout@v4
+       uses: actions/checkout@v6
      - name: Checkout api-validator-dotnet
-       uses: actions/checkout@v4
+       uses: actions/checkout@v6
        with:
          repository: testit-tms/api-validator-dotnet
          token: ${{ env.GITHUB_PAT }}
          path: api-validator-dotnet
      - name: Checkout python-examples
-       uses: actions/checkout@v4
+       uses: actions/checkout@v6
        with:
          repository: testit-tms/python-examples
          path: python-examples
      - name: Setup dotnet
-       uses: actions/setup-dotnet@v4
+       uses: actions/setup-dotnet@v5
        with:
          dotnet-version: ${{ env.DOTNET_VERSION }}
      - name: Setup python
-       uses: actions/setup-python@v5
+       uses: actions/setup-python@v6
        with:
          python-version: ${{ env.PYTHON_VERSION }}
      - name: Create TestRun
