@@ -62,13 +62,41 @@ You can change nothing, it's full compatible with previous versions of adapters 
 
 For CI/CD pipelines, we recommend starting the sync-storage instance before the adapter and waiting for its completion within the same job.
 
+It can be OK for `adapterMode=2` and automatic creation of new test-run + call for `curl -v http://127.0.0.1:49152/wait-completion || true` in the end.  
+
+There is a guide how to do everything with `adapterMode` `1` or `0`:
+
 You can see how we implement this [here.](https://github.com/testit-tms/adapters-python/tree/main/.github/workflows/test.yml#106) 
 
 - to get the latest version of sync-storage, please use our [script](https://github.com/testit-tms/adapters-python/tree/main/scripts/curl_last_version.sh)
 
 - To download a specific version of sync-storage, use our [script](https://github.com/testit-tms/adapters-python/tree/main/scripts/get_sync_storage.sh) and pass the desired version number as the first parameter. Sync-storage will be downloaded as `.caches/syncstorage-linux-amd64`
 
+
 1. Create an empty test run using `testit-cli` or use an existing one, and save the `testRunId`.
+1.1 (alternative) You can use `curl + jq` to create empty test run, there is an example for github actions:
+
+```bash
+mkdir -p "$(dirname "${{ env.TEMP_FILE }}")"
+BASE_URL="${{ env.TMS_URL }}"
+BASE_URL="${BASE_URL%/}"
+BODY=$(jq -nc \
+    --arg projectId "${{ env.TMS_PROJECT_ID }}" \
+    --arg name "${{ env.TMS_TEST_RUN_NAME }}" \
+    '{projectId: $projectId, name: $name}')
+
+curl -sS -f -X POST "${BASE_URL}/api/v2/testRuns" \
+    -H "accept: application/json" \
+    -H "Content-Type: application/json" \
+    -H "Authorization: PrivateToken ${{ env.TMS_PRIVATE_TOKEN }}" \
+    -d "$BODY" \
+    | jq -er '.id' > "${{ env.TEMP_FILE }}"
+
+echo "TMS_TEST_RUN_ID=$(<${{ env.TEMP_FILE }})" >> $GITHUB_ENV
+echo "TMS_TEST_RUN_ID=$(<${{ env.TEMP_FILE }})" >> .env
+export TMS_TEST_RUN_ID=$(<${{ env.TEMP_FILE }})
+```
+
 2. Start **sync-storage** with the correct parameters as a background process (alternatives to nohup can be used). Stream the log output to the `service.log` file:
 ```bash
 nohup .caches/syncstorage-linux-amd64 --testRunId ${{ env.TMS_TEST_RUN_ID }} --port 49152 \
