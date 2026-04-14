@@ -38,8 +38,9 @@ class AdapterManager:
 
         # Sync Storage integration
         self.__sync_storage_runner = None
+        legacy_workflow_enabled = client_configuration.is_legacy_workflow() is True
         # Initialize Sync Storage if available and enabled
-        if SYNC_STORAGE_AVAILABLE:
+        if SYNC_STORAGE_AVAILABLE and not legacy_workflow_enabled:
             self.__sync_storage_runner = self._initialize_sync_storage(
                 client_configuration
             )
@@ -146,11 +147,11 @@ class AdapterManager:
 
         # for realtime false
         # if
-        logging.warning("Is already in progress: " + str(self.__is_already_in_progress()))
+        logging.debug("Is already in progress: " + str(self.__is_already_in_progress()))
         # Handle Sync Storage integration if available
         # Check if current worker is master and no test is in progress
         if self.__is_active_syncstorage_instance() and self.__is_master_and_no_in_progress():
-            logging.warning(f"Outcome: {test_result.get_outcome()}")
+            logging.debug(f"Outcome: {test_result.get_outcome()}")
             is_ok = self.on_master_no_already_in_progress(test_result)
             if is_ok:
                 return
@@ -167,9 +168,9 @@ class AdapterManager:
         tr_cut_api_model = SyncStorageRunner.test_result_to_test_result_cut_api_model(
             test_result, project_id
         )
-        logging.warning("Set as in progress status_code, auto_test_external_id: "
+        logging.debug("Set as in progress status_code, auto_test_external_id: "
                         + tr_cut_api_model.status_code + " " + tr_cut_api_model.auto_test_external_id)
-        logging.warning("Started_on: " + str(test_result.get_started_on()))
+        logging.debug("Started_on: " + str(test_result.get_started_on()))
 
         # Send test result to Sync Storage
         success = self.__sync_storage_runner.send_in_progress_test_result(
@@ -184,7 +185,7 @@ class AdapterManager:
 
         try:
             # Write test result normally (mark as IN PROGRESS in Test IT)
-            logging.warning("Write internally, change status to in progress")
+            logging.debug("Write internally, change status to in progress")
             test_result.set_outcome(IN_PROGRESS_LITERAL)
             self._write_test_realtime_internal(test_result)
             return True
@@ -199,7 +200,7 @@ class AdapterManager:
     @adapter_logger
     def __write_test_realtime(self, test_result: TestResult) -> None:
 
-        logging.warning("Is already in progress: " + str(self.__is_already_in_progress()))
+        logging.debug("Is already in progress: " + str(self.__is_already_in_progress()))
 
         # Handle Sync Storage integration if available
         if self.__is_active_syncstorage_instance() and self.__is_master_and_no_in_progress():
@@ -284,7 +285,7 @@ class AdapterManager:
 
     @adapter_logger
     def set_worker_status(self, status: str):
-        logging.info(f"Set worker_status to {status}")
+        logging.debug(f"Set worker_status to {status}")
         if not self.__is_active_syncstorage_instance():
             return
 

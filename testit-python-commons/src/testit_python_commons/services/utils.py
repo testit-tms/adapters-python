@@ -2,10 +2,17 @@ import inspect
 import logging
 import re
 import warnings
+from typing import TYPE_CHECKING
 
+<<<<<<< feat/small-fixes
+=======
 from testit_python_commons.models.link import Link
 from testit_python_commons.models.link_type import LinkType
+>>>>>>> main
 from testit_python_commons.services.logger import adapter_logger
+
+if TYPE_CHECKING:
+    from testit_python_commons.models.link import Link
 
 
 class Utils:
@@ -94,7 +101,9 @@ class Utils:
 
     @staticmethod
     @adapter_logger
-    def convert_link_dict_to_link_model(link_dict: dict) -> Link:
+    def convert_link_dict_to_link_model(link_dict: dict) -> "Link":
+        from testit_python_commons.models.link import Link
+
         link_model = Link()
         link_model.set_url(link_dict['url'])
 

@@ -36,6 +36,25 @@ class Default:
         return asdict(self)
 
 
+def _clean_value(value):
+    return str(value).replace("'", "").replace('"', '')
+
+
+def _parse_testit_tag(tag):
+    tag = str(tag).strip()
+    if not tag.lower().startswith('testit.'):
+        return None, None
+
+    body = tag.split('.', 1)[-1]
+    separator = ':' if ':' in body else ('=' if '=' in body else None)
+    if not separator:
+        logger.error(f"[TestIt] Wrong tag format: {tag}")
+        return None, None
+
+    attr, value = body.split(separator, 1)
+    return attr.strip().lower(), value.strip()
+
+
 @s
 class StepResult(Default):
     title = attrib(default='')
@@ -104,17 +123,16 @@ class Autotest(Default):
         self.template = attrs['template']
         self.classname = attrs['longname'].split('.')[-2]
         for tag in attrs['tags']:
-            if tag.lower().startswith('testit.'):
-                attr = re.findall(r'(?<=\.).*?(?=:)', tag)[0].strip().lower()
-                value = tag.split(':', 1)[-1].strip()
+            attr, value = _parse_testit_tag(tag)
+            if attr:
                 if attr == 'externalid':
-                    self.externalID = str(value).replace("'", "").replace('"', '')
+                    self.externalID = _clean_value(value)
                 elif attr == 'displayname':
-                    self.autoTestName = str(value).replace("'", "").replace('"', '')
+                    self.autoTestName = _clean_value(value)
                 elif attr == 'title':
-                    self.title = str(value).replace("'", "").replace('"', '')
+                    self.title = _clean_value(value)
                 elif attr == 'description':
-                    self.description = str(value).replace("'", "").replace('"', '')
+                    self.description = _clean_value(value)
                 elif attr == 'workitemsid' or attr == 'workitemsids':
                     value = ast.literal_eval(value)
                     if isinstance(value, (str, int)):
@@ -153,9 +171,9 @@ class Autotest(Default):
                     elif isinstance(value, list):
                         self.tags.extend([str(item) for item in value if isinstance(item, (str, int))])
                 elif attr == 'namespace':
-                    self.namespace = str(value).replace("'", "").replace('"', '')
+                    self.namespace = _clean_value(value)
                 elif attr == 'classname':
-                    self.classname = str(value).replace("'", "").replace('"', '')
+                    self.classname = _clean_value(value)
                 else:
                     logger.error(f"[TestIt] Unknown attribute: {attr}")
         if not self.externalID:

@@ -191,3 +191,28 @@ class TestAdapterManager:
         mock_api_client_worker.load_attachments.assert_called_once_with((expected_file_path,))
         mock_os_remove.assert_called_once_with(expected_file_path)
         assert attachment_id == expected_attachment_id
+
+    def test_init_does_not_start_sync_storage_in_legacy_workflow(
+            self,
+            mocker,
+            mock_adapter_config,
+            mock_client_config,
+            mock_fixture_manager):
+        mocker.patch(
+            'testit_python_commons.services.adapter_manager.ApiClientWorker',
+            autospec=True,
+        )
+        mock_client_config.is_legacy_workflow.return_value = True
+        init_sync_storage = mocker.patch.object(
+            AdapterManager,
+            "_initialize_sync_storage",
+            return_value=None,
+        )
+
+        AdapterManager(
+            adapter_configuration=mock_adapter_config,
+            client_configuration=mock_client_config,
+            fixture_manager=mock_fixture_manager,
+        )
+
+        init_sync_storage.assert_not_called()
