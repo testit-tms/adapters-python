@@ -14,7 +14,7 @@ class TestDynamicMethods:
         return Utils.convert_link_dict_to_link_model({
             "url": "https://www.example.com",
             "title": ''.join(random.choices(string.ascii_letters + string.digits, k=10)),
-            "type": LinkType.ISSUE,
+            "type": LinkType.RELATED,
             "description": ''.join(random.choices(string.ascii_letters + string.digits, k=10))
         })
 

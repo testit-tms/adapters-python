@@ -230,7 +230,7 @@ def test_1(name, tags, url, link_type, link_title, link_desc):
         {'url': 'https://dumps.example.com/module/some_module_dump', 'type': testit.LinkType.BLOCKED_BY,
          'title': 'component_dump.dmp', 'description': 'Description'},
         {'url': 'https://dumps.example.com/module/some_module_dump', 'type': testit.LinkType.DEFECT},
-        {'url': 'https://dumps.example.com/module/some_module_dump', 'type': testit.LinkType.ISSUE,
+        {'url': 'https://dumps.example.com/module/some_module_dump', 'type': testit.LinkType.RELATED,
          'title': 'component_dump.dmp'},
         {'url': 'https://dumps.example.com/module/some_module_dump', 'type': testit.LinkType.REQUIREMENT,
          'title': 'component_dump.dmp', 'description': 'Description'},
