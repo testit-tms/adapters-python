@@ -161,7 +161,6 @@ class AppProperties:
             # import realtime false by default
             properties[PropertiesNames.IMPORT_REALTIME] = 'false'
 
-        print(f'sync storage value {properties.get(PropertiesNames.SYNC_STORAGE_PORT)}')
         if not cls.__check_property_value(properties.get(PropertiesNames.SYNC_STORAGE_PORT)):
             # import realtime false by default
             properties[PropertiesNames.SYNC_STORAGE_PORT] = '49152'

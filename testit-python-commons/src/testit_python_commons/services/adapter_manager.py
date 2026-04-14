@@ -63,7 +63,7 @@ class AdapterManager:
             url = client_configuration.get_url()
             private_token = client_configuration.get_private_token()
             port = client_configuration.get_sync_storage_port()
-            print(f'sync storage port: {url} {private_token} {port}')
+            print(f'sync storage port: {port}')
 
             # Create and start Sync Storage runner
             if SYNC_STORAGE_AVAILABLE:
