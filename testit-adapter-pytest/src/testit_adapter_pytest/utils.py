@@ -10,6 +10,7 @@ from traceback import format_exception_only
 
 from _pytest.mark import Mark
 from testit_python_commons.models.link import Link
+from testit_python_commons.models.link_type import LinkType
 from testit_python_commons.models.test_result import TestResult
 from testit_python_commons.models.test_result_with_all_fixture_step_results_model import TestResultWithAllFixtureStepResults
 from testit_python_commons.models.outcome_type import OutcomeType
@@ -168,7 +169,7 @@ def __set_parameters_to_links(links, all_parameters):
             .set_link_type(
                 collect_parameters_in_string_attribute(
                     link.get_link_type(),
-                    all_parameters) if link.get_link_type() else None)
+                    all_parameters) if link.get_link_type() else LinkType.RELATED)
             .set_description(
                 collect_parameters_in_string_attribute(
                     link.get_description(),
