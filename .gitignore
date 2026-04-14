@@ -59,3 +59,4 @@ pip-wheel-metadata/
 pytestdebug.log
 
 .vs/
+*-examples/
