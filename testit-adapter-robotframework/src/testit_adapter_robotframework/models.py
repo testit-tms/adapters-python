@@ -120,7 +120,6 @@ class Autotest(Default):
         self.description = attrs['doc']
         self.template = attrs['template']
         self.classname = attrs['longname'].split('.')[-2]
-        has_explicit_title = False
         for tag in attrs['tags']:
             attr, value = _parse_testit_tag(tag)
             if attr:
@@ -129,7 +128,6 @@ class Autotest(Default):
                 elif attr == 'displayname':
                     self.autoTestName = _clean_value(value)
                 elif attr == 'title':
-                    has_explicit_title = True
                     self.title = _clean_value(value)
                 elif attr == 'description':
                     self.description = _clean_value(value)
@@ -176,8 +174,6 @@ class Autotest(Default):
                     self.classname = _clean_value(value)
                 else:
                     logger.error(f"[TestIt] Unknown attribute: {attr}")
-        if not has_explicit_title:
-            self.title = self.autoTestName
         if not self.externalID:
             self.externalID = get_hash(attrs['longname'])
 

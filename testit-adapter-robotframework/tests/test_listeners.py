@@ -70,12 +70,12 @@ class TestAutotestTagParsing:
             "tags": tags,
         }
 
-    def test_title_falls_back_to_display_name_when_title_absent(self):
+    def test_display_name_does_not_override_title_when_title_absent(self):
         autotest = Autotest(autoTestName="Initial")
         autotest.add_attributes(self._build_attrs(["testit.displayName:DisplayName"]))
 
         assert autotest.autoTestName == "DisplayName"
-        assert autotest.title == "DisplayName"
+        assert autotest.title == "HeaderName"
 
     def test_title_has_priority_over_display_name(self):
         autotest = Autotest(autoTestName="Initial")
