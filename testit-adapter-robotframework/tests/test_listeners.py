@@ -1,6 +1,18 @@
 import re
+import sys
+import types
 from pytest_mock import MockerFixture
 from unittest.mock import MagicMock
+
+if "robot.api" not in sys.modules:
+    robot_module = types.ModuleType("robot")
+    robot_api_module = types.ModuleType("robot.api")
+    robot_api_module.logger = MagicMock()
+    robot_module.api = robot_api_module
+    sys.modules["robot"] = robot_module
+    sys.modules["robot.api"] = robot_api_module
+
+from testit_adapter_robotframework.models import Autotest
 
 
 class TestAutotestAdapter:
@@ -45,3 +57,32 @@ class TestAutotestAdapter:
             mocker.call("${var3_with_long_value}")
         ]
         mock_builtin_instance.get_variable_value.assert_has_calls(expected_calls, any_order=True)
+
+
+class TestAutotestTagParsing:
+    @staticmethod
+    def _build_attrs(tags):
+        return {
+            "originalname": "HeaderName",
+            "doc": "Doc",
+            "template": None,
+            "longname": "Suite.HeaderName",
+            "tags": tags,
+        }
+
+    def test_title_falls_back_to_display_name_when_title_absent(self):
+        autotest = Autotest(autoTestName="Initial")
+        autotest.add_attributes(self._build_attrs(["testit.displayName:DisplayName"]))
+
+        assert autotest.autoTestName == "DisplayName"
+        assert autotest.title == "DisplayName"
+
+    def test_title_has_priority_over_display_name(self):
+        autotest = Autotest(autoTestName="Initial")
+        autotest.add_attributes(self._build_attrs([
+            "testit.displayName:DisplayName",
+            "testit.title:CardTitle",
+        ]))
+
+        assert autotest.autoTestName == "DisplayName"
+        assert autotest.title == "CardTitle"
