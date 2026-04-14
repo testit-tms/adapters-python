@@ -166,6 +166,9 @@ class AppProperties:
             # import realtime false by default
             properties[PropertiesNames.SYNC_STORAGE_PORT] = '49152'
 
+        if not cls.__check_property_value(properties.get(PropertiesNames.LEGACY_WORKFLOW)):
+            properties[PropertiesNames.LEGACY_WORKFLOW] = 'false'
+
     @classmethod
     def __load_file_properties_from_toml(cls) -> dict:
         properties = {}

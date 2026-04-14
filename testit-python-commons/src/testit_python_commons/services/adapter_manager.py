@@ -38,8 +38,9 @@ class AdapterManager:
 
         # Sync Storage integration
         self.__sync_storage_runner = None
+        legacy_workflow_enabled = client_configuration.is_legacy_workflow() is True
         # Initialize Sync Storage if available and enabled
-        if SYNC_STORAGE_AVAILABLE:
+        if SYNC_STORAGE_AVAILABLE and not legacy_workflow_enabled:
             self.__sync_storage_runner = self._initialize_sync_storage(
                 client_configuration
             )

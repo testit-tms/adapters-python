@@ -34,7 +34,8 @@ class TestAppProperties:
             'certvalidation': "false",
             'automaticcreationtestcases': "true",
             'automaticupdationlinkstotestcases': "true",
-            'importrealtime': "false"
+            'importrealtime': "false",
+            'legacyworkflow': "false",
         }
 
     def test_load_file_properties_ini_file(self, create_config_file, tmp_path, mocker):
@@ -81,6 +82,7 @@ class TestAppProperties:
             f"{self.__env_prefix}_AUTOMATIC_CREATION_TEST_CASES": properties["automaticcreationtestcases"],
             f"{self.__env_prefix}_AUTOMATIC_UPDATION_LINKS_TO_TEST_CASES": properties["automaticupdationlinkstotestcases"],
             f"{self.__env_prefix}_IMPORT_REALTIME": properties["importrealtime"],
+            f"{self.__env_prefix}_LEGACY_WORKFLOW": properties["legacyworkflow"],
         }
         mocker.patch.dict(os.environ, env_vars, clear=True)
 
@@ -100,6 +102,7 @@ class TestAppProperties:
         mock_options.set_automatic_creation_test_cases = properties["automaticcreationtestcases"]
         mock_options.set_automatic_updation_links_to_test_cases = properties["automaticupdationlinkstotestcases"]
         mock_options.set_import_realtime = properties["importrealtime"]
+        mock_options.set_legacy_workflow = properties["legacyworkflow"]
 
         assert AppProperties.load_cli_properties(mock_options) == properties
 

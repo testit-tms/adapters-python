@@ -22,6 +22,8 @@ class ClientConfiguration:
         self.__automatic_updation_links_to_test_cases = Utils.convert_value_str_to_bool(
             app_properties.get(PropertiesNames.AUTOMATIC_UPDATION_LINKS_TO_TEST_CASES).lower())
         self.__sync_storage_port = app_properties.get(PropertiesNames.SYNC_STORAGE_PORT)
+        self.__legacy_workflow = Utils.convert_value_str_to_bool(
+            app_properties.get(PropertiesNames.LEGACY_WORKFLOW).lower())
 
     @adapter_logger
     def get_url(self):
@@ -67,3 +69,6 @@ class ClientConfiguration:
 
     def get_sync_storage_port(self) -> str:
         return self.__sync_storage_port
+
+    def is_legacy_workflow(self) -> bool:
+        return self.__legacy_workflow

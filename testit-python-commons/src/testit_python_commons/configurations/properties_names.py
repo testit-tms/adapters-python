@@ -14,6 +14,7 @@ class PropertiesNames:
     AUTOMATIC_UPDATION_LINKS_TO_TEST_CASES = 'automaticupdationlinkstotestcases'
     IMPORT_REALTIME = 'importrealtime'
     SYNC_STORAGE_PORT = 'syncstorageport'
+    LEGACY_WORKFLOW = 'legacyworkflow'
 
 ENV_TO_PROPERTY = {
     'TMS_URL': PropertiesNames.URL,
@@ -29,6 +30,7 @@ ENV_TO_PROPERTY = {
     'TMS_AUTOMATIC_UPDATION_LINKS_TO_TEST_CASES': PropertiesNames.AUTOMATIC_UPDATION_LINKS_TO_TEST_CASES,
     'TMS_IMPORT_REALTIME': PropertiesNames.IMPORT_REALTIME,
     'TMS_SYNC_STORAGE_PORT': PropertiesNames.SYNC_STORAGE_PORT,
+    'TMS_LEGACY_WORKFLOW': PropertiesNames.LEGACY_WORKFLOW,
 }
 
 OPTION_TO_PROPERTY = {
@@ -45,4 +47,5 @@ OPTION_TO_PROPERTY = {
     'set_automatic_updation_links_to_test_cases': PropertiesNames.AUTOMATIC_UPDATION_LINKS_TO_TEST_CASES,
     'set_import_realtime': PropertiesNames.IMPORT_REALTIME,
     'set_sync_storage_port': PropertiesNames.SYNC_STORAGE_PORT,
+    'set_legacy_workflow': PropertiesNames.LEGACY_WORKFLOW,
 }
