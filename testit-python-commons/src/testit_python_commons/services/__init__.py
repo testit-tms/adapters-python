@@ -1,12 +1,5 @@
 from pluggy import HookimplMarker
 
-from testit_python_commons.services.adapter_manager import AdapterManager
-from testit_python_commons.services.fixture_manager import FixtureManager
-from testit_python_commons.services.plugin_manager import TmsPluginManager
-from testit_python_commons.services.step_manager import StepManager
-from testit_python_commons.services.utils import Utils
-from .sync_storage import (SyncStorageRunner)
-
 __all__ = [
         "AdapterManager",
         "TmsPluginManager",
@@ -18,3 +11,31 @@ __all__ = [
     ]
 
 hookimpl = HookimplMarker("testit")
+
+
+def __getattr__(name):
+    if name == "AdapterManager":
+        from testit_python_commons.services.adapter_manager import AdapterManager
+
+        return AdapterManager
+    if name == "TmsPluginManager":
+        from testit_python_commons.services.plugin_manager import TmsPluginManager
+
+        return TmsPluginManager
+    if name == "FixtureManager":
+        from testit_python_commons.services.fixture_manager import FixtureManager
+
+        return FixtureManager
+    if name == "StepManager":
+        from testit_python_commons.services.step_manager import StepManager
+
+        return StepManager
+    if name == "Utils":
+        from testit_python_commons.services.utils import Utils
+
+        return Utils
+    if name == "SyncStorageRunner":
+        from testit_python_commons.services.sync_storage import SyncStorageRunner
+
+        return SyncStorageRunner
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

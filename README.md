@@ -81,6 +81,9 @@ curl -v http://127.0.0.1:49152/wait-completion?testRunId=${{ env.TMS_TEST_RUN_ID
 ```
 5. You can read the sync-storage logs from the service.log file.
 
+## Legacy behavior
+
+(Hint) To enable legacy behavior without sync-storage you can use flag `legacyWorkflow=true` (`TMS_LEGACY_WORKFLOW`)
 
 ### General
 

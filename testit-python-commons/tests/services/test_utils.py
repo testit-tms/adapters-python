@@ -161,7 +161,7 @@ class TestUtils:
     #convert_link_dict_to_link_model
     def test_convert_link_dict_to_link_model_minimal(self, mocker):
         mock_link = mocker.Mock(spec=Link)
-        mocker.patch('testit_python_commons.services.utils.Link', return_value=mock_link)
+        mocker.patch('testit_python_commons.models.link.Link', return_value=mock_link)
 
         domain = ''.join(random.choices(string.ascii_lowercase, k=12))
         link_dict = {"url": f"https://{domain}.example.com"}
@@ -172,7 +172,7 @@ class TestUtils:
 
     def test_convert_link_dict_to_link_model_full(self, mocker):
         mock_link = mocker.Mock(spec=Link)
-        mocker.patch('testit_python_commons.services.utils.Link', return_value=mock_link)
+        mocker.patch('testit_python_commons.models.link.Link', return_value=mock_link)
 
         domain = ''.join(random.choices(string.ascii_lowercase, k=10))
         link_dict = {
