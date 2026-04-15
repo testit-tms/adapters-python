@@ -4,11 +4,8 @@ import re
 import warnings
 from typing import TYPE_CHECKING
 
-<<<<<<< feat/small-fixes
-=======
 from testit_python_commons.models.link import Link
 from testit_python_commons.models.link_type import LinkType
->>>>>>> main
 from testit_python_commons.services.logger import adapter_logger
 
 if TYPE_CHECKING:
