@@ -111,7 +111,7 @@ jobs:
          eval "${{ matrix.test_command }}" || true #ignore error code
          
          sleep 1
-         curl -v http://127.0.0.1:49152/wait-completion?testRunId=${{ env.TMS_TEST_RUN_ID }} || true
+         curl -v http://127.0.0.1:49152/wait-completion?testRunId=${{ env.TMS_TEST_RUN_ID }} --max-time 100 || true
          cat service.log
          
      - name: Validate
