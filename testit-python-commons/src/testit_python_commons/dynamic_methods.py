@@ -68,7 +68,10 @@ def attachments(*attachments_paths):
     active_step = TmsPluginManager.get_step_manager().get_active_step()
 
     if active_step:
-        attachment_ids = TmsPluginManager.get_adapter_manager().load_attachments(attachments_paths)
+        adapter_manager = TmsPluginManager.get_adapter_manager()
+        if not adapter_manager:
+            return
+        attachment_ids = adapter_manager.load_attachments(attachments_paths)
 
         active_step.set_attachments(active_step.get_attachments() + attachment_ids)
     else:
@@ -92,13 +95,16 @@ def addAttachments(data, is_text: bool = False, name: str = None):   # noqa: N80
 
 @adapter_logger
 def __add_attachments_to_step(step, data, is_text: bool = False, name: str = None):
+    adapter_manager = TmsPluginManager.get_adapter_manager()
+    if not adapter_manager:
+        return
     if is_text:
-        attachment_ids = TmsPluginManager.get_adapter_manager().create_attachment(data, name)
+        attachment_ids = adapter_manager.create_attachment(data, name)
     else:
         if isinstance(data, str):
-            attachment_ids = TmsPluginManager.get_adapter_manager().load_attachments([data])
+            attachment_ids = adapter_manager.load_attachments([data])
         elif isinstance(data, tuple) or isinstance(data, list):
-            attachment_ids = TmsPluginManager.get_adapter_manager().load_attachments(data)
+            attachment_ids = adapter_manager.load_attachments(data)
         else:
             logging.warning(f'File ({data}) not found!')
             return
