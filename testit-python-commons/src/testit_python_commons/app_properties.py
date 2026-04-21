@@ -105,8 +105,8 @@ class AppProperties:
         if adapter_mode == AdapterMode.NEW_TEST_RUN:
             try:
                 uuid.UUID(str(properties.get(PropertiesNames.TEST_RUN_ID)))
-                logging.error('Adapter mode "2" is enabled. Config should not contains test run id!')
-                raise SystemExit
+                logging.warning('Adapter mode "2" is enabled. Config should not contains test run id!')
+                properties[PropertiesNames.TEST_RUN_ID] = None
             except ValueError:
                 pass
 
