@@ -12,6 +12,12 @@ class TmsPluginManager:
     __fixture_manager = None
     __step_manager = None
     __logger = None
+    # None: non-pytest or undecided; False: pytest without --testit; True: pytest with --testit
+    __pytest_tms_report = None
+
+    @classmethod
+    def set_pytest_tms_report(cls, enabled):
+        cls.__pytest_tms_report = enabled
 
     @classmethod
     def get_plugin_manager(cls):
@@ -22,6 +28,9 @@ class TmsPluginManager:
 
     @classmethod
     def get_adapter_manager(cls, option=None):
+        if cls.__pytest_tms_report is False:
+            return None
+
         if cls.__adapter_manager is None:
             from testit_python_commons.client.client_configuration import (
                 ClientConfiguration,

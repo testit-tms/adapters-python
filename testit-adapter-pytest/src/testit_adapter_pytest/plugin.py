@@ -200,7 +200,18 @@ def pytest_addoption(parser):
     )
 
 
-@pytest.mark.tryfirst
+@pytest.hookimpl(tryfirst=True)
+def pytest_load_initial_conftests(early_config, parser, args):
+    ns = getattr(early_config, "known_args_namespace", None)
+    if ns is not None and hasattr(ns, "tms_report"):
+        TmsPluginManager.set_pytest_tms_report(ns.tms_report)
+
+
+def pytest_unconfigure(config):
+    TmsPluginManager.set_pytest_tms_report(None)
+
+
+@pytest.hookimpl(tryfirst=True)
 def pytest_cmdline_main(config):
     if config.option.tms_report:
         listener = TmsListener(

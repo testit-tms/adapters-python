@@ -11,6 +11,7 @@ def reset_tms_plugin_manager_singletons():
     TmsPluginManager._TmsPluginManager__fixture_manager = None
     TmsPluginManager._TmsPluginManager__step_manager = None
     TmsPluginManager._TmsPluginManager__logger = None
+    TmsPluginManager.set_pytest_tms_report(None)
 
 class TestTmsPluginManager:
     def test_get_plugin_manager_creates_instance(self):
@@ -58,6 +59,12 @@ class TestTmsPluginManager:
             mocks['client_configuration_ctor'].return_value,
             mocks['fixture_manager_instance']
         )
+
+    def test_get_adapter_manager_skipped_when_pytest_tms_off(self, mocker):
+        self._setup_adapter_manager_dependencies_mocks(mocker)
+        TmsPluginManager.set_pytest_tms_report(False)
+        assert TmsPluginManager.get_adapter_manager() is None
+        TmsPluginManager.set_pytest_tms_report(None)
 
     def _setup_adapter_manager_dependencies_mocks(self, mocker, logs_enabled_str: str = 'false'):
         mock_app_properties_instance = mocker.MagicMock()
