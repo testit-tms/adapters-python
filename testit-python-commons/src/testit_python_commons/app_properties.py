@@ -72,7 +72,9 @@ class AppProperties:
             )
 
         if extension == cls.__toml_extension:
-            return cls.__load_file_properties_from_toml()
+            toml_properties = cls.__load_file_properties_from_toml()
+            if toml_properties is not None:
+                return toml_properties
 
         return cls.__load_file_properties_from_ini(path)
 
@@ -169,15 +171,18 @@ class AppProperties:
             properties[PropertiesNames.LEGACY_WORKFLOW] = 'false'
 
     @classmethod
-    def __load_file_properties_from_toml(cls) -> dict:
+    def __load_file_properties_from_toml(cls):
         properties = {}
 
         with open(cls.__project_metadata_file, "rb+") as file:
             toml_dict = tomli.load(file)
 
             if not cls.__check_toml_section(toml_dict, cls.__config_section_name):
-                logging.error(f'Config section in "{cls.__properties_file}" file was not found!')
-                raise SystemExit
+                logging.warning(
+                    f'Config section "[{cls.__config_section_name}]" in "{cls.__properties_file}" was not found. '
+                    f'Skipping "{cls.__properties_file}" and continuing with other sources (ini/env/cli).'
+                )
+                return None
 
             config_section = toml_dict.get(cls.__config_section_name)
 
