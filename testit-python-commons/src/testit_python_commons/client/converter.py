@@ -34,6 +34,7 @@ from testit_api_client.models import (
     AssignAttachmentApiModel,
     TestStatusType,
     TestStatusApiType,
+    CreateLinkApiModel,
 )
 
 from testit_python_commons.models.link import Link
@@ -74,6 +75,17 @@ class Converter:
     def build_update_link_api_model(link: LinkApiResult) -> UpdateLinkApiModel:
         return UpdateLinkApiModel(
             id=link.id,
+            title=link.title,
+            description=link.description,
+            type=link.type,
+            url=link.url,
+            has_info=link.has_info
+        )
+
+    @staticmethod
+    @adapter_logger
+    def build_create_link_api_model(link: LinkApiResult) -> CreateLinkApiModel:
+        return CreateLinkApiModel(
             title=link.title,
             description=link.description,
             type=link.type,
@@ -288,7 +300,7 @@ class Converter:
             failure_class_ids=test_result.failure_class_ids,
             status_code=test_result.status.code,
             comment=test_result.comment,
-            links=test_result.links,
+            links=list(map(cls.build_create_link_api_model, test_result.links)),
             step_results=test_result.step_results,
             attachments=cls.attachment_models_to_attachment_put_models(test_result.attachments),
             duration_in_ms=test_result.duration_in_ms,
