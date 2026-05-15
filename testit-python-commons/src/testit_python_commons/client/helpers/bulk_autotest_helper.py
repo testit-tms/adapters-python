@@ -18,7 +18,9 @@ from testit_python_commons.client.models import (
     ThreadsForUpdateAndResult
 )
 from testit_python_commons.services.logger import adapter_logger
-from testit_python_commons.services.retry import retry
+import testit_api_client
+
+from testit_python_commons.services.retry import is_non_retriable_api_exception, retry
 from testit_python_commons.utils.html_escape_utils import HtmlEscapeUtils
 from typing import Dict, List
 
@@ -186,9 +188,20 @@ class BulkAutotestHelper:
     @adapter_logger
     @retry
     def __unlink_test_to_work_item(self, autotest_global_id: str, work_item_id: str):
-        self.__autotests_api.delete_auto_test_link_from_work_item(
-            id=autotest_global_id,
-            work_item_id=work_item_id)
+        try:
+            self.__autotests_api.delete_auto_test_link_from_work_item(
+                id=autotest_global_id,
+                work_item_id=work_item_id)
+        except testit_api_client.exceptions.ApiException as exc:
+            if is_non_retriable_api_exception(exc):
+                logging.warning(
+                    'Cannot unlink autotest %s from work item %s: %s',
+                    autotest_global_id,
+                    work_item_id,
+                    exc,
+                )
+                return
+            raise
 
         logging.debug(f'Autotest was unlinked with workItem "{work_item_id}" by global id "{autotest_global_id}')
 
@@ -196,9 +209,20 @@ class BulkAutotestHelper:
     @adapter_logger
     @retry
     def __link_test_to_work_item(self, autotest_global_id: str, work_item_id: str):
-        self.__autotests_api.link_auto_test_to_work_item(
-            autotest_global_id,
-            link_auto_test_to_work_item_request=LinkAutoTestToWorkItemRequest(id=work_item_id))
+        try:
+            self.__autotests_api.link_auto_test_to_work_item(
+                autotest_global_id,
+                link_auto_test_to_work_item_request=LinkAutoTestToWorkItemRequest(id=work_item_id))
+        except testit_api_client.exceptions.ApiException as exc:
+            if is_non_retriable_api_exception(exc):
+                logging.warning(
+                    'Cannot link autotest %s to work item %s: %s',
+                    autotest_global_id,
+                    work_item_id,
+                    exc,
+                )
+                return
+            raise
 
         logging.debug(f'Autotest was linked with workItem "{work_item_id}" by global id "{autotest_global_id}')
 

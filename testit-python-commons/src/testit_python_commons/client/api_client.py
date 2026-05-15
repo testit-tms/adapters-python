@@ -2,6 +2,7 @@ import logging
 import os
 from datetime import datetime
 
+import testit_api_client
 from testit_api_client import ApiClient, Configuration
 from testit_api_client.apis import (
     AttachmentsApi,
@@ -32,7 +33,12 @@ from testit_python_commons.client.converter import Converter
 from testit_python_commons.client.helpers.bulk_autotest_helper import BulkAutotestHelper
 from testit_python_commons.models.test_result import TestResult
 from testit_python_commons.services.logger import adapter_logger
-from testit_python_commons.services.retry import retry
+from testit_python_commons.services.retry import (
+    is_non_retriable_api_exception,
+    is_retriable_connection_error,
+    retry,
+    retry_on_connection_error,
+)
 from typing import List
 
 
@@ -164,6 +170,7 @@ class ApiClientWorker:
         return self.__autotest_api.api_v2_auto_tests_search_post(api_v2_auto_tests_search_post_request=model)
 
     @adapter_logger
+    @retry
     def write_test(self, test_result: TestResult) -> str:
         model = Converter.project_id_and_external_id_to_auto_tests_search_post_request(
             self.__config.get_project_id(),
@@ -198,6 +205,7 @@ class ApiClientWorker:
         return self.__load_test_result(test_result)
 
     @adapter_logger
+    @retry
     def write_tests(self, test_results: List[TestResult], fixture_containers: dict) -> None:
         logging.debug("call __write_tests")
         bulk_autotest_helper = BulkAutotestHelper(self.__autotest_api, self.__test_run_api, self.__config)
@@ -335,11 +343,20 @@ class ApiClientWorker:
             # logging.debug(f'Got workitem {work_item}')
 
             return work_item.id
+        except testit_api_client.exceptions.ApiException as exc:
+            if is_retriable_connection_error(exc):
+                raise
+            if is_non_retriable_api_exception(exc):
+                logging.warning(f'Getting workitem by id {work_item_id} status: {exc}')
+                return
+            raise
         except Exception as exc:
+            if is_retriable_connection_error(exc):
+                raise
             logging.error(f'Getting workitem by id {work_item_id} status: {exc}')
 
     @adapter_logger
-    #@retry # disabled
+    @retry_on_connection_error
     def __get_work_items_linked_to_autotest(self, autotest_global_id: str) -> List[AutoTestWorkItemIdentifierApiResult]:
         return self.__autotest_api.get_work_items_linked_to_auto_test(id=autotest_global_id)
 
@@ -400,6 +417,8 @@ class ApiClientWorker:
         try:
             self.__autotest_api.update_auto_test(update_auto_test_request=model)
         except Exception as exc:
+            if is_retriable_connection_error(exc):
+                raise
             logging.error(f'Cannot update autotest "{test_result.get_autotest_name()}" status: {exc}')
 
         logging.debug(f'Autotest "{test_result.get_autotest_name()}" was updated')
@@ -416,18 +435,40 @@ class ApiClientWorker:
     @adapter_logger
     @retry
     def __unlink_test_to_work_item(self, autotest_global_id: str, work_item_id: str) -> None:
-        self.__autotest_api.delete_auto_test_link_from_work_item(
-            id=autotest_global_id,
-            work_item_id=work_item_id)
+        try:
+            self.__autotest_api.delete_auto_test_link_from_work_item(
+                id=autotest_global_id,
+                work_item_id=work_item_id)
+        except testit_api_client.exceptions.ApiException as exc:
+            if is_non_retriable_api_exception(exc):
+                logging.warning(
+                    'Cannot unlink autotest %s from work item %s: %s',
+                    autotest_global_id,
+                    work_item_id,
+                    exc,
+                )
+                return
+            raise
 
         logging.debug(f'Autotest was unlinked with workItem "{work_item_id}" by global id "{autotest_global_id}')
 
     @adapter_logger
     @retry
     def __link_test_to_work_item(self, autotest_global_id: str, work_item_id: str) -> None:
-        self.__autotest_api.link_auto_test_to_work_item(
-            autotest_global_id,
-            link_auto_test_to_work_item_request=LinkAutoTestToWorkItemRequest(id=work_item_id))
+        try:
+            self.__autotest_api.link_auto_test_to_work_item(
+                autotest_global_id,
+                link_auto_test_to_work_item_request=LinkAutoTestToWorkItemRequest(id=work_item_id))
+        except testit_api_client.exceptions.ApiException as exc:
+            if is_non_retriable_api_exception(exc):
+                logging.warning(
+                    'Cannot link autotest %s to work item %s: %s',
+                    autotest_global_id,
+                    work_item_id,
+                    exc,
+                )
+                return
+            raise
 
         logging.debug(f'Autotest was linked with workItem "{work_item_id}" by global id "{autotest_global_id}')
 
@@ -472,7 +513,17 @@ class ApiClientWorker:
                     id=test_result.get_test_result_id(),
                     api_v2_test_results_id_put_request=model)
             except Exception as exc:
-                logging.error(f'Cannot update test result with id "{test_result.get_test_result_id()}" status: {exc}')
+                if is_retriable_connection_error(exc):
+                    raise
+                logging.error(
+                    f'Cannot update test result with id "{test_result.get_test_result_id()}" status: {exc}')
+
+    @adapter_logger
+    @retry
+    def __upload_attachment(self, path: str) -> AttachmentPutModel:
+        with open(path, "rb") as file:
+            attachment_response = self.__attachments_api.api_v2_attachments_post(file=file)
+        return AttachmentPutModel(attachment_response['id'])
 
     @adapter_logger
     def load_attachments(self, attach_paths: list or tuple) -> List[AttachmentPutModel]:
@@ -481,12 +532,11 @@ class ApiClientWorker:
         for path in attach_paths:
             if os.path.isfile(path):
                 try:
-                    attachment_response = self.__attachments_api.api_v2_attachments_post(file=open(path, "rb"))
-
-                    attachments.append(AttachmentPutModel(attachment_response['id']))
-
+                    attachments.append(self.__upload_attachment(path))
                     logging.debug(f'Attachment "{path}" was uploaded')
                 except Exception as exc:
+                    if is_retriable_connection_error(exc):
+                        raise
                     logging.error(f'Upload attachment "{path}" status: {exc}')
             else:
                 logging.error(f'File "{path}" was not found!')
@@ -496,10 +546,12 @@ class ApiClientWorker:
         return self.__config.get_configuration_id()
 
     @adapter_logger
+    @retry
     def __get_project(self) -> ProjectModel:
         return self.__projects_api.get_project_by_id(id=self.__config.get_project_id())
 
     @adapter_logger
+    @retry
     def __get_workflow_by_id(self, workflow_id: str) -> WorkflowApiResult:
         return self.__workflows_api.api_v2_workflows_id_get(id=workflow_id)
 
