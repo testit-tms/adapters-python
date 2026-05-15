@@ -1,7 +1,7 @@
 #!/bin/bash
 
-NEW_VERSION="4.2.0"
-TESTIT_API_CLIENT_VERSION="7.5.6"
+NEW_VERSION="4.2.0.post560"
+TESTIT_API_CLIENT_VERSION="7.5.0.post560"
 
 echo "Updating all adapters to version: $NEW_VERSION"
 echo "Updating testit-api-client to version: $TESTIT_API_CLIENT_VERSION"
