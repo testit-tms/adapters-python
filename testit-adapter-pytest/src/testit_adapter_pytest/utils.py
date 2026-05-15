@@ -294,13 +294,24 @@ def get_parameter(key_for_parameter, all_parameters):
     parameter_key = key_for_parameter.replace("[" + id_keys_in_parameter[0] + "]", "")
     id_key_in_parameter = id_keys_in_parameter[0].strip("\'\"")
 
-    if id_key_in_parameter.isdigit() and int(id_key_in_parameter) in range(len(all_parameters[parameter_key])):
-        return all_parameters[parameter_key][int(id_key_in_parameter)]
+    nested = all_parameters.get(parameter_key)
 
-    if id_key_in_parameter.isalnum() and id_key_in_parameter in all_parameters[parameter_key].keys():
-        return all_parameters[parameter_key][id_key_in_parameter]
+    if id_key_in_parameter.isdigit() and isinstance(nested, (list, tuple)):
+        index = int(id_key_in_parameter)
+        if index in range(len(nested)):
+            return nested[index]
+
+    if isinstance(nested, dict) and id_key_in_parameter in nested:
+        return nested[id_key_in_parameter]
 
     logging.error(f"Not key: {key_for_parameter} in run parameters or other keys problem")
+
+
+def __expand_dict_parameters(params):
+    for value in tuple(params.values()):
+        if isinstance(value, dict):
+            for dict_key, dict_value in value.items():
+                params.setdefault(dict_key, dict_value)
 
 
 def get_all_parameters(item):
@@ -311,6 +322,7 @@ def get_all_parameters(item):
 
     if hasattr(item, 'callspec'):
         params.update(item.callspec.params)
+        __expand_dict_parameters(params)
 
     return params
 
