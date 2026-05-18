@@ -492,7 +492,7 @@ class ApiClientWorker:
 
     @adapter_logger
     @retry
-    def __get_project(self) -> ProjectModel:
+    def __get_project(self):
         return self.__projects_api.get_project_by_id(id=self.__config.get_project_id())
 
     @adapter_logger
@@ -502,7 +502,7 @@ class ApiClientWorker:
 
     @adapter_logger
     def __get_status_codes(self) -> List[str]:
-        project: ProjectModel = self.__get_project()
+        project = self.__get_project()
         workflow: WorkflowApiResult = self.__get_workflow_by_id(project.workflow_id)
 
         return [status.code for status in workflow.statuses]
