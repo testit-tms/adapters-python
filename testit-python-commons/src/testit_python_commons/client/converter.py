@@ -300,7 +300,7 @@ class Converter:
             failure_class_ids=test_result.failure_class_ids,
             status_code=test_result.status.code,
             comment=test_result.comment,
-            links=list(map(cls.build_create_link_api_model, test_result.links)),
+            links=test_result.links,
             step_results=test_result.step_results,
             attachments=cls.attachment_models_to_attachment_put_models(test_result.attachments),
             duration_in_ms=test_result.duration_in_ms,
