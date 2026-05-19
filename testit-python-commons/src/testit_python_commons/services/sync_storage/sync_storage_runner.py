@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 import platform
@@ -39,13 +40,15 @@ class SyncStorageRunner:
     across multiple workers.
     """
 
-    SYNC_STORAGE_VERSION = "v0.3.2"
+    SYNC_STORAGE_VERSION = "v0.3.3"
     SYNC_STORAGE_REPO_URL = (
         "https://github.com/testit-tms/sync-storage-public/releases/download/"
     )
     AMD64 = "amd64"
     ARM64 = "arm64"
     SYNC_STORAGE_STARTUP_TIMEOUT = 5  # seconds
+    KEEP_ALIVE_INTERVAL_SECONDS = 30
+    KEEP_ALIVE_REQUEST_TIMEOUT_SECONDS = 5
 
     def __init__(
         self,
@@ -82,6 +85,9 @@ class SyncStorageRunner:
         self.workers_api: Optional[WorkersApi] = None
         self.test_results_api: Optional[TestResultsApi] = None
 
+        self._keep_alive_stop_event = threading.Event()
+        self._keep_alive_thread: Optional[threading.Thread] = None
+
         logger.debug(
             f"Initialized SyncStorageRunner with test_run_id={test_run_id}, port={self.port}"
         )
@@ -113,6 +119,7 @@ class SyncStorageRunner:
                 except Exception as e:
                     logger.error(f"Error registering worker: {e}")
 
+                self._start_keep_alive()
                 return True
 
             # Get executable file name for current platform
@@ -170,6 +177,7 @@ class SyncStorageRunner:
                 except Exception as e:
                     logger.error(f"Error registering worker: {e}")
 
+                self._start_keep_alive()
                 return True
             else:
                 raise RuntimeError("Cannot start the SyncStorage until timeout")
@@ -212,6 +220,49 @@ class SyncStorageRunner:
     def get_url(self) -> str:
         """Get the Sync Storage URL."""
         return f"http://localhost:{self.port}"
+
+    def _keep_alive(self) -> None:
+        try:
+            payload = json.dumps({
+                "pid": self.worker_pid,
+                "testRunId": self.test_run_id,
+            }).encode("utf-8")
+            request = urllib.request.Request(
+                f"{self.get_url()}/keep_alive",
+                data=payload,
+                headers={"Content-Type": "application/json"},
+                method="POST",
+            )
+            urllib.request.urlopen(
+                request,
+                timeout=self.KEEP_ALIVE_REQUEST_TIMEOUT_SECONDS,
+            )
+        except Exception:
+            pass
+
+    def _keep_alive_loop(self) -> None:
+        while not self._keep_alive_stop_event.is_set():
+            self._keep_alive()
+            if self._keep_alive_stop_event.wait(self.KEEP_ALIVE_INTERVAL_SECONDS):
+                break
+
+    def _start_keep_alive(self) -> None:
+        if self._keep_alive_thread and self._keep_alive_thread.is_alive():
+            return
+
+        self._keep_alive_stop_event.clear()
+        self._keep_alive_thread = threading.Thread(
+            target=self._keep_alive_loop,
+            name="sync-storage-keep-alive",
+            daemon=True,
+        )
+        self._keep_alive_thread.start()
+        logger.debug("Sync Storage keep-alive thread started")
+
+    def _stop_keep_alive(self) -> None:
+        self._keep_alive_stop_event.set()
+        if self._keep_alive_thread and self._keep_alive_thread.is_alive():
+            self._keep_alive_thread.join(timeout=1)
 
     def send_in_progress_test_result(
         self, model: TestResultCutApiModel
