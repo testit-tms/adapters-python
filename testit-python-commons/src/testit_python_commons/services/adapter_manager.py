@@ -48,44 +48,43 @@ class AdapterManager:
 
     def _initialize_sync_storage(self, client_configuration: ClientConfiguration):
         """Initialize Sync Storage runner if enabled."""
+        if client_configuration.is_legacy_workflow():
+            return None
+
+        test_run_id = self.__config.get_test_run_id()
+        if not test_run_id and self.__config.get_mode() == AdapterMode.NEW_TEST_RUN:
+            return None
+
+        if not test_run_id:
+            logging.warning('Sync Storage requires test run ID; skipping initialization')
+            return None
+
+        return self._start_sync_storage(test_run_id, client_configuration)
+
+    def _start_sync_storage(
+            self,
+            test_run_id: str,
+            client_configuration: ClientConfiguration):
         try:
-            # Get test run ID - create one if needed
-            test_run_id = self.__config.get_test_run_id()
+            if not SYNC_STORAGE_AVAILABLE:
+                return None
 
-            # If no test run ID, create one (as in Java implementation)
-            if not test_run_id:
-                test_run_id = self.__api_client.create_test_run(
-                    self.__config.get_test_run_name()
-                )
-                self.__config.set_test_run_id(test_run_id)
-                self.__api_client.set_test_run_id(test_run_id)
+            sync_storage_runner = SyncStorageRunner(
+                test_run_id=test_run_id,
+                port=client_configuration.get_sync_storage_port(),
+                base_url=client_configuration.get_url(),
+                private_token=client_configuration.get_private_token(),
+            )
 
-            # Extract configuration properties
-            url = client_configuration.get_url()
-            private_token = client_configuration.get_private_token()
-            port = client_configuration.get_sync_storage_port()
-            print(f'sync storage port: {port}')
+            if sync_storage_runner.start():
+                logging.info("Sync Storage started successfully")
+                return sync_storage_runner
 
-            # Create and start Sync Storage runner
-            if SYNC_STORAGE_AVAILABLE:
-                sync_storage_runner = SyncStorageRunner(
-                    test_run_id=test_run_id,
-                    port=port,
-                    base_url=url,
-                    private_token=private_token,
-                )
-
-                if sync_storage_runner.start():
-                    logging.info("Sync Storage started successfully")
-                    return sync_storage_runner
-                else:
-                    logging.warning("Failed to start Sync Storage")
-
+            logging.warning("Failed to start Sync Storage")
         except Exception as e:
             logging.warning(f"Failed to initialize SyncStorage: {e}", exc_info=True)
 
         return None
-
 
     @adapter_logger
     def set_test_run_id(self, test_run_id: str) -> None:
@@ -94,9 +93,13 @@ class AdapterManager:
 
         self.__api_client.set_test_run_id(test_run_id)
 
-        # Update Sync Storage with test run ID if available
         if self.__sync_storage_runner:
             self.__sync_storage_runner.test_run_id = test_run_id
+            return
+
+        if SYNC_STORAGE_AVAILABLE and not self.__client_config.is_legacy_workflow():
+            self.__sync_storage_runner = self._start_sync_storage(
+                test_run_id, self.__client_config)
 
     @adapter_logger
     def get_test_run_id(self) -> str:

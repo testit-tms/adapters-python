@@ -82,16 +82,16 @@ class TmsListener(object):
     def pytest_configure(self, config):
         self.__pytest_info = metadata("pytest")
 
-        if not hasattr(config, "workerinput") and not hasattr(self, "test_run_id"):
-            config.test_run_id = self.__adapter_manager.get_test_run_id()
-        else:
+        if hasattr(config, "workerinput"):
             config.test_run_id = pickle.loads(config.workerinput["test_run_id"])
+        elif not hasattr(config, "test_run_id"):
+            config.test_run_id = self.__adapter_manager.get_test_run_id()
 
         self.__adapter_manager.set_test_run_id(config.test_run_id)
 
     @pytest.hookimpl
     def pytest_configure_node(self, node):
-        if not hasattr(self, "test_run_id"):
+        if hasattr(node.config, "test_run_id"):
             node.workerinput["test_run_id"] = pickle.dumps(node.config.test_run_id)
 
     @adapter.hookimpl

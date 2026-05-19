@@ -51,7 +51,7 @@ Status](https://img.shields.io/pypi/v/testit-python-commons?style=plastic)](http
 - importRealtime=false is a default mode (previously true)
 
 - **limitations**: 
-- The current 4.0.0 version is not compatible with `adapterMode=2` when using parallelization (e.g., `pytest --testit -n 4`). Please use `adapterMode=1`.
+- Versions before 4.2.2 are not compatible with `adapterMode=2` when using parallelization (e.g., `pytest --testit -n 4`). Please use `adapterMode=1`or update to 4.2.2+ .
 
 ### How to run 4.0+ locally?
 
