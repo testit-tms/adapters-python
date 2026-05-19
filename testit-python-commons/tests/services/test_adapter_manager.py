@@ -192,6 +192,51 @@ class TestAdapterManager:
         mock_os_remove.assert_called_once_with(expected_file_path)
         assert attachment_id == expected_attachment_id
 
+    def test_init_does_not_create_test_run_for_new_test_run_mode_without_id(
+            self,
+            mocker,
+            mock_adapter_config,
+            mock_client_config,
+            mock_fixture_manager,
+            mock_api_client_worker):
+        mock_adapter_config.get_mode.return_value = AdapterMode.NEW_TEST_RUN
+        mock_adapter_config.get_test_run_id.return_value = None
+        mock_client_config.is_legacy_workflow.return_value = False
+        start_sync_storage = mocker.patch.object(
+            AdapterManager,
+            "_start_sync_storage",
+            return_value=None,
+        )
+
+        AdapterManager(
+            adapter_configuration=mock_adapter_config,
+            client_configuration=mock_client_config,
+            fixture_manager=mock_fixture_manager,
+        )
+
+        mock_api_client_worker.create_test_run.assert_not_called()
+        start_sync_storage.assert_not_called()
+
+    def test_set_test_run_id_starts_sync_storage_when_deferred(
+            self,
+            adapter_manager,
+            mock_client_config,
+            mocker):
+        test_run_id = str(uuid.uuid4())
+        sync_storage_runner = mocker.Mock()
+        start_sync_storage = mocker.patch.object(
+            adapter_manager,
+            "_start_sync_storage",
+            return_value=sync_storage_runner,
+        )
+        mock_client_config.is_legacy_workflow.return_value = False
+        adapter_manager._AdapterManager__sync_storage_runner = None
+
+        adapter_manager.set_test_run_id(test_run_id)
+
+        start_sync_storage.assert_called_once_with(test_run_id, mock_client_config)
+        assert adapter_manager._AdapterManager__sync_storage_runner is sync_storage_runner
+
     def test_init_does_not_start_sync_storage_in_legacy_workflow(
             self,
             mocker,
