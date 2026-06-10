@@ -1,6 +1,6 @@
 from setuptools import find_packages, setup
 
-VERSION = "4.2.5"
+VERSION = "4.2.6"
 
 setup(
     name='testit-python-commons',
