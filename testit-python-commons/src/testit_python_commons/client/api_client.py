@@ -499,13 +499,8 @@ class ApiClientWorker:
             fixtures_containers, test_result_ids)
 
         for test_result in test_results:
-            test_result_response = self.get_test_result_by_id(test_result.get_test_result_id())
-            model = Converter.convert_test_result_model_to_test_results_id_put_request(test_result_response)
-
-            model.setup_results = Converter.step_results_to_auto_test_step_result_update_request(
-                    test_result.get_setup_results())
-            model.teardown_results = Converter.step_results_to_auto_test_step_result_update_request(
-                    test_result.get_teardown_results())
+            model = Converter.convert_test_result_with_all_setup_and_teardown_steps_to_test_results_id_put_request(
+                test_result)
 
             try:
                 self.__test_results_api.api_v2_test_results_id_put(

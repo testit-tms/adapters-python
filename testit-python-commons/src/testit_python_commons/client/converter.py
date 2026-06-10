@@ -316,9 +316,9 @@ class Converter:
             cls,
             test_result: TestResultWithAllFixtureStepResults) -> ApiV2TestResultsIdPutRequest:
         return ApiV2TestResultsIdPutRequest(
-            setup_results=cls.step_results_to_attachment_put_model_autotest_step_results_model(
+            setup_results=cls.step_results_to_auto_test_step_result_update_request(
                 test_result.get_setup_results()),
-            teardown_results=cls.step_results_to_attachment_put_model_autotest_step_results_model(
+            teardown_results=cls.step_results_to_auto_test_step_result_update_request(
                 test_result.get_teardown_results()))
 
     @classmethod
