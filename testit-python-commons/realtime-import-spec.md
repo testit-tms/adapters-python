@@ -27,8 +27,15 @@ When `importRealtime=false`, all test results are sent once after the session fi
 - After the run completes, only **top-level** steps remain on the test result.
 - Reproducible with `importRealtime=true` (default since adapter 4.x).
 - Not reproducible with `importRealtime=false`.
+- **With Sync Storage enabled:** only the **first** test in the run is affected (the one held as `InProgress`).
+- Tests that are not the first one keep nested steps.
+- Without Sync Storage the issue does not reproduce (for the adapter-only PUT bug below).
 
-### Root Cause
+There are **two independent causes**; both can flatten nested steps on the test result.
+
+---
+
+### Cause A (adapter): final session PUT overwrote `step_results`
 
 At session finish, `update_test_results` used to:
 
@@ -76,7 +83,89 @@ self.__test_results_api.api_v2_test_results_id_put(...)
 
 The `step_results` field is omitted, so the nested test steps written during real-time import are not overwritten.
 
-### Affected Code
+---
+
+### Cause B (Sync Storage + adapter): first test finalized without step tree
+
+When Sync Storage is running and the worker is **master**, the **first** completed test takes a special path in `AdapterManager.__write_test_realtime` → `on_master_no_already_in_progress`:
+
+1. Adapter sends **`TestResultCutApiModel`** to Sync Storage (`POST /in_progress_test_result`).
+   - Payload contains only: `projectId`, `autoTestExternalId`, `statusCode`, `statusType`, `startedOn`.
+   - **No `step_results`, no attachments, no nested data.**
+2. Adapter sets outcome to `InProgress` and posts the test result to Test IT via `_write_test_realtime_internal`.
+   - This POST **does** include the full nested `step_results` tree.
+3. Method returns `True` — the test is **not** written again with the real outcome through the adapter.
+
+All subsequent tests skip step 1–3 (Sync Storage `is_already_in_progress` flag is set) and go through normal `_write_test_realtime_internal` with the real outcome and full steps.
+
+At the end of the run, CI (or tooling) typically calls:
+
+```bash
+curl http://127.0.0.1:49152/wait-completion?testRunId=...
+```
+
+Sync Storage then finalizes the held in-progress result and pushes the **real** status to Test IT. It only ever received the **cut** model, so the final TMS update cannot restore nested `step_results`. That explains the observed pattern:
+
+| Scenario | Nested steps on test result |
+|----------|----------------------------|
+| First test + Sync Storage + `importRealtime=true` | Visible during run, **lost after** `wait-completion` |
+| Later tests in the same run | OK (normal real-time path) |
+| Without Sync Storage | OK (no finalize overwrite) |
+| Single test only | Always the first → always broken with Sync Storage |
+
+```mermaid
+sequenceDiagram
+    participant Pytest
+    participant Adapter
+    participant SyncStorage
+    participant TMS
+
+    Pytest->>Adapter: test 1 finished
+    Adapter->>SyncStorage: POST cut model (no steps)
+    Adapter->>TMS: POST InProgress + full step tree
+    Note over Adapter: return early, no real-outcome write
+
+    Pytest->>Adapter: test 2..N finished
+    Adapter->>TMS: POST real outcome + full step tree
+
+    Pytest->>Adapter: sessionfinish / write_tests
+    Adapter->>TMS: PUT setup/teardown only
+
+    Note over CI: curl wait-completion
+    SyncStorage->>TMS: finalize test 1 (cut data, no nested steps)
+    Note over TMS: nested steps on test 1 lost
+```
+
+#### Recommended fixes (Cause B)
+
+**Option 1 — adapter (preferred, no Sync Storage release required):**
+
+After Sync Storage completion, re-send the full test result for the held test:
+
+1. In `on_master_no_already_in_progress`, **store a copy** of `TestResult` with the real outcome and full `step_results` before mutating outcome to `InProgress`.
+2. In `write_tests` (or after `wait_completion`):
+   - Call `wait_completion` on Sync Storage if the adapter owns the lifecycle, **or** document that finalize must run after external `wait-completion`.
+   - `PUT` the stored result to Test IT by `test_result_id` from `__test_result_map`, including recursive `step_results` via `step_results_to_auto_test_step_result_update_request`.
+
+**Option 2 — Sync Storage:**
+
+On finalize, either do not send `step_results` in the TMS PUT (update status/duration only), or accept and persist the full `AutoTestResultsForTestRunModel` (as in the Java spec) instead of `TestResultCutApiModel`.
+
+**Option 3 — adapter (coordination-only):**
+
+Send cut data to Sync Storage for coordination but still write the real outcome to TMS immediately (do not skip `_write_test_realtime_internal` with real data). Requires validation that parallel worker coordination still works.
+
+#### Affected Code (Cause B)
+
+| File | Responsibility |
+|------|----------------|
+| `services/adapter_manager.py` | `on_master_no_already_in_progress`, `__write_test_realtime` |
+| `services/sync_storage/sync_storage_runner.py` | `send_in_progress_test_result`, `test_result_to_test_result_cut_api_model` |
+| Sync Storage binary | `/wait-completion` → TMS finalize |
+
+---
+
+### Affected Code (Cause A)
 
 | File | Responsibility |
 |------|----------------|
