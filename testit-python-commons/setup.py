@@ -1,6 +1,6 @@
 from setuptools import find_packages, setup
 
-VERSION = "4.2.6"
+VERSION = "4.2.6-TMS-5.7"
 
 setup(
     name='testit-python-commons',
@@ -25,5 +25,5 @@ setup(
     py_modules=['testit', 'testit_python_commons'],
     packages=find_packages(where='src'),
     package_dir={'': 'src'},
-    install_requires=['pluggy', 'tomli', 'testit-api-client==7.5.10']
+    install_requires=['pluggy', 'tomli', 'testit-api-client==7.5.5.post570']
 )

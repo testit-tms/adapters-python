@@ -1,6 +1,6 @@
 from setuptools import find_packages, setup
 
-VERSION = "4.2.6"
+VERSION = "4.2.6-TMS-5.7"
 
 setup(
     name='testit-adapter-pytest',
