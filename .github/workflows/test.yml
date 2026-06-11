@@ -118,6 +118,45 @@ jobs:
        run: |
          dotnet test --configuration Debug --no-build --logger:"console;verbosity=detailed" api-validator-dotnet
 
+     - name: Create TestRun
+       run: |
+         pip3 install testit-cli
+         testit testrun create --token ${{ env.TMS_PRIVATE_TOKEN }} --output ${{ env.TEMP_FILE }}
+         echo "TMS_TEST_RUN_ID=$(<${{ env.TEMP_FILE }})" >> $GITHUB_ENV
+         pip3 uninstall -y -r <(pip freeze)
+
+     - name: Setup environment import realtime false
+       run: |
+         dotnet build --configuration Debug --property WarningLevel=0 api-validator-dotnet
+         pip3 install -r python-examples/${{ matrix.project_name }}/requirements_ci.txt
+         pip3 install ./testit-python-commons
+         pip3 install ./${{ matrix.adapter_name }}
+        
+   
+     - name: Test import realtime false
+       run: |
+         export TMS_IMPORT_REALTIME=false
+         cd python-examples/${{ matrix.project_name }}
+
+         # restart sync storage (binary was downloaded in the previous Test step)
+         pkill -f 'syncstorage-linux-amd64' || true
+         fuser -k 49152/tcp 2>/dev/null || true
+         sleep 1
+         nohup .caches/syncstorage-linux-amd64 --testRunId ${{ env.TMS_TEST_RUN_ID }} --port 49152 \
+         --baseURL ${{ env.TMS_URL }} --privateToken ${{ env.TMS_PRIVATE_TOKEN }}  > service.log 2>&1 &
+         curl -v http://127.0.0.1:49152/health || true
+         
+         eval "${{ matrix.test_command }}" || true #ignore error code
+         
+         sleep 1
+         curl -v http://127.0.0.1:49152/wait-completion?testRunId=${{ env.TMS_TEST_RUN_ID }} --max-time 100 || true
+         cat service.log
+         
+     - name: Validate import realtime false
+       run: | 
+         dotnet test --configuration Debug --no-build --logger:"console;verbosity=detailed" api-validator-dotnet
+
+
      - name: Test Adapter Mode 2
        run: |
 
