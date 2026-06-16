@@ -242,9 +242,11 @@ class AdapterManager:
 
     @adapter_logger
     def __load_setup_and_teardown_step_results(self) -> None:
-        self.__api_client.update_test_results(
-            self.__fixture_manager.get_all_items(), self.__test_result_map
-        )
+        fixtures = self.__fixture_manager.get_all_items()
+        if not fixtures:
+            return
+
+        self.__api_client.update_test_results(fixtures, self.__test_result_map)
 
     @adapter_logger
     def __write_tests_after_all(self) -> None:

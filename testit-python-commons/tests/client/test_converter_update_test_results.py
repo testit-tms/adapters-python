@@ -1,3 +1,5 @@
+from unittest.mock import Mock
+
 from testit_python_commons.client.converter import Converter
 from testit_python_commons.models.outcome_type import OutcomeType
 from testit_python_commons.models.step_result import StepResult
@@ -20,3 +22,15 @@ def test_setup_teardown_put_request_does_not_include_step_results():
     assert len(model.setup_results) == 1
     assert len(model.setup_results[0].step_results) == 1
     assert model.setup_results[0].step_results[0].title == 'child'
+
+
+def test_fixtures_converter_skips_tests_without_fixture_steps():
+    fixtures_container = Mock()
+    fixtures_container.external_ids = ['other-test']
+
+    result = Converter.fixtures_containers_to_test_results_with_all_fixture_step_results(
+        {'uuid': fixtures_container},
+        {'test-1': 'result-1'},
+    )
+
+    assert result == []
