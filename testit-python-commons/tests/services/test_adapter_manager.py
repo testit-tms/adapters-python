@@ -88,6 +88,16 @@ class TestAdapterManager:
         )
         mock_api_client_worker.write_tests.assert_not_called()
 
+    def test_write_tests_realtime_skips_update_without_fixtures(
+            self, adapter_manager, mock_adapter_config, mock_api_client_worker, mock_fixture_manager):
+        mock_adapter_config.should_import_realtime.return_value = True
+        mock_fixture_manager.get_all_items.return_value = {}
+
+        adapter_manager.write_tests()
+
+        mock_fixture_manager.get_all_items.assert_called_once()
+        mock_api_client_worker.update_test_results.assert_not_called()
+
     def test_load_attachments(self, adapter_manager, mock_api_client_worker):
         attach_paths = ["path/to/attachment1.txt", "path/to/attachment2.jpg"]
         expected_result = ["id1", "id2"]
