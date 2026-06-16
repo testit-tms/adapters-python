@@ -515,7 +515,9 @@ class Converter:
                         test_result_with_all_fixture_step_results.set_teardown_results(
                             fixtures_container.afters[0].steps)
 
-            test_results_with_all_fixture_step_results.append(test_result_with_all_fixture_step_results)
+            if (test_result_with_all_fixture_step_results.get_setup_results()
+                    or test_result_with_all_fixture_step_results.get_teardown_results()):
+                test_results_with_all_fixture_step_results.append(test_result_with_all_fixture_step_results)
 
         return test_results_with_all_fixture_step_results
 

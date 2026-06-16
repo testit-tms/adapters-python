@@ -40,7 +40,7 @@ class SyncStorageRunner:
     across multiple workers.
     """
 
-    SYNC_STORAGE_VERSION = "v0.3.6-tms-5.7"
+    SYNC_STORAGE_VERSION = "v0.3.7-tms-5.7"
     SYNC_STORAGE_REPO_URL = (
         "https://github.com/testit-tms/sync-storage-public/releases/download/"
     )

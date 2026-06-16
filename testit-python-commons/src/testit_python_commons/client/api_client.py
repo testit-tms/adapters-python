@@ -498,6 +498,9 @@ class ApiClientWorker:
         test_results = Converter.fixtures_containers_to_test_results_with_all_fixture_step_results(
             fixtures_containers, test_result_ids)
 
+        if not test_results:
+            return
+
         for test_result in test_results:
             model = Converter.convert_test_result_with_all_setup_and_teardown_steps_to_test_results_id_put_request(
                 test_result)
