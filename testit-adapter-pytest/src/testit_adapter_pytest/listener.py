@@ -243,26 +243,23 @@ class TmsListener(object):
             if report.when == 'setup':
                 self.__executable_test.outcome = report.outcome
                 self.__executable_test.status_type = STATUS_TYPE.get(report.outcome, None)
-                if report.longreprtext:
-                    self.__executable_test.message = report.longreprtext
 
             if report.when == 'call':
                 self.__executable_test.outcome = report.outcome
                 self.__executable_test.status_type = STATUS_TYPE.get(report.outcome, None)
 
+            is_xfailed = hasattr(report, 'wasxfail') and not report.passed
+
             if report.failed or report.outcome == 'rerun':
                 self.__executable_test.outcome = 'failed'
                 self.__executable_test.status_type = STATUS_TYPE.get('failed', None)
 
-                if report.longreprtext:
-                    self.__executable_test.traces = report.longreprtext
-
-            if hasattr(report, 'wasxfail') and not report.passed:
+            if is_xfailed:
                 self.__executable_test.outcome = 'xfailed'
                 self.__executable_test.status_type = STATUS_TYPE.get('xfailed', None)
 
-                if report.longreprtext:
-                    self.__executable_test.traces = report.longreprtext
+            if report.failed or report.outcome == 'rerun' or is_xfailed:
+                self.__executable_test.traces = getattr(report, 'longreprtext', None)
 
             self.__executable_test.duration += report.duration * 1000
 
