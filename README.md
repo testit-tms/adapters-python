@@ -37,6 +37,7 @@ Status](https://img.shields.io/pypi/v/testit-python-commons?style=plastic)](http
 | 5.5     | 3.10.1.post550 | 3.10.1.post550 | 3.10.1.post550 | 3.10.1.post550 |
 | 5.6     | 3.11.6.post560 | 3.11.6.post560 | 3.11.6.post560 | 3.11.6.post560 |
 | 5.7     | 4.2.1.post570  | 4.2.1.post570  | 4.2.1.post570  | 4.2.1.post570  |
+| 5.8     | 4.3.0.post580  | 4.3.0.post580  | 4.3.0.post580  | 4.3.0.post580  |
 | Cloud   | 4.2.0 +        | 4.2.0 +        | 4.2.0 +        | 4.2.0 +        |
 
 1. For current versions, see the releases tab. 
