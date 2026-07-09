@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-VERSION = "4.2.10"
+VERSION = "4.2.11"
 
 setup(
     name='testit-adapter-nose',

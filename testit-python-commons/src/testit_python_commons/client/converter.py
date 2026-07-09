@@ -341,6 +341,7 @@ class Converter:
             return LinkPostModel(
                 url=link.get_url(),
                 title=link.get_title(),
+                type=LinkType("Related"),
                 description=link.get_description(),
                 has_info=True,
             )
@@ -360,6 +361,7 @@ class Converter:
             return LinkCreateApiModel(
                 url=link.get_url(),
                 title=link.get_title(),
+                type=LinkType("Related"),
                 description=link.get_description(),
                 has_info=True,
             )
@@ -379,6 +381,7 @@ class Converter:
             return LinkUpdateApiModel(
                 url=link.get_url(),
                 title=link.get_title(),
+                type=LinkType("Related"),
                 description=link.get_description(),
                 has_info=True,
             )
