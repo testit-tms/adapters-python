@@ -1,13 +1,13 @@
 import logging
-from typing import List
+from typing import List, Optional
 
-from testit_api_client.models import (
-    ApiV2TestResultsSearchPostRequest,
+from api_client_adapters.models import (
+    AdaptersTestResultsSearchPostRequest,
     AutoTestApiResult,
     AttachmentPutModelAutoTestStepResultsModel,
     AutoTestStepResultUpdateRequest,
-    CreateAutoTestRequest,
-    UpdateAutoTestRequest,
+    AdaptersAutoTestsPostRequest,
+    AdaptersAutoTestsPutRequest,
     AutoTestCreateApiModel,
     AutoTestUpdateApiModel,
     AutoTestResultsForTestRunModel,
@@ -17,24 +17,25 @@ from testit_api_client.models import (
     LinkCreateApiModel,
     LinkUpdateApiModel,
     LinkType,
-    CreateEmptyRequest,
-    TestRunV2ApiResult,
+    AdaptersTestRunsPostRequest,
+    AdaptersTestRunsPutRequest,
+    TestRunApiResult,
     TestResultShortResponse,
     AutoTestSearchApiModelFilter,
     AutoTestSearchApiModelIncludes,
-    ApiV2AutoTestsSearchPostRequest,
-    ApiV2TestResultsIdPutRequest,
+    AdaptersAutoTestsSearchPostRequest,
+    AdaptersTestResultsIdPutRequest,
     TestResultResponse,
     AttachmentApiResult,
     AttachmentUpdateRequest,
     AttachmentPutModel,
-    UpdateEmptyRequest,
     LinkApiResult,
     UpdateLinkApiModel,
     AssignAttachmentApiModel,
     TestStatusType,
     TestStatusApiType,
     CreateLinkApiModel,
+    LabelApiModel,
 )
 
 from testit_python_commons.models.link import Link
@@ -47,21 +48,21 @@ from testit_python_commons.services.logger import adapter_logger
 class Converter:
     @staticmethod
     @adapter_logger
-    def test_run_to_test_run_short_model(project_id: str, name: str) -> CreateEmptyRequest:
-        return CreateEmptyRequest(
+    def test_run_to_test_run_short_model(project_id: str, name: str) -> AdaptersTestRunsPostRequest:
+        return AdaptersTestRunsPostRequest(
             project_id=project_id,
             name=name
         )
 
     @staticmethod
     @adapter_logger
-    def get_id_from_create_test_run_response(response: TestRunV2ApiResult) -> str:
+    def get_id_from_create_test_run_response(response: TestRunApiResult) -> str:
         return response.id
 
     @classmethod
     @adapter_logger
-    def build_update_empty_request(cls, test_run: TestRunV2ApiResult) -> UpdateEmptyRequest:
-        return UpdateEmptyRequest(
+    def build_update_empty_request(cls, test_run: TestRunApiResult) -> AdaptersTestRunsPutRequest:
+        return AdaptersTestRunsPutRequest(
             id=test_run.id,
             name=test_run.name,
             description=test_run.description,
@@ -79,7 +80,6 @@ class Converter:
             description=link.description,
             type=link.type,
             url=link.url,
-            has_info=link.has_info
         )
 
     @staticmethod
@@ -90,7 +90,6 @@ class Converter:
             description=link.description,
             type=link.type,
             url=link.url,
-            has_info=link.has_info
         )
 
     @staticmethod
@@ -103,7 +102,7 @@ class Converter:
     def project_id_and_external_id_to_auto_tests_search_post_request(
             project_id: str,
             external_id: str
-    ) -> ApiV2AutoTestsSearchPostRequest:
+    ) -> AdaptersAutoTestsSearchPostRequest:
         autotests_filter = AutoTestSearchApiModelFilter(
             project_ids=[project_id],
             external_ids=[external_id],
@@ -113,14 +112,14 @@ class Converter:
             include_links=False,
             include_labels=False)
 
-        return ApiV2AutoTestsSearchPostRequest(filter=autotests_filter, includes=autotests_includes)
+        return AdaptersAutoTestsSearchPostRequest(filter=autotests_filter, includes=autotests_includes)
 
     @staticmethod
     @adapter_logger
     def build_test_results_search_post_request_with_in_progress_outcome(
             testrun_id: str,
-            configuration_id: str) -> ApiV2TestResultsSearchPostRequest:
-        return ApiV2TestResultsSearchPostRequest(
+            configuration_id: str) -> AdaptersTestResultsSearchPostRequest:
+        return AdaptersTestResultsSearchPostRequest(
             test_run_ids=[testrun_id],
             configuration_ids=[configuration_id],
             status_types=[TestStatusApiType("InProgress")])
@@ -128,7 +127,7 @@ class Converter:
     @staticmethod
     @adapter_logger
     def autotest_ids_to_autotests_search_post_request(
-            autotest_ids: List[int]) -> ApiV2AutoTestsSearchPostRequest:
+            autotest_ids: List[int]) -> AdaptersAutoTestsSearchPostRequest:
         autotests_filter = AutoTestSearchApiModelFilter(
             global_ids=autotest_ids)
         autotests_includes = AutoTestSearchApiModelIncludes(
@@ -136,7 +135,7 @@ class Converter:
             include_links=False,
             include_labels=False)
 
-        return ApiV2AutoTestsSearchPostRequest(filter=autotests_filter, includes=autotests_includes)
+        return AdaptersAutoTestsSearchPostRequest(filter=autotests_filter, includes=autotests_includes)
 
     @staticmethod
     @adapter_logger
@@ -150,6 +149,36 @@ class Converter:
                 external_ids.append(autotest.autotest_external_id)
 
         return external_ids
+
+    @staticmethod
+    @adapter_logger
+    def labels_to_label_api_models(labels: List) -> Optional[List[LabelApiModel]]:
+        if not labels:
+            return None
+
+        label_models = []
+
+        for label in labels:
+            name = None
+            global_id = None
+
+            if isinstance(label, str):
+                name = label
+            elif isinstance(label, dict):
+                name = label.get('name')
+                global_id = label.get('global_id', label.get('globalId'))
+
+            if not name:
+                continue
+
+            label_models.append(
+                LabelApiModel(
+                    name=str(name),
+                    global_id=int(global_id) if global_id is not None else 0,
+                )
+            )
+
+        return label_models or None
 
     @classmethod
     @adapter_logger
@@ -172,7 +201,7 @@ class Converter:
             title=test_result.get_title(),
             description=test_result.get_description(),
             links=cls.links_to_links_create_api_model(test_result.get_links()),
-            labels=test_result.get_labels(),
+            labels=cls.labels_to_label_api_models(test_result.get_labels()),
             tags=test_result.get_tags(),
             should_create_work_item=test_result.get_automatic_creation_test_cases(),
             external_key=test_result.get_external_key()
@@ -183,8 +212,8 @@ class Converter:
     def test_result_to_create_autotest_request(
             cls,
             test_result: TestResult,
-            project_id: str) -> CreateAutoTestRequest:
-        return CreateAutoTestRequest(
+            project_id: str) -> AdaptersAutoTestsPostRequest:
+        return AdaptersAutoTestsPostRequest(
             external_id=test_result.get_external_id(),
             project_id=project_id,
             name=test_result.get_autotest_name(),
@@ -199,7 +228,7 @@ class Converter:
             title=test_result.get_title(),
             description=test_result.get_description(),
             links=cls.links_to_links_create_api_model(test_result.get_links()),
-            labels=test_result.get_labels(),
+            labels=cls.labels_to_label_api_models(test_result.get_labels()),
             tags=test_result.get_tags(),
             should_create_work_item=test_result.get_automatic_creation_test_cases(),
             external_key=test_result.get_external_key()
@@ -226,7 +255,7 @@ class Converter:
             title=test_result.get_title(),
             description=test_result.get_description(),
             links=cls.links_to_links_put_model(test_result.get_links()),
-            labels=test_result.get_labels(),
+            labels=cls.labels_to_label_api_models(test_result.get_labels()),
             tags=test_result.get_tags(),
             external_key=test_result.get_external_key()
         )
@@ -236,8 +265,8 @@ class Converter:
     def test_result_to_update_autotest_request(
             cls,
             test_result: TestResult,
-            project_id: str) -> UpdateAutoTestRequest:
-        return UpdateAutoTestRequest(
+            project_id: str) -> AdaptersAutoTestsPutRequest:
+        return AdaptersAutoTestsPutRequest(
             external_id=test_result.get_external_id(),
             project_id=project_id,
             name=test_result.get_autotest_name(),
@@ -252,7 +281,7 @@ class Converter:
             title=test_result.get_title(),
             description=test_result.get_description(),
             links=cls.links_to_links_put_model(test_result.get_links()),
-            labels=test_result.get_labels(),
+            labels=cls.labels_to_label_api_models(test_result.get_labels()),
             tags=test_result.get_tags(),
             external_key=test_result.get_external_key()
         )
@@ -295,8 +324,8 @@ class Converter:
     @adapter_logger
     def convert_test_result_model_to_test_results_id_put_request(
             cls,
-            test_result: TestResultResponse) -> ApiV2TestResultsIdPutRequest:
-        return ApiV2TestResultsIdPutRequest(
+            test_result: TestResultResponse) -> AdaptersTestResultsIdPutRequest:
+        return AdaptersTestResultsIdPutRequest(
             failure_class_ids=test_result.failure_class_ids,
             status_code=test_result.status.code,
             comment=test_result.comment,
@@ -314,8 +343,8 @@ class Converter:
     @adapter_logger
     def convert_test_result_with_all_setup_and_teardown_steps_to_test_results_id_put_request(
             cls,
-            test_result: TestResultWithAllFixtureStepResults) -> ApiV2TestResultsIdPutRequest:
-        return ApiV2TestResultsIdPutRequest(
+            test_result: TestResultWithAllFixtureStepResults) -> AdaptersTestResultsIdPutRequest:
+        return AdaptersTestResultsIdPutRequest(
             setup_results=cls.step_results_to_auto_test_step_result_update_request(
                 test_result.get_setup_results()),
             teardown_results=cls.step_results_to_auto_test_step_result_update_request(
@@ -355,7 +384,6 @@ class Converter:
                 title=link.get_title(),
                 type=LinkType(link.get_link_type()),
                 description=link.get_description(),
-                has_info=True,
             )
         else:
             return LinkCreateApiModel(
@@ -363,7 +391,6 @@ class Converter:
                 title=link.get_title(),
                 type=LinkType("Related"),
                 description=link.get_description(),
-                has_info=True,
             )
 
     @staticmethod
@@ -375,7 +402,6 @@ class Converter:
                 title=link.get_title(),
                 type=LinkType(link.get_link_type()),
                 description=link.get_description(),
-                has_info=True,
             )
         else:
             return LinkUpdateApiModel(
@@ -383,7 +409,6 @@ class Converter:
                 title=link.get_title(),
                 type=LinkType("Related"),
                 description=link.get_description(),
-                has_info=True,
             )
 
     @classmethod
@@ -553,32 +578,24 @@ class Converter:
     def prepare_to_create_autotest(
             cls,
             test_result: TestResult,
-            project_id: str,
-            work_item_ids_for_link_with_auto_test: list) -> CreateAutoTestRequest:
+            project_id: str) -> AdaptersAutoTestsPostRequest:
         logging.debug('Preparing to create the auto test ' + test_result.get_external_id())
 
-        model = cls.test_result_to_create_autotest_request(
+        return cls.test_result_to_create_autotest_request(
             test_result,
             project_id)
-        model.work_item_ids_for_link_with_auto_test = work_item_ids_for_link_with_auto_test
-
-        return model
 
     @classmethod
     @adapter_logger
     def prepare_to_mass_create_autotest(
             cls,
             test_result: TestResult,
-            project_id: str,
-            work_item_ids_for_link_with_auto_test: list) -> AutoTestCreateApiModel:
+            project_id: str) -> AutoTestCreateApiModel:
         logging.debug('Preparing to create the auto test ' + test_result.get_external_id())
 
-        model = cls.test_result_to_autotest_post_model(
+        return cls.test_result_to_autotest_post_model(
             test_result,
             project_id)
-        model.work_item_ids_for_link_with_auto_test = work_item_ids_for_link_with_auto_test
-
-        return model
 
     @classmethod
     @adapter_logger
@@ -586,7 +603,7 @@ class Converter:
             cls,
             test_result: TestResult,
             autotest: AutoTestApiResult,
-            project_id: str) -> UpdateAutoTestRequest:
+            project_id: str) -> AdaptersAutoTestsPutRequest:
         logging.debug('Preparing to update the auto test ' + test_result.get_external_id())
 
         model = cls.test_result_to_update_autotest_request(

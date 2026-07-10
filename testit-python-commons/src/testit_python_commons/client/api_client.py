@@ -2,9 +2,9 @@ import logging
 import os
 from datetime import datetime
 
-import testit_api_client
-from testit_api_client import ApiClient, Configuration
-from testit_api_client.apis import (
+import api_client_adapters
+from api_client_adapters import ApiClient, Configuration
+from api_client_adapters.apis import (
     AttachmentsApi,
     AutoTestsApi,
     TestRunsApi,
@@ -13,16 +13,16 @@ from testit_api_client.apis import (
     ProjectsApi,
     WorkflowsApi,
 )
-from testit_api_client.models import (
-    ApiV2TestResultsSearchPostRequest,
+from api_client_adapters.models import (
+    AdaptersTestResultsSearchPostRequest,
     AutoTestApiResult,
     AutoTestCreateApiModel,
     AutoTestUpdateApiModel,
     AttachmentPutModel,
     TestResultResponse,
     TestResultShortResponse,
-    TestRunV2ApiResult,
-    LinkAutoTestToWorkItemRequest,
+    TestRunApiResult,
+    AdaptersAutoTestsIdWorkItemsPostRequest,
     AutoTestWorkItemIdentifierApiResult,
     WorkflowApiResult,
 )
@@ -88,16 +88,17 @@ class ApiClientWorker:
             test_run_name
         )
 
-        response = self.__test_run_api.create_empty(create_empty_request=model)
+        response = self.__test_run_api.adapters_test_runs_post(
+            adapters_test_runs_post_request=model)
 
         return Converter.get_id_from_create_test_run_response(response)
 
     @retry
-    def get_test_run(self, test_run_id: str) -> TestRunV2ApiResult:
+    def get_test_run(self, test_run_id: str) -> TestRunApiResult:
         """Function gets test run and returns test run."""
         logging.debug(f"Getting test run by id {test_run_id}")
 
-        test_run = self.__test_run_api.get_test_run_by_id(test_run_id)
+        test_run = self.__test_run_api.adapters_test_runs_id_get(id=test_run_id)
         if test_run is not None:
             logging.debug(f"Got testrun: {test_run}")
             return test_run
@@ -106,12 +107,12 @@ class ApiClientWorker:
         raise Exception(f"Test run by id {test_run_id} not found!")
 
     @retry
-    def update_test_run(self, test_run: TestRunV2ApiResult) -> None:
+    def update_test_run(self, test_run: TestRunApiResult) -> None:
         """Function updates test run."""
         model = Converter.build_update_empty_request(test_run)
         logging.debug(f"Updating test run with model: {model}")
 
-        self.__test_run_api.update_empty(update_empty_request=model)
+        self.__test_run_api.adapters_test_runs_put(adapters_test_runs_put_request=model)
 
         logging.debug(f'Updated testrun (ID: {test_run.id})')
 
@@ -136,7 +137,7 @@ class ApiClientWorker:
     def __get_test_results(self) -> List[TestResultShortResponse]:
         all_test_results = []
         skip = 0
-        model: ApiV2TestResultsSearchPostRequest = (
+        model: AdaptersTestResultsSearchPostRequest = (
             Converter.build_test_results_search_post_request_with_in_progress_outcome(
                 self.__config.get_test_run_id(),
                 self.__config.get_configuration_id()))
@@ -144,10 +145,10 @@ class ApiClientWorker:
         while skip >= 0:
             logging.debug(f"Getting test results with limit {self.__tests_limit}: {model}")
 
-            test_results: List[TestResultShortResponse] = self.__test_results_api.api_v2_test_results_search_post(
+            test_results: List[TestResultShortResponse] = self.__test_results_api.adapters_test_results_search_post(
                 skip=skip,
                 take=self.__tests_limit,
-                api_v2_test_results_search_post_request=model)
+                adapters_test_results_search_post_request=model)
 
             logging.debug(f"Got {len(test_results)} test results: {test_results}")
 
@@ -166,7 +167,8 @@ class ApiClientWorker:
             self.__config.get_project_id(),
             external_id)
 
-        return self.__autotest_api.api_v2_auto_tests_search_post(api_v2_auto_tests_search_post_request=model)
+        return self.__autotest_api.adapters_auto_tests_search_post(
+            adapters_auto_tests_search_post_request=model)
 
     @adapter_logger
     @retry
@@ -175,7 +177,8 @@ class ApiClientWorker:
             self.__config.get_project_id(),
             test_result.get_external_id())
 
-        autotests = self.__autotest_api.api_v2_auto_tests_search_post(api_v2_auto_tests_search_post_request=model)
+        autotests = self.__autotest_api.adapters_auto_tests_search_post(
+            adapters_auto_tests_search_post_request=model)
         should_create_work_item = test_result.get_automatic_creation_test_cases()
 
         if autotests:
@@ -210,6 +213,7 @@ class ApiClientWorker:
         bulk_autotest_helper = BulkAutotestHelper(self.__autotest_api, self.__test_run_api, self.__config)
         create_count = 0
         update_count = 0
+        tests_to_link_after_create = []
 
         for test_result in test_results:
             test_result = self.__add_fixtures_to_test_result(test_result, fixture_containers)
@@ -219,9 +223,6 @@ class ApiClientWorker:
                 test_result,
                 self.__config.get_configuration_id(),
                 self.__status_codes)
-
-            work_item_ids_for_link_with_auto_test = self.__get_work_item_uuids_for_link_with_auto_test(
-                test_result.get_work_item_ids())
 
             autotests = self.__get_autotests_by_external_id(test_result.get_external_id())
 
@@ -255,10 +256,10 @@ class ApiClientWorker:
                 )
                 autotest_for_create = Converter.prepare_to_mass_create_autotest(
                     test_result,
-                    self.__config.get_project_id(),
-                    work_item_ids_for_link_with_auto_test)
+                    self.__config.get_project_id())
 
                 bulk_autotest_helper.add_for_create(autotest_for_create, test_result_model)
+                tests_to_link_after_create.append(test_result)
 
         logging.info(
             "Bulk write summary: create=%d, update=%d, total=%d",
@@ -267,6 +268,13 @@ class ApiClientWorker:
             len(test_results),
         )
         bulk_autotest_helper.teardown()
+
+        for test_result in tests_to_link_after_create:
+            created_autotests = self.__get_autotests_by_external_id(test_result.get_external_id())
+            if created_autotests:
+                self.__update_autotest_link_from_work_items(
+                    created_autotests[0].id,
+                    test_result.get_work_item_ids())
 
     @staticmethod
     @adapter_logger
@@ -337,12 +345,12 @@ class ApiClientWorker:
         logging.debug('Getting workitem by id ' + work_item_id)
 
         try:
-            work_item = self.__work_items_api.get_work_item_by_id(id=work_item_id)
+            work_item = self.__work_items_api.adapters_work_items_id_get(id=work_item_id)
 
             # logging.debug(f'Got workitem {work_item}')
 
             return work_item.id
-        except testit_api_client.exceptions.ApiException as exc:
+        except api_client_adapters.exceptions.ApiException as exc:
             if is_retriable_connection_error(exc):
                 raise
             if is_non_retriable_api_exception(exc):
@@ -357,7 +365,7 @@ class ApiClientWorker:
     @adapter_logger
     @retry_on_connection_error
     def __get_work_items_linked_to_autotest(self, autotest_global_id: str) -> List[AutoTestWorkItemIdentifierApiResult]:
-        return self.__autotest_api.get_work_items_linked_to_auto_test(id=autotest_global_id)
+        return self.__autotest_api.adapters_auto_tests_id_work_items_get(id=autotest_global_id)
 
     @adapter_logger
     def __update_autotest_link_from_work_items(self, autotest_global_id: str, work_item_ids: list):
@@ -383,26 +391,27 @@ class ApiClientWorker:
         logging.debug(f'Autotest "{test_result.get_autotest_name()}" was not found')
 
         logging.debug("call __create_auto_test")
-        work_item_ids_for_link_with_auto_test = self.__get_work_item_uuids_for_link_with_auto_test(
-            test_result.get_work_item_ids())
 
         model = Converter.prepare_to_create_autotest(
             test_result,
-            self.__config.get_project_id(),
-            work_item_ids_for_link_with_auto_test)
+            self.__config.get_project_id())
 
-        autotest_response = self.__autotest_api.create_auto_test(create_auto_test_request=model)
+        autotest_response = self.__autotest_api.adapters_auto_tests_post(
+            adapters_auto_tests_post_request=model)
 
         logging.debug(f'Autotest "{test_result.get_autotest_name()}" was created')
 
-        return autotest_response.id
+        autotest_id = autotest_response.id
+        self.__update_autotest_link_from_work_items(autotest_id, test_result.get_work_item_ids())
+
+        return autotest_id
 
     @adapter_logger
     @retry
     def __create_tests(self, autotests_for_create: List[AutoTestCreateApiModel]) -> None:
         logging.debug(f'Creating autotests: "{autotests_for_create}')
 
-        self.__autotest_api.create_multiple(auto_test_create_api_model=autotests_for_create)
+        self.__autotest_api.adapters_auto_tests_bulk_post(auto_test_create_api_model=autotests_for_create)
 
         logging.debug(f'Autotests were created')
 
@@ -414,7 +423,7 @@ class ApiClientWorker:
         model = Converter.prepare_to_update_autotest(test_result, autotest, self.__config.get_project_id())
 
         try:
-            self.__autotest_api.update_auto_test(update_auto_test_request=model)
+            self.__autotest_api.adapters_auto_tests_put(adapters_auto_tests_put_request=model)
         except Exception as exc:
             if is_retriable_connection_error(exc):
                 raise
@@ -427,7 +436,7 @@ class ApiClientWorker:
     def __update_tests(self, autotests_for_update: List[AutoTestUpdateApiModel]) -> None:
         # logging.debug(f'Updating autotests: {autotests_for_update}')
 
-        self.__autotest_api.update_multiple(auto_test_update_api_model=autotests_for_update)
+        self.__autotest_api.adapters_auto_tests_bulk_put(auto_test_update_api_model=autotests_for_update)
 
         logging.debug(f'Autotests were updated')
 
@@ -435,10 +444,10 @@ class ApiClientWorker:
     @retry
     def __unlink_test_to_work_item(self, autotest_global_id: str, work_item_id: str) -> None:
         try:
-            self.__autotest_api.delete_auto_test_link_from_work_item(
+            self.__autotest_api.adapters_auto_tests_id_work_items_delete(
                 id=autotest_global_id,
                 work_item_id=work_item_id)
-        except testit_api_client.exceptions.ApiException as exc:
+        except api_client_adapters.exceptions.ApiException as exc:
             if is_non_retriable_api_exception(exc):
                 logging.warning(
                     'Cannot unlink autotest %s from work item %s: %s',
@@ -455,10 +464,11 @@ class ApiClientWorker:
     @retry
     def __link_test_to_work_item(self, autotest_global_id: str, work_item_id: str) -> None:
         try:
-            self.__autotest_api.link_auto_test_to_work_item(
-                autotest_global_id,
-                link_auto_test_to_work_item_request=LinkAutoTestToWorkItemRequest(id=work_item_id))
-        except testit_api_client.exceptions.ApiException as exc:
+            self.__autotest_api.adapters_auto_tests_id_work_items_post(
+                id=autotest_global_id,
+                adapters_auto_tests_id_work_items_post_request=AdaptersAutoTestsIdWorkItemsPostRequest(
+                    id=work_item_id))
+        except api_client_adapters.exceptions.ApiException as exc:
             if is_non_retriable_api_exception(exc):
                 logging.warning(
                     'Cannot link autotest %s to work item %s: %s',
@@ -479,7 +489,7 @@ class ApiClientWorker:
             self.__config.get_configuration_id(),
             self.__status_codes)
 
-        response = self.__test_run_api.set_auto_test_results_for_test_run(
+        response = self.__test_run_api.adapters_test_runs_id_test_results_post(
             id=self.__config.get_test_run_id(),
             auto_test_results_for_test_run_model=[model])
 
@@ -491,7 +501,7 @@ class ApiClientWorker:
     @adapter_logger
     @retry
     def get_test_result_by_id(self, test_result_id: str) -> TestResultResponse:
-        return self.__test_results_api.api_v2_test_results_id_get(id=test_result_id)
+        return self.__test_results_api.adapters_test_results_id_get(id=test_result_id)
 
     @adapter_logger
     def update_test_results(self, fixtures_containers: dict, test_result_ids: dict) -> None:
@@ -506,9 +516,9 @@ class ApiClientWorker:
                 test_result)
 
             try:
-                self.__test_results_api.api_v2_test_results_id_put(
+                self.__test_results_api.adapters_test_results_id_put(
                     id=test_result.get_test_result_id(),
-                    api_v2_test_results_id_put_request=model)
+                    adapters_test_results_id_put_request=model)
             except Exception as exc:
                 if is_retriable_connection_error(exc):
                     raise
@@ -519,7 +529,7 @@ class ApiClientWorker:
     @retry
     def __upload_attachment(self, path: str) -> AttachmentPutModel:
         with open(path, "rb") as file:
-            attachment_response = self.__attachments_api.api_v2_attachments_post(file=file)
+            attachment_response = self.__attachments_api.adapters_attachments_post(file=file)
         return AttachmentPutModel(attachment_response['id'])
 
     @adapter_logger
@@ -545,12 +555,12 @@ class ApiClientWorker:
     @adapter_logger
     @retry
     def __get_project(self):
-        return self.__projects_api.get_project_by_id(id=self.__config.get_project_id())
+        return self.__projects_api.adapters_projects_id_get(id=self.__config.get_project_id())
 
     @adapter_logger
     @retry
     def __get_workflow_by_id(self, workflow_id: str) -> WorkflowApiResult:
-        return self.__workflows_api.api_v2_workflows_id_get(id=workflow_id)
+        return self.__workflows_api.adapters_workflows_id_get(id=workflow_id)
 
     @adapter_logger
     def __get_status_codes(self) -> List[str]:
