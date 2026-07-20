@@ -1,6 +1,6 @@
 from setuptools import find_packages, setup
 
-VERSION = "4.3.1.post580"
+VERSION = "4.3.2.post580"
 
 setup(
     name='testit-python-commons',
@@ -25,5 +25,5 @@ setup(
     py_modules=['testit', 'testit_python_commons'],
     packages=find_packages(where='src'),
     package_dir={'': 'src'},
-    install_requires=['pluggy', 'tomli', 'testit-api-client==7.6.0.post580']
+    install_requires=['pluggy', 'tomli', 'testit-api-client==7.6.1.post580']
 )
