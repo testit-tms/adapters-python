@@ -1,11 +1,11 @@
 import logging
 
-from testit_api_client.apis import AutoTestsApi, TestRunsApi
-from testit_api_client.models import (
+from api_client_adapters.apis import AutoTestsApi, TestRunsApi
+from api_client_adapters.models import (
     AutoTestCreateApiModel,
     AutoTestUpdateApiModel,
     AutoTestResultsForTestRunModel,
-    LinkAutoTestToWorkItemRequest,
+    AdaptersAutoTestsIdWorkItemsPostRequest,
     AutoTestWorkItemIdentifierApiResult,
 )
 
@@ -18,7 +18,7 @@ from testit_python_commons.client.models import (
     ThreadsForUpdateAndResult
 )
 from testit_python_commons.services.logger import adapter_logger
-import testit_api_client
+import api_client_adapters
 
 from testit_python_commons.services.retry import is_non_retriable_api_exception, retry
 from testit_python_commons.utils.html_escape_utils import HtmlEscapeUtils
@@ -157,7 +157,7 @@ class BulkAutotestHelper:
         # logging.debug(f'Creating autotests: "{autotests_for_create}')
 
         autotests_for_create = HtmlEscapeUtils.escape_html_in_object(autotests_for_create)
-        self.__autotests_api.create_multiple(auto_test_create_api_model=autotests_for_create)
+        self.__autotests_api.adapters_auto_tests_bulk_post(auto_test_create_api_model=autotests_for_create)
 
         logging.debug(f'Autotests were created')
 
@@ -166,7 +166,7 @@ class BulkAutotestHelper:
         # logging.debug(f'Updating autotests: {autotests_for_update}')
 
         autotests_for_update = HtmlEscapeUtils.escape_html_in_object(autotests_for_update)
-        self.__autotests_api.update_multiple(auto_test_update_api_model=autotests_for_update)
+        self.__autotests_api.adapters_auto_tests_bulk_put(auto_test_update_api_model=autotests_for_update)
 
         logging.debug(f'Autotests were updated')
 
@@ -175,24 +175,24 @@ class BulkAutotestHelper:
         # logging.debug(f'Loading test results: {test_results}')
 
         test_results = HtmlEscapeUtils.escape_html_in_object(test_results)
-        self.__test_runs_api.set_auto_test_results_for_test_run(
+        self.__test_runs_api.adapters_test_runs_id_test_results_post(
             id=self.__test_run_id,
             auto_test_results_for_test_run_model=test_results)
 
     # TODO: delete after fix PUT/api/v2/autoTests
     @adapter_logger
     def __get_work_items_linked_to_autotest(self, autotest_global_id: str) -> List[AutoTestWorkItemIdentifierApiResult]:
-        return self.__autotests_api.get_work_items_linked_to_auto_test(id=autotest_global_id)
+        return self.__autotests_api.adapters_auto_tests_id_work_items_get(id=autotest_global_id)
 
     # TODO: delete after fix PUT/api/v2/autoTests
     @adapter_logger
     @retry
     def __unlink_test_to_work_item(self, autotest_global_id: str, work_item_id: str):
         try:
-            self.__autotests_api.delete_auto_test_link_from_work_item(
+            self.__autotests_api.adapters_auto_tests_id_work_items_delete(
                 id=autotest_global_id,
                 work_item_id=work_item_id)
-        except testit_api_client.exceptions.ApiException as exc:
+        except api_client_adapters.exceptions.ApiException as exc:
             if is_non_retriable_api_exception(exc):
                 logging.warning(
                     'Cannot unlink autotest %s from work item %s: %s',
@@ -210,10 +210,11 @@ class BulkAutotestHelper:
     @retry
     def __link_test_to_work_item(self, autotest_global_id: str, work_item_id: str):
         try:
-            self.__autotests_api.link_auto_test_to_work_item(
-                autotest_global_id,
-                link_auto_test_to_work_item_request=LinkAutoTestToWorkItemRequest(id=work_item_id))
-        except testit_api_client.exceptions.ApiException as exc:
+            self.__autotests_api.adapters_auto_tests_id_work_items_post(
+                id=autotest_global_id,
+                adapters_auto_tests_id_work_items_post_request=AdaptersAutoTestsIdWorkItemsPostRequest(
+                    id=work_item_id))
+        except api_client_adapters.exceptions.ApiException as exc:
             if is_non_retriable_api_exception(exc):
                 logging.warning(
                     'Cannot link autotest %s to work item %s: %s',

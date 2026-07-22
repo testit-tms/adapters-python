@@ -1,4 +1,4 @@
-from testit_api_client.models import (
+from api_client_adapters.models import (
     AutoTestCreateApiModel,
     AutoTestUpdateApiModel,
     AutoTestResultsForTestRunModel,
