@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-VERSION = "5.0.0"
+VERSION = "5.0.0.post580"
 
 setup(
     name='testit-adapter-nose',
