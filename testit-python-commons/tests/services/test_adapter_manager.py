@@ -174,6 +174,38 @@ class TestAdapterManager:
 
         assert adapter_manager._AdapterManager__test_results == [test_result]
 
+    def test_on_master_keeps_final_outcome_and_writes(
+            self,
+            adapter_manager,
+            mock_client_config,
+            mocker):
+        sync_runner = mocker.Mock()
+        sync_runner.send_in_progress_test_result.return_value = True
+        adapter_manager._AdapterManager__sync_storage_runner = sync_runner
+        mock_client_config.get_project_id.return_value = "proj-1"
+        mocker.patch(
+            "testit_python_commons.services.adapter_manager.SyncStorageRunner"
+            ".test_result_to_test_result_cut_api_model",
+            return_value=mocker.Mock(
+                status_code="Passed",
+                auto_test_external_id="ext-1",
+            ),
+        )
+        write_internal = mocker.patch.object(
+            adapter_manager,
+            "_write_test_realtime_internal",
+        )
+
+        test_result = mocker.Mock()
+        test_result.get_outcome.return_value = "Passed"
+        test_result.get_external_id.return_value = "ext-1"
+        test_result.get_started_on.return_value = None
+
+        assert adapter_manager.on_master_no_already_in_progress(test_result) is True
+        test_result.set_outcome.assert_not_called()
+        write_internal.assert_called_once_with(test_result)
+        sync_runner.set_is_already_in_progress.assert_called_with(True)
+
     def test_create_attachment_with_name(self, adapter_manager, mock_api_client_worker, mocker):
         mock_os_path_join = mocker.patch("os.path.join")
         mock_os_path_abspath = mocker.patch("os.path.abspath", return_value="/abs/path")

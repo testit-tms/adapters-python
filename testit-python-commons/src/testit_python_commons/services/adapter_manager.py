@@ -18,7 +18,6 @@ from testit_python_commons.services.sync_storage.sync_storage_runner import (
 )
 
 SYNC_STORAGE_AVAILABLE = True
-IN_PROGRESS_LITERAL = "InProgress"
 
 
 class AdapterManager:
@@ -187,9 +186,12 @@ class AdapterManager:
         self.__sync_storage_runner.set_is_already_in_progress(True)
 
         try:
-            # Write test result normally (mark as IN PROGRESS in Test IT)
-            logging.debug("Write internally, change status to in progress")
-            test_result.set_outcome(IN_PROGRESS_LITERAL)
+            # Keep final outcome. Prefer PUT on existing TP-bound InProgress (mode=0);
+            # never invent a second InProgress via setAutoTestResultsForTestRun.
+            logging.debug(
+                "SyncStorage accepted %s; write final status (update existing if present)",
+                test_result.get_external_id(),
+            )
             self._write_test_realtime_internal(test_result)
             return True
         except Exception as e:
