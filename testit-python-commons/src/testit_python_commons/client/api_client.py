@@ -482,8 +482,98 @@ class ApiClientWorker:
         logging.debug(f'Autotest was linked with workItem "{work_item_id}" by global id "{autotest_global_id}')
 
     @adapter_logger
+    def find_in_progress_test_result_id(self, external_id: str):
+        if not external_id:
+            return None
+
+        matches = []
+        for item in self.__get_test_results():
+            if item is None:
+                continue
+            if getattr(item, "autotest_external_id", None) == external_id:
+                matches.append(item)
+
+        if not matches:
+            return None
+
+        orphan_id = None
+        for item in matches:
+            result_id = getattr(item, "id", None)
+            if result_id is None:
+                continue
+            result_id_str = str(result_id)
+            if self.__has_valid_test_point_id_v2(result_id_str):
+                return result_id_str
+            if orphan_id is None:
+                orphan_id = result_id_str
+        return orphan_id
+
+    def __has_valid_test_point_id_v2(self, test_result_id: str) -> bool:
+        """Hack: adapters OpenAPI omits testPointId — read GET /api/v2/testResults/{id}."""
+        import requests
+
+        base = (self.__config.get_url() or "").rstrip("/")
+        url = f"{base}/api/v2/testResults/{test_result_id}"
+        try:
+            response = requests.get(
+                url,
+                headers={
+                    "Accept": "application/json",
+                    "Authorization": f"PrivateToken {self.__config.get_private_token()}",
+                },
+                timeout=10,
+                verify=self.__config.get_cert_validation(),
+            )
+            if response.status_code < 200 or response.status_code >= 300:
+                logging.debug(
+                    "v2 getTestResult %s HTTP %s", test_result_id, response.status_code
+                )
+                return False
+            payload = response.json()
+            test_point_id = payload.get("testPointId")
+            if test_point_id is None:
+                return False
+            value = str(test_point_id)
+            return bool(value) and value != "00000000-0000-0000-0000-000000000000"
+        except Exception as exc:
+            logging.debug("v2 getTestResult %s failed: %s", test_result_id, exc)
+            return False
+
+    @adapter_logger
+    @retry
+    def __update_existing_test_result(self, test_result_id: str, test_result: TestResult) -> str:
+        existing = self.get_test_result_by_id(test_result_id)
+        model = Converter.convert_test_result_model_to_test_results_id_put_request(existing)
+
+        outcome = test_result.get_outcome()
+        if outcome and outcome.upper() in self.__status_codes:
+            model.status_code = outcome
+
+        if test_result.get_duration() is not None:
+            model.duration_in_ms = round(test_result.get_duration())
+        if test_result.get_message() is not None:
+            model.message = test_result.get_message()
+        if test_result.get_traces() is not None:
+            model.trace = test_result.get_traces()
+
+        self.__test_results_api.adapters_test_results_id_put(
+            id=test_result_id,
+            adapters_test_results_id_put_request=model,
+        )
+        logging.debug(
+            'Updated existing test result "%s" for autotest "%s"',
+            test_result_id,
+            test_result.get_autotest_name(),
+        )
+        return test_result_id
+
+    @adapter_logger
     @retry
     def __load_test_result(self, test_result: TestResult) -> str:
+        existing_id = self.find_in_progress_test_result_id(test_result.get_external_id())
+        if existing_id:
+            return self.__update_existing_test_result(existing_id, test_result)
+
         model = Converter.test_result_to_testrun_result_post_model(
             test_result,
             self.__config.get_configuration_id(),
