@@ -10,6 +10,8 @@ class Option(object):
     set_configuration_id = attrib(default=None)
     set_test_run_id = attrib(default=None)
     set_test_run_name = attrib(default=None)
+    set_test_run_tags = attrib(default=None)
+    set_test_run_links = attrib(default=None)
     set_tms_proxy = attrib(default=None)
     set_adapter_mode = attrib(default=None)
     set_config_file = attrib(default=None)

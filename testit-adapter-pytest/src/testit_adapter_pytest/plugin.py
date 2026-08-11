@@ -135,6 +135,20 @@ def pytest_addoption(parser):
         help='Set custom name of test run (optional)'
     )
     parser.getgroup('testit').addoption(
+        '--tmsTestRunTags',
+        action="store",
+        dest="set_test_run_tags",
+        metavar='smoke,nightly',
+        help='Set test run tags (comma-separated or JSON array), optional'
+    )
+    parser.getgroup('testit').addoption(
+        '--tmsTestRunLinks',
+        action="store",
+        dest="set_test_run_links",
+        metavar='[{"url":"https://ci.example/job/1","title":"CI Job","type":"Related"}]',
+        help='Set test run links as JSON array (optional). Applied at run create/start.'
+    )
+    parser.getgroup('testit').addoption(
         '--tmsAdapterMode',
         action="store",
         type=_adapter_mode_type,

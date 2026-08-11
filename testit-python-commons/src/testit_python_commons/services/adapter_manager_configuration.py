@@ -1,7 +1,12 @@
+from typing import List
+
 from testit_python_commons.models.adapter_mode import AdapterMode
+from testit_python_commons.models.link import Link
 from testit_python_commons.services.logger import adapter_logger
+from testit_python_commons.services.test_run_metadata import parse_test_run_links, parse_test_run_tags
 from testit_python_commons.services.utils import Utils
 from testit_python_commons.configurations.properties_names import PropertiesNames
+
 
 class AdapterManagerConfiguration:
     __test_run_id = None
@@ -14,8 +19,11 @@ class AdapterManagerConfiguration:
         self.__automatic_creation_test_cases = Utils.convert_value_str_to_bool(
             app_properties.get(PropertiesNames.AUTOMATIC_CREATION_TEST_CASES).lower())
 
-        self.__import_realtime = Utils.convert_value_str_to_bool(app_properties.get(PropertiesNames.IMPORT_REALTIME).lower())
+        self.__import_realtime = Utils.convert_value_str_to_bool(
+            app_properties.get(PropertiesNames.IMPORT_REALTIME).lower())
         self.__test_run_name = app_properties.get(PropertiesNames.TEST_RUN_NAME)
+        self.__test_run_tags = parse_test_run_tags(app_properties.get(PropertiesNames.TEST_RUN_TAGS))
+        self.__test_run_links = parse_test_run_links(app_properties.get(PropertiesNames.TEST_RUN_LINKS))
 
     @adapter_logger
     def get_test_run_id(self):
@@ -28,6 +36,14 @@ class AdapterManagerConfiguration:
     @adapter_logger
     def get_test_run_name(self):
         return self.__test_run_name
+
+    @adapter_logger
+    def get_test_run_tags(self) -> List[str]:
+        return self.__test_run_tags
+
+    @adapter_logger
+    def get_test_run_links(self) -> List[Link]:
+        return self.__test_run_links
 
     @adapter_logger
     def get_mode(self):
