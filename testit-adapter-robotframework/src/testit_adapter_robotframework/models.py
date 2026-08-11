@@ -233,6 +233,10 @@ class Option:
             self.set_tms_proxy = kwargs.get('tmsProxy', None)
         if kwargs.get('tmsTestRunName', None):
             self.set_test_run_name = kwargs.get('tmsTestRunName', None)
+        if kwargs.get('tmsTestRunTags', None):
+            self.set_test_run_tags = kwargs.get('tmsTestRunTags', None)
+        if kwargs.get('tmsTestRunLinks', None):
+            self.set_test_run_links = kwargs.get('tmsTestRunLinks', None)
         if kwargs.get('tmsAdapterMode', None):
             self.set_adapter_mode = kwargs.get('tmsAdapterMode', None)
         if kwargs.get('tmsConfigFile', None):

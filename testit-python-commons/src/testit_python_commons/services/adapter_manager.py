@@ -34,6 +34,7 @@ class AdapterManager:
         self.__fixture_manager = fixture_manager
         self.__test_result_map = {}
         self.__test_results = []
+        self.__test_run_metadata_applied = False
 
         # Sync Storage integration
         self.__sync_storage_runner = None
@@ -106,33 +107,35 @@ class AdapterManager:
             test_run_id = self.__config.get_test_run_id()
 
             if test_run_id:
-                self.__update_test_run_name(test_run_id)
+                self.__apply_test_run_metadata_early(test_run_id)
 
             return test_run_id or ""
 
         result = self.__config.get_test_run_id()
         if result is not None:
+            self.__apply_test_run_metadata_early(result)
             return result
 
         # create if not exists
         test_run_name = self.__config.get_test_run_name()
-        return self.__api_client.create_test_run(test_run_name if test_run_name else "")
+        return self.__api_client.create_test_run(
+            test_run_name if test_run_name else "",
+            tags=self.__config.get_test_run_tags(),
+            links=self.__config.get_test_run_links(),
+        )
 
     @adapter_logger
-    def __update_test_run_name(self, test_run_id: str) -> None:
-        test_run_name = self.__config.get_test_run_name()
-
-        if not test_run_name:
+    def __apply_test_run_metadata_early(self, test_run_id: str) -> None:
+        if self.__test_run_metadata_applied:
             return
 
-        test_run = self.__api_client.get_test_run(test_run_id)
-
-        if test_run_name == test_run.name:
-            return
-
-        test_run.name = test_run_name
-
-        self.__api_client.update_test_run(test_run)
+        self.__test_run_metadata_applied = True
+        self.__api_client.apply_test_run_tags_and_links(
+            test_run_id,
+            tags=self.__config.get_test_run_tags(),
+            links=self.__config.get_test_run_links(),
+            test_run_name=self.__config.get_test_run_name(),
+        )
 
     @adapter_logger
     def get_autotests_for_launch(self):

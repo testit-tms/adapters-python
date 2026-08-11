@@ -36,6 +36,12 @@ def parse_userdata(userdata):
     if 'tmsTestRunName' in userdata:
         option.set_test_run_name = userdata['tmsTestRunName']
 
+    if 'tmsTestRunTags' in userdata:
+        option.set_test_run_tags = userdata['tmsTestRunTags']
+
+    if 'tmsTestRunLinks' in userdata:
+        option.set_test_run_links = userdata['tmsTestRunLinks']
+
     if 'tmsProxy' in userdata:
         option.set_tms_proxy = userdata['tmsProxy']
 
