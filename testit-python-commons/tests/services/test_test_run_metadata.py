@@ -48,6 +48,26 @@ def test_create_test_run_model_includes_tags_and_links():
     assert model.links[0].url == 'https://ci.example/job/1'
 
 
+def test_build_update_empty_request_without_description_attr(mocker):
+    """Adapters TestRunApiResult has no description/launch_source — must not raise."""
+    test_run = mocker.Mock(spec=['id', 'name', 'attachments', 'links', 'tags'])
+    test_run.id = 'run-id'
+    test_run.name = 'name'
+    test_run.attachments = []
+    test_run.links = []
+    test_run.tags = ['ui']
+    # Simulate OpenAPI ApiAttributeError on missing fields
+    type(test_run).description = property(
+        lambda self: (_ for _ in ()).throw(AttributeError('description')))
+    type(test_run).launch_source = property(
+        lambda self: (_ for _ in ()).throw(AttributeError('launch_source')))
+
+    model = Converter.build_update_empty_request(test_run, tags=['smoke'], links=[])
+    assert model.tags == ['ui', 'smoke']
+    assert 'description' not in model
+    assert 'launch_source' not in model
+
+
 def test_build_update_empty_request_merges_tags_and_links(mocker):
     existing_link = LinkApiResult(
         id='link-1',

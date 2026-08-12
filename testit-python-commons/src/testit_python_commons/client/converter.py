@@ -77,27 +77,47 @@ class Converter:
             test_run: TestRunApiResult,
             tags: List[str] = None,
             links: List[Link] = None) -> AdaptersTestRunsPutRequest:
-        merged_tags = list(test_run.tags or [])
+        existing_tags = cls._safe_model_attr(test_run, 'tags') or []
+        merged_tags = list(existing_tags)
         for tag in tags or []:
             if tag not in merged_tags:
                 merged_tags.append(tag)
 
-        update_links = list(map(cls.build_update_link_api_model, test_run.links or []))
-        existing_urls = {link.url for link in (test_run.links or [])}
+        existing_links = cls._safe_model_attr(test_run, 'links') or []
+        update_links = list(map(cls.build_update_link_api_model, existing_links))
+        existing_urls = {link.url for link in existing_links}
         for link in links or []:
             if link.get_url() not in existing_urls:
                 update_links.append(cls.link_to_update_link_api_model(link))
                 existing_urls.add(link.get_url())
 
-        return AdaptersTestRunsPutRequest(
-            id=test_run.id,
-            name=test_run.name,
-            description=test_run.description,
-            launch_source=test_run.launch_source,
-            attachments=list(map(cls.build_assign_attachment_api_model, test_run.attachments or [])),
-            links=update_links,
-            tags=merged_tags,
-        )
+        existing_attachments = cls._safe_model_attr(test_run, 'attachments') or []
+        kwargs = {
+            'id': test_run.id,
+            'name': test_run.name,
+            'attachments': list(map(cls.build_assign_attachment_api_model, existing_attachments)),
+            'links': update_links,
+            'tags': merged_tags,
+        }
+        # Adapters TestRunApiResult DTO has no description/launch_source; omit if absent.
+        description = cls._safe_model_attr(test_run, 'description')
+        if description is not None:
+            kwargs['description'] = description
+        launch_source = cls._safe_model_attr(test_run, 'launch_source')
+        if launch_source is not None:
+            kwargs['launch_source'] = launch_source
+
+        return AdaptersTestRunsPutRequest(**kwargs)
+
+    @staticmethod
+    def _safe_model_attr(obj, name, default=None):
+        try:
+            return obj[name]
+        except Exception:
+            try:
+                return getattr(obj, name)
+            except Exception:
+                return default
 
     @staticmethod
     @adapter_logger
@@ -123,9 +143,9 @@ class Converter:
     @adapter_logger
     def build_update_link_api_model(link: LinkApiResult) -> UpdateLinkApiModel:
         return UpdateLinkApiModel(
-            id=link.id,
-            title=link.title,
-            description=link.description,
+            id=Converter._safe_model_attr(link, 'id'),
+            title=Converter._safe_model_attr(link, 'title'),
+            description=Converter._safe_model_attr(link, 'description'),
             type=link.type,
             url=link.url,
         )
