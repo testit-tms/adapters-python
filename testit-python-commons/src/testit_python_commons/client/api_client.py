@@ -30,6 +30,9 @@ from api_client_adapters.models import (
 from testit_python_commons.client.client_configuration import ClientConfiguration
 from testit_python_commons.client.converter import Converter
 from testit_python_commons.client.helpers.bulk_autotest_helper import BulkAutotestHelper
+from typing import List
+
+from testit_python_commons.models.link import Link
 from testit_python_commons.models.test_result import TestResult
 from testit_python_commons.services.logger import adapter_logger
 from testit_python_commons.services.retry import (
@@ -38,7 +41,6 @@ from testit_python_commons.services.retry import (
     retry,
     retry_on_connection_error,
 )
-from typing import List
 
 
 class ApiClientWorker:
@@ -80,14 +82,25 @@ class ApiClientWorker:
 
     @adapter_logger
     @retry
-    def create_test_run(self, test_run_name: str = None) -> str:
+    def create_test_run(
+            self,
+            test_run_name: str = None,
+            tags: List[str] = None,
+            links: List[Link] = None) -> str:
         test_run_name = f'TestRun_{datetime.today().strftime("%Y-%m-%dT%H:%M:%S")}' if \
             not test_run_name else test_run_name
         model = Converter.test_run_to_test_run_short_model(
             self.__config.get_project_id(),
-            test_run_name
+            test_run_name,
+            tags=tags,
+            links=links,
         )
 
+        logging.info(
+            'Creating test run with tags=%s, links=%s',
+            tags or [],
+            [link.get_url() for link in (links or [])],
+        )
         response = self.__test_run_api.adapters_test_runs_post(
             adapters_test_runs_post_request=model)
 
@@ -107,14 +120,54 @@ class ApiClientWorker:
         raise Exception(f"Test run by id {test_run_id} not found!")
 
     @retry
-    def update_test_run(self, test_run: TestRunApiResult) -> None:
+    def update_test_run(
+            self,
+            test_run: TestRunApiResult,
+            tags: List[str] = None,
+            links: List[Link] = None) -> None:
         """Function updates test run."""
-        model = Converter.build_update_empty_request(test_run)
+        model = Converter.build_update_empty_request(test_run, tags=tags, links=links)
         logging.debug(f"Updating test run with model: {model}")
 
         self.__test_run_api.adapters_test_runs_put(adapters_test_runs_put_request=model)
 
         logging.debug(f'Updated testrun (ID: {test_run.id})')
+
+    @adapter_logger
+    def apply_test_run_tags_and_links(
+            self,
+            test_run_id: str,
+            tags: List[str] = None,
+            links: List[Link] = None,
+            test_run_name: str = None) -> None:
+        tags = tags or []
+        links = links or []
+        if not tags and not links and not test_run_name:
+            return
+
+        try:
+            test_run = self.get_test_run(test_run_id)
+            name_changed = bool(test_run_name and test_run_name != test_run.name)
+            if name_changed:
+                test_run.name = test_run_name
+
+            if not tags and not links and not name_changed:
+                return
+
+            logging.info(
+                'Applying test run metadata to %s: tags=%s, links=%s, name=%s',
+                test_run_id,
+                tags,
+                [link.get_url() for link in links],
+                test_run_name,
+            )
+            self.update_test_run(test_run, tags=tags, links=links)
+        except Exception as exc:
+            logging.error(
+                'Cannot apply tags/links to test run %s: %s',
+                test_run_id,
+                exc,
+            )
 
     @adapter_logger
     def set_test_run_id(self, test_run_id: str) -> None:

@@ -52,14 +52,41 @@ class TestAdapterManager:
         test_run_id = str(uuid.uuid4())
         mock_adapter_config.get_mode.return_value = AdapterMode.NEW_TEST_RUN
         mock_adapter_config.get_test_run_id.return_value = None
+        mock_adapter_config.get_test_run_name.return_value = 'CustomRun'
+        mock_adapter_config.get_test_run_tags.return_value = ['smoke']
+        mock_adapter_config.get_test_run_links.return_value = []
         mock_api_client_worker.create_test_run.return_value = test_run_id
 
         test_run_result_id = adapter_manager.get_test_run_id()
 
         assert test_run_id == test_run_result_id
         mock_adapter_config.get_mode.assert_called_once()
-        mock_api_client_worker.create_test_run.assert_called_once()
+        mock_api_client_worker.create_test_run.assert_called_once_with(
+            'CustomRun',
+            tags=['smoke'],
+            links=[],
+        )
         mock_adapter_config.get_test_run_id.assert_called_once()
+
+    def test_get_test_run_id_existing_run_applies_metadata_early(
+            self, adapter_manager, mock_adapter_config, mock_api_client_worker):
+        test_run_id = str(uuid.uuid4())
+        mock_adapter_config.get_mode.return_value = AdapterMode.USE_FILTER
+        mock_adapter_config.get_test_run_id.return_value = test_run_id
+        mock_adapter_config.get_test_run_name.return_value = None
+        mock_adapter_config.get_test_run_tags.return_value = ['nightly']
+        mock_adapter_config.get_test_run_links.return_value = []
+
+        assert adapter_manager.get_test_run_id() == test_run_id
+        mock_api_client_worker.apply_test_run_tags_and_links.assert_called_once_with(
+            test_run_id,
+            tags=['nightly'],
+            links=[],
+            test_run_name=None,
+        )
+        # second call must not re-apply
+        assert adapter_manager.get_test_run_id() == test_run_id
+        mock_api_client_worker.apply_test_run_tags_and_links.assert_called_once()
 
     def test_get_autotests_for_launch_use_filter_mode(self, adapter_manager, mock_adapter_config, mock_api_client_worker):
         mock_adapter_config.get_mode.return_value = AdapterMode.USE_FILTER

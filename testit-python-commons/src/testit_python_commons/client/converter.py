@@ -48,11 +48,22 @@ from testit_python_commons.services.logger import adapter_logger
 class Converter:
     @staticmethod
     @adapter_logger
-    def test_run_to_test_run_short_model(project_id: str, name: str) -> AdaptersTestRunsPostRequest:
-        return AdaptersTestRunsPostRequest(
-            project_id=project_id,
-            name=name
-        )
+    def test_run_to_test_run_short_model(
+            project_id: str,
+            name: str,
+            tags: List[str] = None,
+            links: List[Link] = None) -> AdaptersTestRunsPostRequest:
+        kwargs = {
+            'project_id': project_id,
+            'name': name,
+        }
+        if tags:
+            kwargs['tags'] = tags
+        if links:
+            kwargs['links'] = [
+                Converter.link_to_create_link_api_model(link) for link in links
+            ]
+        return AdaptersTestRunsPostRequest(**kwargs)
 
     @staticmethod
     @adapter_logger
@@ -61,14 +72,51 @@ class Converter:
 
     @classmethod
     @adapter_logger
-    def build_update_empty_request(cls, test_run: TestRunApiResult) -> AdaptersTestRunsPutRequest:
+    def build_update_empty_request(
+            cls,
+            test_run: TestRunApiResult,
+            tags: List[str] = None,
+            links: List[Link] = None) -> AdaptersTestRunsPutRequest:
+        merged_tags = list(test_run.tags or [])
+        for tag in tags or []:
+            if tag not in merged_tags:
+                merged_tags.append(tag)
+
+        update_links = list(map(cls.build_update_link_api_model, test_run.links or []))
+        existing_urls = {link.url for link in (test_run.links or [])}
+        for link in links or []:
+            if link.get_url() not in existing_urls:
+                update_links.append(cls.link_to_update_link_api_model(link))
+                existing_urls.add(link.get_url())
+
         return AdaptersTestRunsPutRequest(
             id=test_run.id,
             name=test_run.name,
             description=test_run.description,
             launch_source=test_run.launch_source,
-            attachments=list(map(cls.build_assign_attachment_api_model, test_run.attachments)),
-            links=list(map(cls.build_update_link_api_model, test_run.links))
+            attachments=list(map(cls.build_assign_attachment_api_model, test_run.attachments or [])),
+            links=update_links,
+            tags=merged_tags,
+        )
+
+    @staticmethod
+    @adapter_logger
+    def link_to_create_link_api_model(link: Link) -> CreateLinkApiModel:
+        return CreateLinkApiModel(
+            url=link.get_url(),
+            title=link.get_title(),
+            type=LinkType(link.get_link_type() or "Related"),
+            description=link.get_description(),
+        )
+
+    @staticmethod
+    @adapter_logger
+    def link_to_update_link_api_model(link: Link) -> UpdateLinkApiModel:
+        return UpdateLinkApiModel(
+            url=link.get_url(),
+            title=link.get_title(),
+            type=LinkType(link.get_link_type() or "Related"),
+            description=link.get_description(),
         )
 
     @staticmethod

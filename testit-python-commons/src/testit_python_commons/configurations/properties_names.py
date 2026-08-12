@@ -7,6 +7,8 @@ class PropertiesNames:
     CONFIGURATION_ID = 'configurationid'
     TEST_RUN_ID = 'testrunid'
     TEST_RUN_NAME = 'testrunname'
+    TEST_RUN_TAGS = 'testruntags'
+    TEST_RUN_LINKS = 'testrunlinks'
     TMS_PROXY = 'tmsproxy'
     ADAPTER_MODE = 'adaptermode'
     CERT_VALIDATION = 'certvalidation'
@@ -23,6 +25,8 @@ ENV_TO_PROPERTY = {
     'TMS_CONFIGURATION_ID': PropertiesNames.CONFIGURATION_ID,
     'TMS_TEST_RUN_ID': PropertiesNames.TEST_RUN_ID,
     'TMS_TEST_RUN_NAME': PropertiesNames.TEST_RUN_NAME,
+    'TMS_TEST_RUN_TAGS': PropertiesNames.TEST_RUN_TAGS,
+    'TMS_TEST_RUN_LINKS': PropertiesNames.TEST_RUN_LINKS,
     'TMS_PROXY': PropertiesNames.TMS_PROXY,
     'TMS_ADAPTER_MODE': PropertiesNames.ADAPTER_MODE,
     'TMS_CERT_VALIDATION': PropertiesNames.CERT_VALIDATION,
@@ -40,6 +44,8 @@ OPTION_TO_PROPERTY = {
     'set_configuration_id': PropertiesNames.CONFIGURATION_ID,
     'set_test_run_id': PropertiesNames.TEST_RUN_ID,
     'set_test_run_name': PropertiesNames.TEST_RUN_NAME,
+    'set_test_run_tags': PropertiesNames.TEST_RUN_TAGS,
+    'set_test_run_links': PropertiesNames.TEST_RUN_LINKS,
     'set_tms_proxy': PropertiesNames.TMS_PROXY,
     'set_adapter_mode': PropertiesNames.ADAPTER_MODE,
     'set_cert_validation': PropertiesNames.CERT_VALIDATION,
