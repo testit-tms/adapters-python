@@ -563,26 +563,27 @@ class ApiClientWorker:
 
     def __has_valid_test_point_id_v2(self, test_result_id: str) -> bool:
         """Hack: adapters OpenAPI omits testPointId — read GET /api/v2/testResults/{id}."""
-        import requests
+        import json
+        import ssl
+        import urllib.error
+        import urllib.request
 
         base = (self.__config.get_url() or "").rstrip("/")
         url = f"{base}/api/v2/testResults/{test_result_id}"
         try:
-            response = requests.get(
+            request = urllib.request.Request(
                 url,
                 headers={
                     "Accept": "application/json",
                     "Authorization": f"PrivateToken {self.__config.get_private_token()}",
                 },
-                timeout=10,
-                verify=self.__config.get_cert_validation(),
+                method="GET",
             )
-            if response.status_code < 200 or response.status_code >= 300:
-                logging.debug(
-                    "v2 getTestResult %s HTTP %s", test_result_id, response.status_code
-                )
-                return False
-            payload = response.json()
+            context = None
+            if not self.__config.get_cert_validation():
+                context = ssl._create_unverified_context()
+            with urllib.request.urlopen(request, timeout=10, context=context) as response:
+                payload = json.loads(response.read().decode("utf-8"))
             test_point_id = payload.get("testPointId")
             if test_point_id is None:
                 return False
