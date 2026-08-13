@@ -1,5 +1,5 @@
-import urllib3
-from api_client_adapters.exceptions import ApiException
+﻿import urllib3
+from adapters_api.exceptions import ApiException
 
 from testit_python_commons.services.retry import (
     CONNECTION_RETRIES,
@@ -35,7 +35,7 @@ def test_retry_connection_error_retries_and_raises():
 
 
 def test_is_non_retriable_api_exception_for_not_found_subclass():
-    from api_client_adapters.exceptions import NotFoundException
+    from adapters_api.exceptions import NotFoundException
 
     exc = NotFoundException(status=404, reason='Not Found')
     assert is_non_retriable_api_exception(exc)

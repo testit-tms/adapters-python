@@ -1,7 +1,7 @@
-import logging
+﻿import logging
 
-from api_client_adapters.apis import AutoTestsApi, TestRunsApi
-from api_client_adapters.models import (
+from adapters_api.apis import AutoTestsApi, TestRunsApi
+from adapters_api.models import (
     AutoTestCreateApiModel,
     AutoTestUpdateApiModel,
     AutoTestResultsForTestRunModel,
@@ -18,7 +18,7 @@ from testit_python_commons.client.models import (
     ThreadsForUpdateAndResult
 )
 from testit_python_commons.services.logger import adapter_logger
-import api_client_adapters
+import adapters_api
 
 from testit_python_commons.services.retry import is_non_retriable_api_exception, retry
 from testit_python_commons.utils.html_escape_utils import HtmlEscapeUtils
@@ -192,7 +192,7 @@ class BulkAutotestHelper:
             self.__autotests_api.adapters_auto_tests_id_work_items_delete(
                 id=autotest_global_id,
                 work_item_id=work_item_id)
-        except api_client_adapters.exceptions.ApiException as exc:
+        except adapters_api.exceptions.ApiException as exc:
             if is_non_retriable_api_exception(exc):
                 logging.warning(
                     'Cannot unlink autotest %s from work item %s: %s',
@@ -214,7 +214,7 @@ class BulkAutotestHelper:
                 id=autotest_global_id,
                 adapters_auto_tests_id_work_items_post_request=AdaptersAutoTestsIdWorkItemsPostRequest(
                     id=work_item_id))
-        except api_client_adapters.exceptions.ApiException as exc:
+        except adapters_api.exceptions.ApiException as exc:
             if is_non_retriable_api_exception(exc):
                 logging.warning(
                     'Cannot link autotest %s to work item %s: %s',

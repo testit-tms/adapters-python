@@ -43,9 +43,8 @@ autotest/result parameters, plus search that ignores parameters.
 
 ### Why short search is not enough
 
-`TestResultShortResponse` (search) has **no `parameters`**. Full / v2 payload does.
-Adapters OpenAPI models also omit `testPointId` on short DTOs → temporary
-`GET /api/v2/testResults/{id}` for both `testPointId` and `parameters`.
+`TestResultShortResponse` (search) has **no `parameters`** / `testPointId`.
+Full detail comes from `GET /adapters/testResults/{id}` (`TestResultResponse`).
 
 ---
 

@@ -1,9 +1,9 @@
-import logging
+﻿import logging
 import random
 import time
 from http.client import RemoteDisconnected
 
-import api_client_adapters
+import adapters_api
 import urllib3
 
 CONNECTION_RETRIES = 3
@@ -24,7 +24,7 @@ _RETRIABLE_CONNECTION_TYPES = (
 
 def is_non_retriable_api_exception(exc: BaseException) -> bool:
     return (
-        isinstance(exc, api_client_adapters.exceptions.ApiException)
+        isinstance(exc, adapters_api.exceptions.ApiException)
         and int(exc.status) in NON_RETRIABLE_API_STATUS_CODES
     )
 
@@ -78,7 +78,7 @@ def retry(func):
         while True:
             try:
                 return _execute_with_connection_retries(func, args, kwargs)
-            except api_client_adapters.exceptions.ApiException as e:
+            except adapters_api.exceptions.ApiException as e:
                 if is_non_retriable_api_exception(e):
                     raise
 

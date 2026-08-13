@@ -1,5 +1,5 @@
-from api_client_adapters.model.link_api_result import LinkApiResult
-from api_client_adapters.model.link_type import LinkType as ApiLinkType
+﻿from adapters_api.model.link_api_result import LinkApiResult
+from adapters_api.model.link_type import LinkType as ApiLinkType
 
 from testit_python_commons.client.converter import Converter
 from testit_python_commons.models.link import Link

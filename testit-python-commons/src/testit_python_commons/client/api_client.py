@@ -1,10 +1,10 @@
-import logging
+﻿import logging
 import os
 from datetime import datetime
 
-import api_client_adapters
-from api_client_adapters import ApiClient, Configuration
-from api_client_adapters.apis import (
+import adapters_api
+from adapters_api import ApiClient, Configuration
+from adapters_api.apis import (
     AttachmentsApi,
     AutoTestsApi,
     TestRunsApi,
@@ -13,7 +13,7 @@ from api_client_adapters.apis import (
     ProjectsApi,
     WorkflowsApi,
 )
-from api_client_adapters.models import (
+from adapters_api.models import (
     AdaptersTestResultsSearchPostRequest,
     AutoTestApiResult,
     AutoTestCreateApiModel,
@@ -405,7 +405,7 @@ class ApiClientWorker:
             # logging.debug(f'Got workitem {work_item}')
 
             return work_item.id
-        except api_client_adapters.exceptions.ApiException as exc:
+        except adapters_api.exceptions.ApiException as exc:
             if is_retriable_connection_error(exc):
                 raise
             if is_non_retriable_api_exception(exc):
@@ -502,7 +502,7 @@ class ApiClientWorker:
             self.__autotest_api.adapters_auto_tests_id_work_items_delete(
                 id=autotest_global_id,
                 work_item_id=work_item_id)
-        except api_client_adapters.exceptions.ApiException as exc:
+        except adapters_api.exceptions.ApiException as exc:
             if is_non_retriable_api_exception(exc):
                 logging.warning(
                     'Cannot unlink autotest %s from work item %s: %s',
@@ -523,7 +523,7 @@ class ApiClientWorker:
                 id=autotest_global_id,
                 adapters_auto_tests_id_work_items_post_request=AdaptersAutoTestsIdWorkItemsPostRequest(
                     id=work_item_id))
-        except api_client_adapters.exceptions.ApiException as exc:
+        except adapters_api.exceptions.ApiException as exc:
             if is_non_retriable_api_exception(exc):
                 logging.warning(
                     'Cannot link autotest %s to work item %s: %s',
@@ -553,11 +553,18 @@ class ApiClientWorker:
             result_id_str = str(result_id)
             if result_id_str in self.__claimed_in_progress_ids:
                 continue
-            meta = self.__get_test_result_v2_meta(result_id_str)
+            try:
+                detail = self.get_test_result_by_id(result_id_str)
+                test_point_id = getattr(detail, "test_point_id", None)
+                parameters_meta = getattr(detail, "parameters", None) or {}
+            except Exception as exc:
+                logging.debug("getTestResult %s failed: %s", result_id_str, exc)
+                test_point_id = None
+                parameters_meta = {}
             candidates.append({
                 "id": result_id_str,
-                "has_test_point": self.__is_valid_test_point_id(meta.get("testPointId")),
-                "parameters": meta.get("parameters") or {},
+                "has_test_point": self.__is_valid_test_point_id(test_point_id),
+                "parameters": parameters_meta,
             })
 
         chosen = pick_best_in_progress_id(candidates, parameters)
@@ -565,42 +572,12 @@ class ApiClientWorker:
             self.__claimed_in_progress_ids.add(chosen)
         return chosen
 
-    def __get_test_result_v2_meta(self, test_result_id: str) -> dict:
-        """Hack: adapters OpenAPI omits testPointId/parameters — read GET /api/v2/testResults/{id}."""
-        import json
-        import ssl
-        import urllib.request
-
-        base = (self.__config.get_url() or "").rstrip("/")
-        url = f"{base}/api/v2/testResults/{test_result_id}"
-        try:
-            request = urllib.request.Request(
-                url,
-                headers={
-                    "Accept": "application/json",
-                    "Authorization": f"PrivateToken {self.__config.get_private_token()}",
-                },
-                method="GET",
-            )
-            context = None
-            if not self.__config.get_cert_validation():
-                context = ssl._create_unverified_context()
-            with urllib.request.urlopen(request, timeout=10, context=context) as response:
-                return json.loads(response.read().decode("utf-8")) or {}
-        except Exception as exc:
-            logging.debug("v2 getTestResult %s failed: %s", test_result_id, exc)
-            return {}
-
     @staticmethod
     def __is_valid_test_point_id(test_point_id) -> bool:
         if test_point_id is None:
             return False
         value = str(test_point_id)
         return bool(value) and value != "00000000-0000-0000-0000-000000000000"
-
-    def __has_valid_test_point_id_v2(self, test_result_id: str) -> bool:
-        meta = self.__get_test_result_v2_meta(test_result_id)
-        return self.__is_valid_test_point_id(meta.get("testPointId"))
 
     @adapter_logger
     @retry
