@@ -1,6 +1,6 @@
-from typing import Dict, List
+﻿from typing import Dict, List
 
-from api_client_adapters.models import AutoTestUpdateApiModel, AutoTestResultsForTestRunModel
+from adapters_api.models import AutoTestUpdateApiModel, AutoTestResultsForTestRunModel
 
 
 class ThreadForUpdateAndResult:

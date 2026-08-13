@@ -93,11 +93,11 @@ class TestFindInProgressAndUpdate:
         )
         mocker.patch.object(
             worker,
-            "_ApiClientWorker__get_test_result_v2_meta",
-            side_effect=lambda rid: {
-                "orphan-id": {"testPointId": None, "parameters": {}},
-                "bound-id": {"testPointId": "tp-1", "parameters": {}},
-            }[rid],
+            "get_test_result_by_id",
+            side_effect=lambda rid: mocker.Mock(**{
+                "orphan-id": {"test_point_id": None, "parameters": {}},
+                "bound-id": {"test_point_id": "tp-1", "parameters": {}},
+            }[rid]),
         )
 
         assert worker.find_in_progress_test_result_id("ext-1") == "bound-id"
@@ -112,11 +112,11 @@ class TestFindInProgressAndUpdate:
         )
         mocker.patch.object(
             worker,
-            "_ApiClientWorker__get_test_result_v2_meta",
-            side_effect=lambda rid: {
-                "res-a": {"testPointId": "tp-a", "parameters": {"x": "1"}},
-                "res-b": {"testPointId": "tp-b", "parameters": {"x": "2"}},
-            }[rid],
+            "get_test_result_by_id",
+            side_effect=lambda rid: mocker.Mock(**{
+                "res-a": {"test_point_id": "tp-a", "parameters": {"x": "1"}},
+                "res-b": {"test_point_id": "tp-b", "parameters": {"x": "2"}},
+            }[rid]),
         )
 
         assert worker.find_in_progress_test_result_id("ext-1", {"x": "2"}) == "res-b"
@@ -131,11 +131,11 @@ class TestFindInProgressAndUpdate:
         )
         mocker.patch.object(
             worker,
-            "_ApiClientWorker__get_test_result_v2_meta",
-            side_effect=lambda rid: {
-                "res-a": {"testPointId": "tp-a", "parameters": {}},
-                "res-b": {"testPointId": "tp-b", "parameters": {}},
-            }[rid],
+            "get_test_result_by_id",
+            side_effect=lambda rid: mocker.Mock(**{
+                "res-a": {"test_point_id": "tp-a", "parameters": {}},
+                "res-b": {"test_point_id": "tp-b", "parameters": {}},
+            }[rid]),
         )
 
         first = worker.find_in_progress_test_result_id("ext-1", {"browser": "chrome"})
@@ -154,8 +154,8 @@ class TestFindInProgressAndUpdate:
         )
         mocker.patch.object(
             worker,
-            "_ApiClientWorker__get_test_result_v2_meta",
-            return_value={"testPointId": "tp-a", "parameters": {"x": "1"}},
+            "get_test_result_by_id",
+            return_value=mocker.Mock(test_point_id="tp-a", parameters={"x": "1"}),
         )
 
         assert worker.find_in_progress_test_result_id("ext-1", {"x": "2"}) is None

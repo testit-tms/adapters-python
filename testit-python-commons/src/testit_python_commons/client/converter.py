@@ -1,7 +1,7 @@
-import logging
+﻿import logging
 from typing import List, Optional
 
-from api_client_adapters.models import (
+from adapters_api.models import (
     AdaptersTestResultsSearchPostRequest,
     AutoTestApiResult,
     AttachmentPutModelAutoTestStepResultsModel,
@@ -227,24 +227,17 @@ class Converter:
         label_models = []
 
         for label in labels:
-            name = None
-            global_id = None
-
             if isinstance(label, str):
                 name = label
             elif isinstance(label, dict):
                 name = label.get('name')
-                global_id = label.get('global_id', label.get('globalId'))
+            else:
+                continue
 
             if not name:
                 continue
 
-            label_models.append(
-                LabelApiModel(
-                    name=str(name),
-                    global_id=int(global_id) if global_id is not None else 0,
-                )
-            )
+            label_models.append(LabelApiModel(name=str(name)))
 
         return label_models or None
 

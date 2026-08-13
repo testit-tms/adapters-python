@@ -1,6 +1,6 @@
-from unittest.mock import Mock
+﻿from unittest.mock import Mock
 
-from api_client_adapters.models import LabelApiModel
+from adapters_api.models import LabelApiModel
 
 from testit_python_commons.client.converter import Converter
 
@@ -9,8 +9,8 @@ def test_labels_to_label_api_models_from_string():
     result = Converter.labels_to_label_api_models(['smoke', 'regression'])
 
     assert len(result) == 2
-    assert result[0] == LabelApiModel(name='smoke', global_id=0)
-    assert result[1] == LabelApiModel(name='regression', global_id=0)
+    assert result[0] == LabelApiModel(name='smoke')
+    assert result[1] == LabelApiModel(name='regression')
 
 
 def test_labels_to_label_api_models_from_dict():
@@ -21,9 +21,9 @@ def test_labels_to_label_api_models_from_dict():
     ])
 
     assert result == [
-        LabelApiModel(name='smoke', global_id=0),
-        LabelApiModel(name='regression', global_id=42),
-        LabelApiModel(name='legacy', global_id=7),
+        LabelApiModel(name='smoke'),
+        LabelApiModel(name='regression'),
+        LabelApiModel(name='legacy'),
     ]
 
 
@@ -51,4 +51,4 @@ def test_create_autotest_request_accepts_labels_from_adapter():
 
     request = Converter.test_result_to_create_autotest_request(test_result, 'project-id')
 
-    assert request.labels == [LabelApiModel(name='smoke', global_id=0)]
+    assert request.labels == [LabelApiModel(name='smoke')]

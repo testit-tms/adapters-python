@@ -1,6 +1,6 @@
-from unittest.mock import Mock
+﻿from unittest.mock import Mock
 
-from api_client_adapters.models import (
+from adapters_api.models import (
     CreateLinkApiModel,
     LinkCreateApiModel,
     LinkType,

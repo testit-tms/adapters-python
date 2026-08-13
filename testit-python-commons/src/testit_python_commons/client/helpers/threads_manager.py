@@ -1,4 +1,4 @@
-from api_client_adapters.models import (
+﻿from adapters_api.models import (
     AutoTestCreateApiModel,
     AutoTestUpdateApiModel,
     AutoTestResultsForTestRunModel,
