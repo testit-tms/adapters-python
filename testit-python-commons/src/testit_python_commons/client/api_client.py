@@ -30,6 +30,7 @@ from api_client_adapters.models import (
 from testit_python_commons.client.client_configuration import ClientConfiguration
 from testit_python_commons.client.converter import Converter
 from testit_python_commons.client.helpers.bulk_autotest_helper import BulkAutotestHelper
+from testit_python_commons.client.helpers.test_result_matching import pick_best_in_progress_id
 from typing import List
 
 from testit_python_commons.models.link import Link
@@ -62,6 +63,7 @@ class ApiClientWorker:
         self.__workflows_api = WorkflowsApi(api_client=api_client)
         self.__config = config
         self.__status_codes = self.__get_status_codes()
+        self.__claimed_in_progress_ids = set()
 
     @staticmethod
     @adapter_logger
@@ -535,37 +537,38 @@ class ApiClientWorker:
         logging.debug(f'Autotest was linked with workItem "{work_item_id}" by global id "{autotest_global_id}')
 
     @adapter_logger
-    def find_in_progress_test_result_id(self, external_id: str):
+    def find_in_progress_test_result_id(self, external_id: str, parameters=None):
         if not external_id:
             return None
 
-        matches = []
+        candidates = []
         for item in self.__get_test_results():
             if item is None:
                 continue
-            if getattr(item, "autotest_external_id", None) == external_id:
-                matches.append(item)
-
-        if not matches:
-            return None
-
-        orphan_id = None
-        for item in matches:
+            if getattr(item, "autotest_external_id", None) != external_id:
+                continue
             result_id = getattr(item, "id", None)
             if result_id is None:
                 continue
             result_id_str = str(result_id)
-            if self.__has_valid_test_point_id_v2(result_id_str):
-                return result_id_str
-            if orphan_id is None:
-                orphan_id = result_id_str
-        return orphan_id
+            if result_id_str in self.__claimed_in_progress_ids:
+                continue
+            meta = self.__get_test_result_v2_meta(result_id_str)
+            candidates.append({
+                "id": result_id_str,
+                "has_test_point": self.__is_valid_test_point_id(meta.get("testPointId")),
+                "parameters": meta.get("parameters") or {},
+            })
 
-    def __has_valid_test_point_id_v2(self, test_result_id: str) -> bool:
-        """Hack: adapters OpenAPI omits testPointId — read GET /api/v2/testResults/{id}."""
+        chosen = pick_best_in_progress_id(candidates, parameters)
+        if chosen:
+            self.__claimed_in_progress_ids.add(chosen)
+        return chosen
+
+    def __get_test_result_v2_meta(self, test_result_id: str) -> dict:
+        """Hack: adapters OpenAPI omits testPointId/parameters — read GET /api/v2/testResults/{id}."""
         import json
         import ssl
-        import urllib.error
         import urllib.request
 
         base = (self.__config.get_url() or "").rstrip("/")
@@ -583,15 +586,21 @@ class ApiClientWorker:
             if not self.__config.get_cert_validation():
                 context = ssl._create_unverified_context()
             with urllib.request.urlopen(request, timeout=10, context=context) as response:
-                payload = json.loads(response.read().decode("utf-8"))
-            test_point_id = payload.get("testPointId")
-            if test_point_id is None:
-                return False
-            value = str(test_point_id)
-            return bool(value) and value != "00000000-0000-0000-0000-000000000000"
+                return json.loads(response.read().decode("utf-8")) or {}
         except Exception as exc:
             logging.debug("v2 getTestResult %s failed: %s", test_result_id, exc)
+            return {}
+
+    @staticmethod
+    def __is_valid_test_point_id(test_point_id) -> bool:
+        if test_point_id is None:
             return False
+        value = str(test_point_id)
+        return bool(value) and value != "00000000-0000-0000-0000-000000000000"
+
+    def __has_valid_test_point_id_v2(self, test_result_id: str) -> bool:
+        meta = self.__get_test_result_v2_meta(test_result_id)
+        return self.__is_valid_test_point_id(meta.get("testPointId"))
 
     @adapter_logger
     @retry
@@ -624,7 +633,10 @@ class ApiClientWorker:
     @adapter_logger
     @retry
     def __load_test_result(self, test_result: TestResult) -> str:
-        existing_id = self.find_in_progress_test_result_id(test_result.get_external_id())
+        existing_id = self.find_in_progress_test_result_id(
+            test_result.get_external_id(),
+            test_result.get_parameters(),
+        )
         if existing_id:
             return self.__update_existing_test_result(existing_id, test_result)
 
