@@ -30,9 +30,11 @@ from adapters_api.exceptions import ApiAttributeError
 
 
 def lazy_import():
+    from adapters_api.model.auto_test_create_api_model_layer import AutoTestCreateApiModelLayer
     from adapters_api.model.auto_test_step_api_model import AutoTestStepApiModel
     from adapters_api.model.label_api_model import LabelApiModel
     from adapters_api.model.link_create_api_model import LinkCreateApiModel
+    globals()['AutoTestCreateApiModelLayer'] = AutoTestCreateApiModelLayer
     globals()['AutoTestStepApiModel'] = AutoTestStepApiModel
     globals()['LabelApiModel'] = LabelApiModel
     globals()['LinkCreateApiModel'] = LinkCreateApiModel
@@ -99,6 +101,7 @@ class AutoTestCreateApiModel(ModelNormal):
             'title': (str, none_type,),  # noqa: E501
             'description': (str, none_type,),  # noqa: E501
             'is_flaky': (bool, none_type,),  # noqa: E501
+            'layer': (AutoTestCreateApiModelLayer,),  # noqa: E501
             'steps': ([AutoTestStepApiModel], none_type,),  # noqa: E501
             'setup': ([AutoTestStepApiModel], none_type,),  # noqa: E501
             'teardown': ([AutoTestStepApiModel], none_type,),  # noqa: E501
@@ -123,6 +126,7 @@ class AutoTestCreateApiModel(ModelNormal):
         'title': 'title',  # noqa: E501
         'description': 'description',  # noqa: E501
         'is_flaky': 'isFlaky',  # noqa: E501
+        'layer': 'layer',  # noqa: E501
         'steps': 'steps',  # noqa: E501
         'setup': 'setup',  # noqa: E501
         'teardown': 'teardown',  # noqa: E501
@@ -184,6 +188,7 @@ class AutoTestCreateApiModel(ModelNormal):
             title (str, none_type): Name of the autotest in autotest's card. [optional]  # noqa: E501
             description (str, none_type): Description of the autotest in autotest's card. [optional]  # noqa: E501
             is_flaky (bool, none_type): Indicates if the autotest is marked as flaky. [optional]  # noqa: E501
+            layer (AutoTestCreateApiModelLayer): [optional]  # noqa: E501
             steps ([AutoTestStepApiModel], none_type): Collection of the autotest steps. [optional]  # noqa: E501
             setup ([AutoTestStepApiModel], none_type): Collection of the autotest setup steps. [optional]  # noqa: E501
             teardown ([AutoTestStepApiModel], none_type): Collection of the autotest teardown steps. [optional]  # noqa: E501
@@ -290,6 +295,7 @@ class AutoTestCreateApiModel(ModelNormal):
             title (str, none_type): Name of the autotest in autotest's card. [optional]  # noqa: E501
             description (str, none_type): Description of the autotest in autotest's card. [optional]  # noqa: E501
             is_flaky (bool, none_type): Indicates if the autotest is marked as flaky. [optional]  # noqa: E501
+            layer (AutoTestCreateApiModelLayer): [optional]  # noqa: E501
             steps ([AutoTestStepApiModel], none_type): Collection of the autotest steps. [optional]  # noqa: E501
             setup ([AutoTestStepApiModel], none_type): Collection of the autotest setup steps. [optional]  # noqa: E501
             teardown ([AutoTestStepApiModel], none_type): Collection of the autotest teardown steps. [optional]  # noqa: E501

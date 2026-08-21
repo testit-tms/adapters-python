@@ -30,9 +30,11 @@ from adapters_api.exceptions import ApiAttributeError
 
 
 def lazy_import():
+    from adapters_api.model.auto_test_api_result_layer import AutoTestApiResultLayer
     from adapters_api.model.auto_test_step_api_result import AutoTestStepApiResult
     from adapters_api.model.label_api_result import LabelApiResult
     from adapters_api.model.link_api_result import LinkApiResult
+    globals()['AutoTestApiResultLayer'] = AutoTestApiResultLayer
     globals()['AutoTestStepApiResult'] = AutoTestStepApiResult
     globals()['LabelApiResult'] = LabelApiResult
     globals()['LinkApiResult'] = LinkApiResult
@@ -98,6 +100,7 @@ class AutoTestApiResult(ModelNormal):
             'title': (str, none_type,),  # noqa: E501
             'description': (str, none_type,),  # noqa: E501
             'external_key': (str, none_type,),  # noqa: E501
+            'layer': (AutoTestApiResultLayer,),  # noqa: E501
             'links': ([LinkApiResult], none_type,),  # noqa: E501
             'labels': ([LabelApiResult], none_type,),  # noqa: E501
             'tags': ([str], none_type,),  # noqa: E501
@@ -123,6 +126,7 @@ class AutoTestApiResult(ModelNormal):
         'title': 'title',  # noqa: E501
         'description': 'description',  # noqa: E501
         'external_key': 'externalKey',  # noqa: E501
+        'layer': 'layer',  # noqa: E501
         'links': 'links',  # noqa: E501
         'labels': 'labels',  # noqa: E501
         'tags': 'tags',  # noqa: E501
@@ -185,6 +189,7 @@ class AutoTestApiResult(ModelNormal):
             title (str, none_type): [optional]  # noqa: E501
             description (str, none_type): [optional]  # noqa: E501
             external_key (str, none_type): [optional]  # noqa: E501
+            layer (AutoTestApiResultLayer): [optional]  # noqa: E501
             links ([LinkApiResult], none_type): [optional]  # noqa: E501
             labels ([LabelApiResult], none_type): [optional]  # noqa: E501
             tags ([str], none_type): [optional]  # noqa: E501
@@ -294,6 +299,7 @@ class AutoTestApiResult(ModelNormal):
             title (str, none_type): [optional]  # noqa: E501
             description (str, none_type): [optional]  # noqa: E501
             external_key (str, none_type): [optional]  # noqa: E501
+            layer (AutoTestApiResultLayer): [optional]  # noqa: E501
             links ([LinkApiResult], none_type): [optional]  # noqa: E501
             labels ([LabelApiResult], none_type): [optional]  # noqa: E501
             tags ([str], none_type): [optional]  # noqa: E501

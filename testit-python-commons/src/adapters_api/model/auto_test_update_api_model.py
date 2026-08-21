@@ -30,9 +30,11 @@ from adapters_api.exceptions import ApiAttributeError
 
 
 def lazy_import():
+    from adapters_api.model.auto_test_create_api_model_layer import AutoTestCreateApiModelLayer
     from adapters_api.model.auto_test_step_api_model import AutoTestStepApiModel
     from adapters_api.model.label_api_model import LabelApiModel
     from adapters_api.model.link_update_api_model import LinkUpdateApiModel
+    globals()['AutoTestCreateApiModelLayer'] = AutoTestCreateApiModelLayer
     globals()['AutoTestStepApiModel'] = AutoTestStepApiModel
     globals()['LabelApiModel'] = LabelApiModel
     globals()['LinkUpdateApiModel'] = LinkUpdateApiModel
@@ -93,6 +95,7 @@ class AutoTestUpdateApiModel(ModelNormal):
             'project_id': (str,),  # noqa: E501
             'external_id': (str,),  # noqa: E501
             'name': (str,),  # noqa: E501
+            'reset_layer': (bool,),  # noqa: E501
             'id': (str, none_type,),  # noqa: E501
             'external_key': (str, none_type,),  # noqa: E501
             'namespace': (str, none_type,),  # noqa: E501
@@ -100,6 +103,7 @@ class AutoTestUpdateApiModel(ModelNormal):
             'title': (str, none_type,),  # noqa: E501
             'description': (str, none_type,),  # noqa: E501
             'is_flaky': (bool, none_type,),  # noqa: E501
+            'layer': (AutoTestCreateApiModelLayer,),  # noqa: E501
             'steps': ([AutoTestStepApiModel], none_type,),  # noqa: E501
             'setup': ([AutoTestStepApiModel], none_type,),  # noqa: E501
             'teardown': ([AutoTestStepApiModel], none_type,),  # noqa: E501
@@ -117,6 +121,7 @@ class AutoTestUpdateApiModel(ModelNormal):
         'project_id': 'projectId',  # noqa: E501
         'external_id': 'externalId',  # noqa: E501
         'name': 'name',  # noqa: E501
+        'reset_layer': 'resetLayer',  # noqa: E501
         'id': 'id',  # noqa: E501
         'external_key': 'externalKey',  # noqa: E501
         'namespace': 'namespace',  # noqa: E501
@@ -124,6 +129,7 @@ class AutoTestUpdateApiModel(ModelNormal):
         'title': 'title',  # noqa: E501
         'description': 'description',  # noqa: E501
         'is_flaky': 'isFlaky',  # noqa: E501
+        'layer': 'layer',  # noqa: E501
         'steps': 'steps',  # noqa: E501
         'setup': 'setup',  # noqa: E501
         'teardown': 'teardown',  # noqa: E501
@@ -139,13 +145,14 @@ class AutoTestUpdateApiModel(ModelNormal):
 
     @classmethod
     @convert_js_args_to_python_args
-    def _from_openapi_data(cls, project_id, external_id, name, *args, **kwargs):  # noqa: E501
+    def _from_openapi_data(cls, project_id, external_id, name, reset_layer, *args, **kwargs):  # noqa: E501
         """AutoTestUpdateApiModel - a model defined in OpenAPI
 
         Args:
             project_id (str): Unique ID of the autotest project
             external_id (str): External ID of the autotest
             name (str): Name of the autotest
+            reset_layer (bool): Indicates if the autotest layer should be reset.
 
         Keyword Args:
             _check_type (bool): if True, values for parameters in openapi_types
@@ -185,6 +192,7 @@ class AutoTestUpdateApiModel(ModelNormal):
             title (str, none_type): Name of the autotest in autotest's card. [optional]  # noqa: E501
             description (str, none_type): Description of the autotest in autotest's card. [optional]  # noqa: E501
             is_flaky (bool, none_type): Indicates if the autotest is marked as flaky. [optional]  # noqa: E501
+            layer (AutoTestCreateApiModelLayer): [optional]  # noqa: E501
             steps ([AutoTestStepApiModel], none_type): Collection of the autotest steps. [optional]  # noqa: E501
             setup ([AutoTestStepApiModel], none_type): Collection of the autotest setup steps. [optional]  # noqa: E501
             teardown ([AutoTestStepApiModel], none_type): Collection of the autotest teardown steps. [optional]  # noqa: E501
@@ -225,6 +233,7 @@ class AutoTestUpdateApiModel(ModelNormal):
         self.project_id = project_id
         self.external_id = external_id
         self.name = name
+        self.reset_layer = reset_layer
         for var_name, var_value in kwargs.items():
             if var_name not in self.attribute_map and \
                         self._configuration is not None and \
@@ -245,13 +254,14 @@ class AutoTestUpdateApiModel(ModelNormal):
     ])
 
     @convert_js_args_to_python_args
-    def __init__(self, project_id, external_id, name, *args, **kwargs):  # noqa: E501
+    def __init__(self, project_id, external_id, name, reset_layer, *args, **kwargs):  # noqa: E501
         """AutoTestUpdateApiModel - a model defined in OpenAPI
 
         Args:
             project_id (str): Unique ID of the autotest project
             external_id (str): External ID of the autotest
             name (str): Name of the autotest
+            reset_layer (bool): Indicates if the autotest layer should be reset.
 
         Keyword Args:
             _check_type (bool): if True, values for parameters in openapi_types
@@ -291,6 +301,7 @@ class AutoTestUpdateApiModel(ModelNormal):
             title (str, none_type): Name of the autotest in autotest's card. [optional]  # noqa: E501
             description (str, none_type): Description of the autotest in autotest's card. [optional]  # noqa: E501
             is_flaky (bool, none_type): Indicates if the autotest is marked as flaky. [optional]  # noqa: E501
+            layer (AutoTestCreateApiModelLayer): [optional]  # noqa: E501
             steps ([AutoTestStepApiModel], none_type): Collection of the autotest steps. [optional]  # noqa: E501
             setup ([AutoTestStepApiModel], none_type): Collection of the autotest setup steps. [optional]  # noqa: E501
             teardown ([AutoTestStepApiModel], none_type): Collection of the autotest teardown steps. [optional]  # noqa: E501
@@ -329,6 +340,7 @@ class AutoTestUpdateApiModel(ModelNormal):
         self.project_id = project_id
         self.external_id = external_id
         self.name = name
+        self.reset_layer = reset_layer
         for var_name, var_value in kwargs.items():
             if var_name not in self.attribute_map and \
                         self._configuration is not None and \

@@ -30,8 +30,8 @@ from adapters_api.exceptions import ApiAttributeError
 
 
 def lazy_import():
-    from adapters_api.model.int32_range_selector_model import Int32RangeSelectorModel
-    globals()['Int32RangeSelectorModel'] = Int32RangeSelectorModel
+    from adapters_api.model.int64_range_selector_model import Int64RangeSelectorModel
+    globals()['Int64RangeSelectorModel'] = Int64RangeSelectorModel
 
 
 class ProjectsFilterModelSharedStepsCount(ModelComposed):
@@ -316,7 +316,7 @@ class ProjectsFilterModelSharedStepsCount(ModelComposed):
           'anyOf': [
           ],
           'allOf': [
-              Int32RangeSelectorModel,
+              Int64RangeSelectorModel,
           ],
           'oneOf': [
           ],
