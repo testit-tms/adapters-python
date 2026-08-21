@@ -305,6 +305,7 @@ class Converter:
             external_id=test_result.get_external_id(),
             project_id=project_id,
             name=test_result.get_autotest_name(),
+            reset_layer=False,
             steps=cls.step_results_to_autotest_steps_model(
                 test_result.get_step_results()),
             setup=cls.step_results_to_autotest_steps_model(
@@ -331,6 +332,7 @@ class Converter:
             external_id=test_result.get_external_id(),
             project_id=project_id,
             name=test_result.get_autotest_name(),
+            reset_layer=False,
             steps=cls.step_results_to_autotest_steps_model(
                 test_result.get_step_results()),
             setup=cls.step_results_to_autotest_steps_model(
