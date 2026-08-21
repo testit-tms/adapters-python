@@ -30,10 +30,12 @@ from adapters_api.exceptions import ApiAttributeError
 
 
 def lazy_import():
+    from adapters_api.model.failure_category_model import FailureCategoryModel
     from adapters_api.model.test_result_outcome import TestResultOutcome
     from adapters_api.model.test_results_filter_api_model import TestResultsFilterApiModel
     from adapters_api.model.test_results_filter_api_model_duration import TestResultsFilterApiModelDuration
     from adapters_api.model.test_status_api_type import TestStatusApiType
+    globals()['FailureCategoryModel'] = FailureCategoryModel
     globals()['TestResultOutcome'] = TestResultOutcome
     globals()['TestResultsFilterApiModel'] = TestResultsFilterApiModel
     globals()['TestResultsFilterApiModelDuration'] = TestResultsFilterApiModelDuration
@@ -105,6 +107,7 @@ class ManualRerunSelectTestResultsApiModelFilter(ModelComposed):
             'outcomes': ([TestResultOutcome], none_type,),  # noqa: E501
             'status_codes': ([str], none_type,),  # noqa: E501
             'status_types': ([TestStatusApiType], none_type,),  # noqa: E501
+            'failure_categories': ([FailureCategoryModel], none_type,),  # noqa: E501
             'namespace': (str, none_type,),  # noqa: E501
             'class_name': (str, none_type,),  # noqa: E501
             'auto_test_global_ids': ([int], none_type,),  # noqa: E501
@@ -125,6 +128,7 @@ class ManualRerunSelectTestResultsApiModelFilter(ModelComposed):
         'outcomes': 'outcomes',  # noqa: E501
         'status_codes': 'statusCodes',  # noqa: E501
         'status_types': 'statusTypes',  # noqa: E501
+        'failure_categories': 'failureCategories',  # noqa: E501
         'namespace': 'namespace',  # noqa: E501
         'class_name': 'className',  # noqa: E501
         'auto_test_global_ids': 'autoTestGlobalIds',  # noqa: E501
@@ -178,6 +182,7 @@ class ManualRerunSelectTestResultsApiModelFilter(ModelComposed):
             outcomes ([TestResultOutcome], none_type): Specifies a test result outcomes to search for. [optional]  # noqa: E501
             status_codes ([str], none_type): Specifies a test result status codes to search for. [optional]  # noqa: E501
             status_types ([TestStatusApiType], none_type): Specifies a test result status types to search for. [optional]  # noqa: E501
+            failure_categories ([FailureCategoryModel], none_type): Specifies a test result failure categories to search for. [optional]  # noqa: E501
             namespace (str, none_type): Specifies a test result namespace to search for. [optional]  # noqa: E501
             class_name (str, none_type): Specifies a test result class name to search for. [optional]  # noqa: E501
             auto_test_global_ids ([int], none_type): Specifies an autotest global IDs to search results for. [optional]  # noqa: E501
@@ -293,6 +298,7 @@ class ManualRerunSelectTestResultsApiModelFilter(ModelComposed):
             outcomes ([TestResultOutcome], none_type): Specifies a test result outcomes to search for. [optional]  # noqa: E501
             status_codes ([str], none_type): Specifies a test result status codes to search for. [optional]  # noqa: E501
             status_types ([TestStatusApiType], none_type): Specifies a test result status types to search for. [optional]  # noqa: E501
+            failure_categories ([FailureCategoryModel], none_type): Specifies a test result failure categories to search for. [optional]  # noqa: E501
             namespace (str, none_type): Specifies a test result namespace to search for. [optional]  # noqa: E501
             class_name (str, none_type): Specifies a test result class name to search for. [optional]  # noqa: E501
             auto_test_global_ids ([int], none_type): Specifies an autotest global IDs to search results for. [optional]  # noqa: E501

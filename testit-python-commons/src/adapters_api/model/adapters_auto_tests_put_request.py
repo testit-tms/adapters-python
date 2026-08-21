@@ -30,10 +30,12 @@ from adapters_api.exceptions import ApiAttributeError
 
 
 def lazy_import():
+    from adapters_api.model.auto_test_create_api_model_layer import AutoTestCreateApiModelLayer
     from adapters_api.model.auto_test_step_api_model import AutoTestStepApiModel
     from adapters_api.model.auto_test_update_api_model import AutoTestUpdateApiModel
     from adapters_api.model.label_api_model import LabelApiModel
     from adapters_api.model.link_update_api_model import LinkUpdateApiModel
+    globals()['AutoTestCreateApiModelLayer'] = AutoTestCreateApiModelLayer
     globals()['AutoTestStepApiModel'] = AutoTestStepApiModel
     globals()['AutoTestUpdateApiModel'] = AutoTestUpdateApiModel
     globals()['LabelApiModel'] = LabelApiModel
@@ -102,6 +104,7 @@ class AdaptersAutoTestsPutRequest(ModelComposed):
             'project_id': (str,),  # noqa: E501
             'external_id': (str,),  # noqa: E501
             'name': (str,),  # noqa: E501
+            'reset_layer': (bool,),  # noqa: E501
             'id': (str, none_type,),  # noqa: E501
             'external_key': (str, none_type,),  # noqa: E501
             'namespace': (str, none_type,),  # noqa: E501
@@ -109,6 +112,7 @@ class AdaptersAutoTestsPutRequest(ModelComposed):
             'title': (str, none_type,),  # noqa: E501
             'description': (str, none_type,),  # noqa: E501
             'is_flaky': (bool, none_type,),  # noqa: E501
+            'layer': (AutoTestCreateApiModelLayer,),  # noqa: E501
             'steps': ([AutoTestStepApiModel], none_type,),  # noqa: E501
             'setup': ([AutoTestStepApiModel], none_type,),  # noqa: E501
             'teardown': ([AutoTestStepApiModel], none_type,),  # noqa: E501
@@ -126,6 +130,7 @@ class AdaptersAutoTestsPutRequest(ModelComposed):
         'project_id': 'projectId',  # noqa: E501
         'external_id': 'externalId',  # noqa: E501
         'name': 'name',  # noqa: E501
+        'reset_layer': 'resetLayer',  # noqa: E501
         'id': 'id',  # noqa: E501
         'external_key': 'externalKey',  # noqa: E501
         'namespace': 'namespace',  # noqa: E501
@@ -133,6 +138,7 @@ class AdaptersAutoTestsPutRequest(ModelComposed):
         'title': 'title',  # noqa: E501
         'description': 'description',  # noqa: E501
         'is_flaky': 'isFlaky',  # noqa: E501
+        'layer': 'layer',  # noqa: E501
         'steps': 'steps',  # noqa: E501
         'setup': 'setup',  # noqa: E501
         'teardown': 'teardown',  # noqa: E501
@@ -153,6 +159,7 @@ class AdaptersAutoTestsPutRequest(ModelComposed):
             project_id (str): Unique ID of the autotest project
             external_id (str): External ID of the autotest
             name (str): Name of the autotest
+            reset_layer (bool): Indicates if the autotest layer should be reset.
             _check_type (bool): if True, values for parameters in openapi_types
                                 will be type checked and a TypeError will be
                                 raised if the wrong type is input.
@@ -190,6 +197,7 @@ class AdaptersAutoTestsPutRequest(ModelComposed):
             title (str, none_type): Name of the autotest in autotest's card. [optional]  # noqa: E501
             description (str, none_type): Description of the autotest in autotest's card. [optional]  # noqa: E501
             is_flaky (bool, none_type): Indicates if the autotest is marked as flaky. [optional]  # noqa: E501
+            layer (AutoTestCreateApiModelLayer): [optional]  # noqa: E501
             steps ([AutoTestStepApiModel], none_type): Collection of the autotest steps. [optional]  # noqa: E501
             setup ([AutoTestStepApiModel], none_type): Collection of the autotest setup steps. [optional]  # noqa: E501
             teardown ([AutoTestStepApiModel], none_type): Collection of the autotest teardown steps. [optional]  # noqa: E501
@@ -272,6 +280,7 @@ class AdaptersAutoTestsPutRequest(ModelComposed):
             project_id (str): Unique ID of the autotest project
             external_id (str): External ID of the autotest
             name (str): Name of the autotest
+            reset_layer (bool): Indicates if the autotest layer should be reset.
             _check_type (bool): if True, values for parameters in openapi_types
                                 will be type checked and a TypeError will be
                                 raised if the wrong type is input.
@@ -309,6 +318,7 @@ class AdaptersAutoTestsPutRequest(ModelComposed):
             title (str, none_type): Name of the autotest in autotest's card. [optional]  # noqa: E501
             description (str, none_type): Description of the autotest in autotest's card. [optional]  # noqa: E501
             is_flaky (bool, none_type): Indicates if the autotest is marked as flaky. [optional]  # noqa: E501
+            layer (AutoTestCreateApiModelLayer): [optional]  # noqa: E501
             steps ([AutoTestStepApiModel], none_type): Collection of the autotest steps. [optional]  # noqa: E501
             setup ([AutoTestStepApiModel], none_type): Collection of the autotest setup steps. [optional]  # noqa: E501
             teardown ([AutoTestStepApiModel], none_type): Collection of the autotest teardown steps. [optional]  # noqa: E501
