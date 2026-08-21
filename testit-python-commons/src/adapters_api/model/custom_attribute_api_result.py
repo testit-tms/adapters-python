@@ -123,7 +123,7 @@ class CustomAttributeApiResult(ModelNormal):
 
     @classmethod
     @convert_js_args_to_python_args
-    def _from_openapi_data(cls, id, options, type, is_deleted, name, is_enabled, is_required, is_global, is_read_only, is_system, targets, *args, **kwargs):  # noqa: E501
+    def _from_openapi_data(cls, id, options, type, is_deleted, name, is_enabled, is_required, is_global, *args, **kwargs):  # noqa: E501
         """CustomAttributeApiResult - a model defined in OpenAPI
 
         Args:
@@ -135,9 +135,6 @@ class CustomAttributeApiResult(ModelNormal):
             is_enabled (bool): Indicates if the attribute is enabled
             is_required (bool): Indicates if the attribute value is mandatory to specify
             is_global (bool): Indicates if the attribute is available across all projects
-            is_read_only (bool): Indicates if the attribute is read-only
-            is_system (bool): Indicates if the attribute is system
-            targets ([str]): Collection of the attribute targets   Defines where the attribute can be used (e.g., TestCases, AutoTestCases, TestPlans)
 
         Keyword Args:
             is_read_only (bool): Indicates if the attribute is read-only. [optional]  # noqa: E501
@@ -239,7 +236,7 @@ class CustomAttributeApiResult(ModelNormal):
     ])
 
     @convert_js_args_to_python_args
-    def __init__(self, id, options, type, is_deleted, name, is_enabled, is_required, is_global, is_read_only, is_system, targets, *args, **kwargs):  # noqa: E501
+    def __init__(self, id, options, type, is_deleted, name, is_enabled, is_required, is_global, *args, **kwargs):  # noqa: E501
         """CustomAttributeApiResult - a model defined in OpenAPI
 
         Args:
@@ -251,9 +248,6 @@ class CustomAttributeApiResult(ModelNormal):
             is_enabled (bool): Indicates if the attribute is enabled
             is_required (bool): Indicates if the attribute value is mandatory to specify
             is_global (bool): Indicates if the attribute is available across all projects
-            is_read_only (bool): Indicates if the attribute is read-only
-            is_system (bool): Indicates if the attribute is system
-            targets ([str]): Collection of the attribute targets   Defines where the attribute can be used (e.g., TestCases, AutoTestCases, TestPlans)
 
         Keyword Args:
             is_read_only (bool): Indicates if the attribute is read-only. [optional]  # noqa: E501
