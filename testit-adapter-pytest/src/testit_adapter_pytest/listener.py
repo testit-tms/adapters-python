@@ -261,6 +261,10 @@ class TmsListener(object):
             if report.failed or report.outcome == 'rerun' or is_xfailed:
                 self.__executable_test.traces = getattr(report, 'longreprtext', None)
 
+            skip_message = utils.get_skip_message_from_report(report)
+            if skip_message:
+                self.__executable_test.message = skip_message
+
             self.__executable_test.duration += report.duration * 1000
 
     @pytest.hookimpl

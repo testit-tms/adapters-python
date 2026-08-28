@@ -133,6 +133,10 @@ Supported test frameworks:
  3. [RobotFramework](https://github.com/testit-tms/adapters-python/tree/main/testit-adapter-robotframework)
  4. [Nose](https://github.com/testit-tms/adapters-python/tree/main/testit-adapter-nose) 
 
+## Internal documentation
+
+Adapter behaviour specs (export contract, mode 0, real-time import): [docs/README.md](docs/README.md).
+
 # 🚀 Warning
 Since 3.0.0 version:
 - If the externalId annotation is not specified, then its contents will be a hash of a fully qualified method name.

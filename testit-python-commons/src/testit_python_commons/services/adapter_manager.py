@@ -189,10 +189,9 @@ class AdapterManager:
         self.__sync_storage_runner.set_is_already_in_progress(True)
 
         try:
-            # Keep final outcome. Prefer PUT on existing TP-bound InProgress (mode=0);
-            # never invent a second InProgress via setAutoTestResultsForTestRun.
+            # Final status via sendTestResults (create); never change status via PUT.
             logging.debug(
-                "SyncStorage accepted %s; write final status (update existing if present)",
+                "SyncStorage accepted %s; sendTestResults with final status",
                 test_result.get_external_id(),
             )
             self._write_test_realtime_internal(test_result)
@@ -263,7 +262,11 @@ class AdapterManager:
         for test_result in self.__test_results:
             test_result.set_automatic_creation_test_cases(should_create_work_item)
 
-        self.__api_client.write_tests(self.__test_results, fixtures)
+        self.__api_client.write_tests(
+            self.__test_results,
+            fixtures,
+            finalized_external_ids=set(self.__test_result_map.keys()),
+        )
 
     @adapter_logger
     def load_attachments(self, attach_paths):

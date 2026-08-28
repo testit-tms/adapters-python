@@ -436,5 +436,15 @@ def get_traceback(exc_traceback):
     return ''.join(traceback.format_tb(exc_traceback)) if exc_traceback else None
 
 
+def get_skip_message_from_report(report) -> str or None:
+    if report is None:
+        return None
+    if not (getattr(report, 'skipped', False) or report.outcome == 'skipped'):
+        return None
+    if report.longrepr is not None:
+        return str(report.longrepr)
+    return None
+
+
 def get_message(etype, value):
     return '\n'.join(format_exception_only(etype, value)) if etype or value else None

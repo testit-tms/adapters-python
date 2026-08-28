@@ -60,3 +60,4 @@ pytestdebug.log
 
 .vs/
 *-examples/
+.user/
