@@ -15,6 +15,7 @@ def parse_test_tags(tags):
         TagType.TAGS: [],
         TagType.NAMESPACE: None,
         TagType.CLASSNAME: None,
+        TagType.LAYER: None,
     }
 
     for tag in tags:
@@ -51,6 +52,9 @@ def parse_test_tags(tags):
 
         elif TagType.CLASSNAME in tag:
             parsed_tags[TagType.CLASSNAME] = __parse_space_in_tag(tag[len(TagType.CLASSNAME):])
+
+        elif TagType.LAYER in tag:
+            parsed_tags[TagType.LAYER] = __parse_space_in_tag(tag[len(TagType.LAYER):])
 
     return parsed_tags
 

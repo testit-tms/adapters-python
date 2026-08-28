@@ -86,6 +86,7 @@ def form_test(item, top_level_directory):
         'links': __get_links_from(item, function),
         'labels': __get_labels_from(item, function),
         'tags': __get_tags_from(item, function),
+        'layer': __get_layer_from(item, function),
         'workItemsID': __get_work_item_ids_from(item, function),
         'message': None,
         'externalKey': __get_fullname(function, top_level_directory)
@@ -240,6 +241,16 @@ def __get_tags_from(item, function) -> List[str]:
             tags.append(str(result))
 
     return tags
+
+
+def __get_layer_from(item, function):
+    test_layer = __search_attribute(function, 'test_layer')
+    if not test_layer:
+        return None
+
+    return str(collect_parameters_in_string_attribute(
+        test_layer,
+        get_all_parameters(item)))
 
 
 def __get_work_item_ids_from(item, function):
@@ -405,6 +416,7 @@ def convert_executable_test_to_test_result_model(executable_test: dict) -> TestR
         .set_result_links(executable_test['resultLinks'])\
         .set_labels(executable_test['labels'])\
         .set_tags(executable_test['tags'])\
+        .set_layer(executable_test.get('layer'))\
         .set_work_item_ids(executable_test['workItemsID'])\
         .set_message(executable_test['message'])\
         .set_external_key(executable_test['externalKey'])

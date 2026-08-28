@@ -57,6 +57,7 @@ def parse_scenario(scenario):
         'links': [],
         'labels': [],
         'tags': [],
+        'layer': None,
         'workItemsID': [],
         "externalKey": get_scenario_name(scenario)
         # TODO: Add to python-commons
@@ -88,6 +89,9 @@ def parse_scenario(scenario):
     if TagType.WORK_ITEM_IDS in tags:
         # TODO: Fix in python-commons to "workItemIds"
         executable_test['workItemsID'] = tags[TagType.WORK_ITEM_IDS]
+
+    if TagType.LAYER in tags and tags[TagType.LAYER]:
+        executable_test['layer'] = tags[TagType.LAYER]
 
     return executable_test
 

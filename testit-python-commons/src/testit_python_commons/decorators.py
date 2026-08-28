@@ -171,6 +171,18 @@ def tags(*test_tags: str):
     return outer
 
 
+@adapter_logger
+def layer(test_layer: str):
+    """
+    specifies the test pyramid layer for the autotest card
+    """
+    def outer(function):
+        function.test_layer = test_layer
+        return inner(function)
+
+    return outer
+
+
 @Utils.deprecated('Use "links" instead.')
 @adapter_logger
 def link(url: str, title: str = None, type: str = None, description: str = None):  # noqa: A002,VNE003

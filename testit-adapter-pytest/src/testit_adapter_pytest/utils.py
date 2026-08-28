@@ -35,6 +35,7 @@ def form_test(item) -> ExecutableTest:
         links=__get_links_from(item),
         labels=__get_labels_from(item),
         tags=__get_tags_from(item),
+        layer=__get_layer_from(item),
         work_item_ids=__get_work_item_ids_from(item),
         node_id=item.nodeid
     )
@@ -52,13 +53,9 @@ def __set_outcome_and_message_from_markers(executable_test: ExecutableTest, mark
         if marker.name == 'xfail':
             executable_test.outcome = 'Xfailed'
         if marker.name in ('skip', 'skipif', 'xfail'):
-            if len(marker.args) == 1 and isinstance(marker.args, str):
+            if len(marker.args) == 1 and isinstance(marker.args[0], str):
                 executable_test.message = marker.args[0]
-
-            condition_in_args = marker.args and marker.args[0]
-            condition_in_kwargs = marker.kwargs and 'condition' in marker.kwargs and marker.kwargs['condition']
-
-            if (condition_in_kwargs or condition_in_args) and 'reason' in marker.kwargs:
+            elif 'reason' in marker.kwargs:
                 executable_test.message = marker.kwargs['reason']
 
     return executable_test
@@ -226,6 +223,22 @@ def __get_tags_from(item) -> List[str]:
     return tags
 
 
+def __get_layer_from(item):
+    for marker in item.iter_markers(name='layer'):
+        if marker.args:
+            return str(marker.args[0])
+        if 'name' in marker.kwargs:
+            return str(marker.kwargs['name'])
+
+    test_layer = __search_attribute(item, 'test_layer')
+    if not test_layer:
+        return None
+
+    return str(collect_parameters_in_string_attribute(
+        test_layer,
+        get_all_parameters(item)))
+
+
 def __get_work_item_ids_from(item):
     test_workitem_ids = __search_attribute(item, 'test_workitems_id')
 
@@ -366,6 +379,7 @@ def convert_executable_test_to_test_result_model(executable_test: ExecutableTest
         .set_result_links(executable_test.result_links)\
         .set_labels(executable_test.labels)\
         .set_tags(executable_test.tags)\
+        .set_layer(executable_test.layer)\
         .set_work_item_ids(executable_test.work_item_ids) \
         .set_message(executable_test.message) \
         .set_external_key(pytest_autotest_keys)
@@ -443,7 +457,8 @@ def get_skip_message_from_report(report) -> str or None:
         return None
     if report.longrepr is not None:
         return str(report.longrepr)
-    return None
+    skip_repr = getattr(report, 'longreprtext', None)
+    return skip_repr if skip_repr else None
 
 
 def get_message(etype, value):
