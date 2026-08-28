@@ -158,6 +158,7 @@ class TestAdapterManager:
         mock_api_client_worker.write_tests.assert_called_once_with(
             [test_result_1, test_result_2],
             fixtures,
+            finalized_external_ids=set(),
         )
 
     def test_write_test_realtime_sets_automatic_creation_for_each_test(

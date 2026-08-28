@@ -2,7 +2,9 @@
 
 This library includes built-in support for Sync Storage, enabling coordinated test execution across multiple workers in distributed testing environments.
 
-See [SYNC_STORAGE_INTEGRATION.md](SYNC_STORAGE_INTEGRATION.md) for detailed documentation on how the integration works.
+See [sync-storage-interaction-spec.md](sync-storage-interaction-spec.md) for the protocol.
+
+**Test result export (POST vs PUT):** [../docs/test-result-export-contract.md](../docs/test-result-export-contract.md)
 
 # How to enable debug logging?
 1. Add in **connection_config.ini** file from the root directory of the project:
