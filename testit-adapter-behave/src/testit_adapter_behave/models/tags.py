@@ -9,3 +9,4 @@ class TagType:
     TAGS = 'Tags='
     NAMESPACE = 'NameSpace='
     CLASSNAME = 'ClassName='
+    LAYER = 'Layer='

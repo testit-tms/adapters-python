@@ -90,9 +90,9 @@ class CustomAttributeApiResult(ModelNormal):
             'is_enabled': (bool,),  # noqa: E501
             'is_required': (bool,),  # noqa: E501
             'is_global': (bool,),  # noqa: E501
-            'is_read_only': (bool, none_type,),  # noqa: E501
-            'is_system': (bool, none_type,),  # noqa: E501
-            'targets': ([str], none_type,),  # noqa: E501
+            'is_read_only': (bool,),  # noqa: E501
+            'is_system': (bool,),  # noqa: E501
+            'targets': ([str],),  # noqa: E501
             'code': (str, none_type,),  # noqa: E501
         }
 
@@ -123,7 +123,7 @@ class CustomAttributeApiResult(ModelNormal):
 
     @classmethod
     @convert_js_args_to_python_args
-    def _from_openapi_data(cls, id, options, type, is_deleted, name, is_enabled, is_required, is_global, *args, **kwargs):  # noqa: E501
+    def _from_openapi_data(cls, id, options, type, is_deleted, name, is_enabled, is_required, is_global, is_read_only, is_system, targets, *args, **kwargs):  # noqa: E501
         """CustomAttributeApiResult - a model defined in OpenAPI
 
         Args:
@@ -135,11 +135,11 @@ class CustomAttributeApiResult(ModelNormal):
             is_enabled (bool): Indicates if the attribute is enabled
             is_required (bool): Indicates if the attribute value is mandatory to specify
             is_global (bool): Indicates if the attribute is available across all projects
+            is_read_only (bool): Indicates if the attribute is read-only
+            is_system (bool): Indicates if the attribute is system
+            targets ([str]): Collection of the attribute targets   Defines where the attribute can be used (e.g., TestCases, AutoTestCases, TestPlans)
 
         Keyword Args:
-            is_read_only (bool): Indicates if the attribute is read-only. [optional]  # noqa: E501
-            is_system (bool): Indicates if the attribute is system. [optional]  # noqa: E501
-            targets ([str]): Collection of the attribute targets. [optional]  # noqa: E501
             _check_type (bool): if True, values for parameters in openapi_types
                                 will be type checked and a TypeError will be
                                 raised if the wrong type is input.
@@ -178,9 +178,6 @@ class CustomAttributeApiResult(ModelNormal):
         _path_to_item = kwargs.pop('_path_to_item', ())
         _configuration = kwargs.pop('_configuration', None)
         _visited_composed_classes = kwargs.pop('_visited_composed_classes', ())
-        is_read_only = kwargs.pop('is_read_only', False)
-        is_system = kwargs.pop('is_system', False)
-        targets = kwargs.pop('targets', None)
 
         self = super(OpenApiModel, cls).__new__(cls)
 
@@ -236,7 +233,7 @@ class CustomAttributeApiResult(ModelNormal):
     ])
 
     @convert_js_args_to_python_args
-    def __init__(self, id, options, type, is_deleted, name, is_enabled, is_required, is_global, *args, **kwargs):  # noqa: E501
+    def __init__(self, id, options, type, is_deleted, name, is_enabled, is_required, is_global, is_read_only, is_system, targets, *args, **kwargs):  # noqa: E501
         """CustomAttributeApiResult - a model defined in OpenAPI
 
         Args:
@@ -248,11 +245,11 @@ class CustomAttributeApiResult(ModelNormal):
             is_enabled (bool): Indicates if the attribute is enabled
             is_required (bool): Indicates if the attribute value is mandatory to specify
             is_global (bool): Indicates if the attribute is available across all projects
+            is_read_only (bool): Indicates if the attribute is read-only
+            is_system (bool): Indicates if the attribute is system
+            targets ([str]): Collection of the attribute targets   Defines where the attribute can be used (e.g., TestCases, AutoTestCases, TestPlans)
 
         Keyword Args:
-            is_read_only (bool): Indicates if the attribute is read-only. [optional]  # noqa: E501
-            is_system (bool): Indicates if the attribute is system. [optional]  # noqa: E501
-            targets ([str]): Collection of the attribute targets. [optional]  # noqa: E501
             _check_type (bool): if True, values for parameters in openapi_types
                                 will be type checked and a TypeError will be
                                 raised if the wrong type is input.
@@ -291,9 +288,6 @@ class CustomAttributeApiResult(ModelNormal):
         _path_to_item = kwargs.pop('_path_to_item', ())
         _configuration = kwargs.pop('_configuration', None)
         _visited_composed_classes = kwargs.pop('_visited_composed_classes', ())
-        is_read_only = kwargs.pop('is_read_only', False)
-        is_system = kwargs.pop('is_system', False)
-        targets = kwargs.pop('targets', None)
 
         if args:
             for arg in args:

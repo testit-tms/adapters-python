@@ -36,6 +36,8 @@ from adapters_api.models import (
     TestStatusApiType,
     CreateLinkApiModel,
     LabelApiModel,
+    AutoTestCreateApiModelLayer,
+    LayerSource,
 )
 
 from testit_python_commons.models.link import Link
@@ -241,6 +243,36 @@ class Converter:
 
         return label_models or None
 
+    @staticmethod
+    @adapter_logger
+    def layer_to_api_model(layer: Optional[str]) -> Optional[AutoTestCreateApiModelLayer]:
+        if not layer or not str(layer).strip():
+            return None
+
+        return AutoTestCreateApiModelLayer(
+            name=str(layer).strip(),
+            source=LayerSource("Run"),
+        )
+
+    @classmethod
+    @adapter_logger
+    def _autotest_layer_kwargs_for_create(cls, test_result: TestResult) -> dict:
+        layer = cls.layer_to_api_model(test_result.get_layer())
+        if not layer:
+            return {}
+
+        return {'layer': layer}
+
+    @classmethod
+    @adapter_logger
+    def _autotest_layer_kwargs_for_update(cls, test_result: TestResult) -> dict:
+        kwargs = {'reset_layer': False}
+        layer = cls.layer_to_api_model(test_result.get_layer())
+        if layer:
+            kwargs['layer'] = layer
+
+        return kwargs
+
     @classmethod
     @adapter_logger
     def test_result_to_autotest_post_model(
@@ -265,7 +297,8 @@ class Converter:
             labels=cls.labels_to_label_api_models(test_result.get_labels()),
             tags=test_result.get_tags(),
             should_create_work_item=test_result.get_automatic_creation_test_cases(),
-            external_key=test_result.get_external_key()
+            external_key=test_result.get_external_key(),
+            **cls._autotest_layer_kwargs_for_create(test_result),
         )
 
     @classmethod
@@ -292,7 +325,8 @@ class Converter:
             labels=cls.labels_to_label_api_models(test_result.get_labels()),
             tags=test_result.get_tags(),
             should_create_work_item=test_result.get_automatic_creation_test_cases(),
-            external_key=test_result.get_external_key()
+            external_key=test_result.get_external_key(),
+            **cls._autotest_layer_kwargs_for_create(test_result),
         )
 
     @classmethod
@@ -305,7 +339,6 @@ class Converter:
             external_id=test_result.get_external_id(),
             project_id=project_id,
             name=test_result.get_autotest_name(),
-            reset_layer=False,
             steps=cls.step_results_to_autotest_steps_model(
                 test_result.get_step_results()),
             setup=cls.step_results_to_autotest_steps_model(
@@ -319,7 +352,8 @@ class Converter:
             links=cls.links_to_links_put_model(test_result.get_links()),
             labels=cls.labels_to_label_api_models(test_result.get_labels()),
             tags=test_result.get_tags(),
-            external_key=test_result.get_external_key()
+            external_key=test_result.get_external_key(),
+            **cls._autotest_layer_kwargs_for_update(test_result),
         )
 
     @classmethod
@@ -332,7 +366,6 @@ class Converter:
             external_id=test_result.get_external_id(),
             project_id=project_id,
             name=test_result.get_autotest_name(),
-            reset_layer=False,
             steps=cls.step_results_to_autotest_steps_model(
                 test_result.get_step_results()),
             setup=cls.step_results_to_autotest_steps_model(
@@ -346,7 +379,8 @@ class Converter:
             links=cls.links_to_links_put_model(test_result.get_links()),
             labels=cls.labels_to_label_api_models(test_result.get_labels()),
             tags=test_result.get_tags(),
-            external_key=test_result.get_external_key()
+            external_key=test_result.get_external_key(),
+            **cls._autotest_layer_kwargs_for_update(test_result),
         )
 
     @classmethod

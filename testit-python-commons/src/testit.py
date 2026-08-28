@@ -5,6 +5,7 @@ from testit_python_commons.decorators import (
     externalID,
     externalId,
     labels,
+    layer,
     tags,
     link,
     links,
@@ -32,6 +33,7 @@ from testit_python_commons.dynamic_methods import (
     message
 )
 from testit_python_commons.models import LinkType
+from testit_python_commons.models.test_layers import TestLayers
 from testit_python_commons.step import step
 
 __all__ = [
@@ -45,6 +47,7 @@ __all__ = [
     'title',
     'description',
     'labels',
+    'layer',
     'tags',
     'link',
     'links',
@@ -65,5 +68,6 @@ __all__ = [
     'addTags',
     'addParameter',
     'step',
-    'LinkType'
+    'LinkType',
+    'TestLayers',
 ]

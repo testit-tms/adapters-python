@@ -33,6 +33,7 @@ class TestResult:
     __properties: dict = {}
     __automatic_creation_test_cases: bool = False
     __external_key: str = None
+    __layer: str = None
 
     @adapter_logger
     def set_external_id(self, external_id: str):
@@ -295,3 +296,13 @@ class TestResult:
     @adapter_logger
     def get_external_key(self) -> str:
         return self.__external_key
+
+    @adapter_logger
+    def set_layer(self, layer: str):
+        self.__layer = HtmlEscapeUtils.escape_html_tags(layer) if layer else None
+
+        return self
+
+    @adapter_logger
+    def get_layer(self) -> str:
+        return self.__layer
