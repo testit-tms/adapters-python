@@ -30,7 +30,6 @@ from api_client_adapters.models import (
 from testit_python_commons.client.client_configuration import ClientConfiguration
 from testit_python_commons.client.converter import Converter
 from testit_python_commons.client.helpers.bulk_autotest_helper import BulkAutotestHelper
-from testit_python_commons.client.helpers.test_result_matching import pick_best_in_progress_id
 from typing import List
 
 from testit_python_commons.models.link import Link
@@ -63,7 +62,6 @@ class ApiClientWorker:
         self.__workflows_api = WorkflowsApi(api_client=api_client)
         self.__config = config
         self.__status_codes = self.__get_status_codes()
-        self.__claimed_in_progress_ids = set()
 
     @staticmethod
     @adapter_logger
@@ -263,15 +261,34 @@ class ApiClientWorker:
 
     @adapter_logger
     @retry
-    def write_tests(self, test_results: List[TestResult], fixture_containers: dict) -> None:
+    def write_tests(
+            self,
+            test_results: List[TestResult],
+            fixture_containers: dict,
+            finalized_external_ids: set = None) -> None:
         logging.debug("call __write_tests")
+        finalized_external_ids = finalized_external_ids or set()
         bulk_autotest_helper = BulkAutotestHelper(self.__autotest_api, self.__test_run_api, self.__config)
         create_count = 0
         update_count = 0
+        skip_count = 0
         tests_to_link_after_create = []
 
         for test_result in test_results:
             test_result = self.__add_fixtures_to_test_result(test_result, fixture_containers)
+            external_id = test_result.get_external_id()
+
+            if external_id in finalized_external_ids:
+                skip_count += 1
+                logging.info(
+                    'Bulk import: skip sendTestResults for %s (already finalized at test finish)',
+                    external_id,
+                )
+                autotests = self.__get_autotests_by_external_id(external_id)
+                if autotests:
+                    self.__update_auto_test(test_result, autotests[0])
+                continue
+
             should_create_work_item = test_result.get_automatic_creation_test_cases()
 
             test_result_model = Converter.test_result_to_testrun_result_post_model(
@@ -317,9 +334,10 @@ class ApiClientWorker:
                 tests_to_link_after_create.append(test_result)
 
         logging.info(
-            "Bulk write summary: create=%d, update=%d, total=%d",
+            "Bulk write summary: create=%d, update=%d, skip=%d, total=%d",
             create_count,
             update_count,
+            skip_count,
             len(test_results),
         )
         bulk_autotest_helper.teardown()
@@ -537,109 +555,8 @@ class ApiClientWorker:
         logging.debug(f'Autotest was linked with workItem "{work_item_id}" by global id "{autotest_global_id}')
 
     @adapter_logger
-    def find_in_progress_test_result_id(self, external_id: str, parameters=None):
-        if not external_id:
-            return None
-
-        candidates = []
-        for item in self.__get_test_results():
-            if item is None:
-                continue
-            if getattr(item, "autotest_external_id", None) != external_id:
-                continue
-            result_id = getattr(item, "id", None)
-            if result_id is None:
-                continue
-            result_id_str = str(result_id)
-            if result_id_str in self.__claimed_in_progress_ids:
-                continue
-            meta = self.__get_test_result_v2_meta(result_id_str)
-            candidates.append({
-                "id": result_id_str,
-                "has_test_point": self.__is_valid_test_point_id(meta.get("testPointId")),
-                "parameters": meta.get("parameters") or {},
-            })
-
-        chosen = pick_best_in_progress_id(candidates, parameters)
-        if chosen:
-            self.__claimed_in_progress_ids.add(chosen)
-        return chosen
-
-    def __get_test_result_v2_meta(self, test_result_id: str) -> dict:
-        """Hack: adapters OpenAPI omits testPointId/parameters — read GET /api/v2/testResults/{id}."""
-        import json
-        import ssl
-        import urllib.request
-
-        base = (self.__config.get_url() or "").rstrip("/")
-        url = f"{base}/api/v2/testResults/{test_result_id}"
-        try:
-            request = urllib.request.Request(
-                url,
-                headers={
-                    "Accept": "application/json",
-                    "Authorization": f"PrivateToken {self.__config.get_private_token()}",
-                },
-                method="GET",
-            )
-            context = None
-            if not self.__config.get_cert_validation():
-                context = ssl._create_unverified_context()
-            with urllib.request.urlopen(request, timeout=10, context=context) as response:
-                return json.loads(response.read().decode("utf-8")) or {}
-        except Exception as exc:
-            logging.debug("v2 getTestResult %s failed: %s", test_result_id, exc)
-            return {}
-
-    @staticmethod
-    def __is_valid_test_point_id(test_point_id) -> bool:
-        if test_point_id is None:
-            return False
-        value = str(test_point_id)
-        return bool(value) and value != "00000000-0000-0000-0000-000000000000"
-
-    def __has_valid_test_point_id_v2(self, test_result_id: str) -> bool:
-        meta = self.__get_test_result_v2_meta(test_result_id)
-        return self.__is_valid_test_point_id(meta.get("testPointId"))
-
-    @adapter_logger
-    @retry
-    def __update_existing_test_result(self, test_result_id: str, test_result: TestResult) -> str:
-        existing = self.get_test_result_by_id(test_result_id)
-        model = Converter.convert_test_result_model_to_test_results_id_put_request(existing)
-
-        outcome = test_result.get_outcome()
-        if outcome and outcome.upper() in self.__status_codes:
-            model.status_code = outcome
-
-        if test_result.get_duration() is not None:
-            model.duration_in_ms = round(test_result.get_duration())
-        if test_result.get_message() is not None:
-            model.message = test_result.get_message()
-        if test_result.get_traces() is not None:
-            model.trace = test_result.get_traces()
-
-        self.__test_results_api.adapters_test_results_id_put(
-            id=test_result_id,
-            adapters_test_results_id_put_request=model,
-        )
-        logging.debug(
-            'Updated existing test result "%s" for autotest "%s"',
-            test_result_id,
-            test_result.get_autotest_name(),
-        )
-        return test_result_id
-
-    @adapter_logger
     @retry
     def __load_test_result(self, test_result: TestResult) -> str:
-        existing_id = self.find_in_progress_test_result_id(
-            test_result.get_external_id(),
-            test_result.get_parameters(),
-        )
-        if existing_id:
-            return self.__update_existing_test_result(existing_id, test_result)
-
         model = Converter.test_result_to_testrun_result_post_model(
             test_result,
             self.__config.get_configuration_id(),
@@ -649,10 +566,19 @@ class ApiClientWorker:
             id=self.__config.get_test_run_id(),
             auto_test_results_for_test_run_model=[model])
 
-        logging.debug(f'Result of the autotest "{test_result.get_autotest_name()}" was set '
-                      f'in the test run "{self.__config.get_test_run_id()}"')
+        test_result_id = Converter.get_test_result_id_from_testrun_result_post_response(response)
+        logging.debug(
+            'Finalized test result via sendTestResults for %s (resultId=%s)',
+            test_result.get_external_id(),
+            test_result_id,
+        )
+        logging.debug(
+            'Result of the autotest "%s" was set in the test run "%s"',
+            test_result.get_autotest_name(),
+            self.__config.get_test_run_id(),
+        )
 
-        return Converter.get_test_result_id_from_testrun_result_post_response(response)
+        return test_result_id
 
     @adapter_logger
     @retry
@@ -661,6 +587,8 @@ class ApiClientWorker:
 
     @adapter_logger
     def update_test_results(self, fixtures_containers: dict, test_result_ids: dict) -> None:
+        # PUT only setup/teardown fixtures — never status or step_results.
+        # See docs/test-result-export-contract.md
         test_results = Converter.fixtures_containers_to_test_results_with_all_fixture_step_results(
             fixtures_containers, test_result_ids)
 

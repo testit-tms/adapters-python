@@ -1,90 +1,61 @@
-# Mode 0: InProgress matching (orphan TP + parametrized)
+# Mode 0: InProgress slots and test plan runs
 
-How the Python adapter finds and **updates** an existing InProgress test result
-instead of creating a new one when `adapterMode=0` (test plan / webhook / filter).
+How the Python adapter exports results when `adapterMode=0` (test plan / webhook / filter) and TMS already created **InProgress** rows bound to test points.
 
-Related: Java/sync-storage contract in
-`adapters-java/docs/mode0-orphan-testpoint-inprogress.md`.
+**Related:** [test-result-export-contract.md](./test-result-export-contract.md), Java `adapters-java/docs/mode0-orphan-testpoint-inprogress.md`.
 
 ---
 
-## Problem 1 — orphan InProgress (no `testPointId`)
+## TMS context
 
-With `adapterMode=0`, TMS already creates InProgress results **bound to a test point**
-(`testPointId` set).
+With `adapterMode=0`, the test run is created from a plan. TMS pre-creates one **InProgress** result per test point (`testPointId` set).
 
-Previously the Python adapter (after sync-storage accepted the cut) forced
-`outcome=InProgress` and called create (`setAutoTestResultsForTestRun`) **without**
-`testPointId`. That produced a second row (orphan). The TP-bound result stayed
-InProgress forever; the final status landed on the orphan.
-
-**Fix:** keep the final outcome after sync; before create, search InProgress by
-`autotest_external_id`, prefer a result with a valid `testPointId`, then **PUT**
-that result instead of posting a new one.
+The adapter must **finalize** those rows with the real outcome and full payload (steps, parameters, …), not leave them stuck InProgress and not create orphan duplicates.
 
 ---
 
-## Problem 2 — parametrized pytest leaves many InProgress forever
+## Correct behaviour (current)
 
-### What happens in practice
+**Finalization uses `sendTestResults` only** (`POST /adapters/testRuns/{id}/test-results`).
 
-1. A test plan / filter creates many InProgress rows (one per test point).
-2. The same autotest is parametrized (`@pytest.mark.parametrize`). Iterations often
-   share one `external_id` (name template without `{param}`).
-3. Work items / test points frequently have **empty parameters**, while the adapter
-   sends **callspec parameters** on create.
-4. The first matching logic used only `external_id`. The first TP-bound InProgress
-   was always chosen (or create ran when params on TMS did not “fit” create semantics).
-5. Result: one empty TP might get updated once; other iterations **POST new results**
-   with parameters; remaining empty InProgress rows stay InProgress forever.
+- Applies even when an InProgress result already exists for the autotest.
+- TMS merges the create payload into the plan-bound row (external id + configuration + parameters).
+- The adapter **does not** search InProgress and **does not** PUT final status (removed workaround).
 
-Root cause: mismatch between WI parameters and
-autotest/result parameters, plus search that ignores parameters.
+After Sync Storage accepts the cut, the adapter keeps the **final** outcome and calls `_write_test_realtime_internal` → `sendTestResults`.
 
-### Why short search is not enough
-
-`TestResultShortResponse` (search) has **no `parameters`**. Full / v2 payload does.
-Adapters OpenAPI models also omit `testPointId` on short DTOs → temporary
-`GET /api/v2/testResults/{id}` for both `testPointId` and `parameters`.
+See [test-result-export-contract.md](./test-result-export-contract.md) and [mode0-duplicate-results-bulk-after-realtime.md](./mode0-duplicate-results-bulk-after-realtime.md).
 
 ---
 
-## Solution (parameter-aware pick + claim)
+## Historical issues (for context)
 
-| File | Role |
-|------|------|
-| `client/helpers/test_result_matching.py` | Pure ranking: exact params > empty TMS params; prefer valid TP |
-| `client/api_client.py` | `find_in_progress_test_result_id(external_id, parameters)`; claim chosen ids; `__load_test_result` passes `get_parameters()` |
-| `services/adapter_manager.py` | After sync: keep **final** outcome; realtime write without forcing InProgress |
+### Orphan without `testPointId`
 
-### Matching rules
+Older behaviour: POST create without matching the plan row → second result (orphan), plan row stayed InProgress.
 
-For candidates with the same `external_id` (and not yet claimed in this process):
+**Fix:** finalize via `sendTestResults`; TMS updates the existing slot instead of requiring a separate PUT-by-id path.
 
-1. **Exact parameter match** (normalized string key/value) — best.
-2. Else **empty / missing parameters on TMS** — fallback for WI without params
-   (typical test-plan case).
-3. Else **skip** if TMS has non-empty parameters that differ from the incoming ones
-   (do not overwrite the wrong callspec’s TP).
-4. Among equal match quality, prefer a valid `testPointId`.
-5. **Claim** the chosen result id so the next parametrize iteration does not reuse
-   the same empty TP.
+### Duplicate at bulk (importRealtime=false)
 
-If nothing matches → create (previous behaviour for genuinely new results).
+Test finalized at test finish via `sendTestResults`, then bulk at session end sent **again** → orphan duplicate.
 
-Non-parametrized tests (`parameters` empty/`None`) still pick the empty-params
-TP-bound InProgress first — same as the original orphan fix.
+**Fix:** skip bulk `sendTestResults` when `externalId` is already in `AdapterManager.__test_result_map`.
 
-### What we do **not** change
+### Parametrized tests and many InProgress rows
 
-- Adapters PUT body still cannot set `parameters` (OpenAPI PUT has no field) —
-  we complete the existing TP-bound row (outcome / duration / message / trace).
-- Cloud-side “better” filling of WI params remains a TMS concern; the adapter only
-  stops creating endless orphans and stuck InProgress.
+When several TPs share the same `external_id` with different (or empty) parameters, TMS matching on create uses the payload `parameters`. Adapter sends callspec parameters on `sendTestResults`; each iteration should get its own finalized row without leaving unrelated TPs stuck (TMS-side matching).
+
+Helper `client/helpers/test_result_matching.py` remains for unit tests / future client-side ranking if needed; **`__load_test_result` no longer uses it**.
+
+---
+
+## What PUT is still used for
+
+**Only** after session with `importRealtime=true`: attach pytest fixture **setup/teardown** steps to an already finalized result id. No status, no `stepResults`. See [test-result-export-contract.md](./test-result-export-contract.md).
 
 ---
 
 ## Note
 
-Sync-storage Work X PUT fix still requires a published binary newer than
-`v0.3.7-tms-5.7` for nested-step finalize issues unrelated to this matching.
+Sync Storage Work X finalize may still affect nested steps on the **first** held test independently of this export contract; see [realtime-import-spec.md](../testit-python-commons/realtime-import-spec.md) (Cause B).
