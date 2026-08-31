@@ -102,6 +102,7 @@ Description of decorators:
 - `testit.labels` - labels listed in the autotest card
 - `testit.tags` - tags listed in the autotest card
 - `testit.links` - links listed in the autotest card
+- `testit.layer` - test pyramid layer on the autotest card (source `Run`). Recommended values: `testit.TestLayers` (`E2E`, `UI`, `API`, `Contract`, `Integration`, `Component`, `Unit`); any non-empty string is accepted
 - `testit.step` - the designation of the step called in the body of the test or other step
 - `testit.nameSpace` - directory in the TMS system (default - file's name of test)
 - `testit.className` - subdirectory in the TMS system (default - class's name of test)
@@ -162,6 +163,13 @@ def oneOneStep():
 @testit.step('step 2')
 def oneTwoStep():
     return True
+
+
+# Layer on autotest card
+@testit.externalId('api_layer_test')
+@testit.layer(testit.TestLayers.API)
+def test_with_layer():
+    assert True
 ```
 
 #### Parameterized test
