@@ -114,6 +114,7 @@ Description of decorators:
 - `testit.labels` - labels listed in the autotest card
 - `testit.tags` - tags listed in the autotest card
 - `testit.links` - links listed in the autotest card
+- `testit.layer` - test pyramid layer on the autotest card (source `Run`). Recommended values: `testit.TestLayers` (`E2E`, `UI`, `API`, `Contract`, `Integration`, `Component`, `Unit`); any non-empty string is accepted. Also supported as `@pytest.mark.layer("API")`
 - `testit.step` - the designation of the step called in the body of the test or other step
 - `testit.nameSpace` - directory in the TMS system (default - file's name of test)
 - `testit.className` - subdirectory in the TMS system (default - class's name of test)
@@ -185,6 +186,20 @@ def oneTwoStep():
               description='Description of JCP-777')
 @pytest.mark.skipif(True, reason='Because i can')
 def test_skip():
+    assert True
+
+
+# Layer via decorator
+@testit.externalId('api_layer_test')
+@testit.layer(testit.TestLayers.API)
+def test_with_layer_decorator():
+    assert True
+
+
+# Layer via pytest mark
+@testit.externalId('ui_layer_test')
+@pytest.mark.layer("UI")
+def test_with_layer_mark():
     assert True
 ```
 

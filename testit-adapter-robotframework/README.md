@@ -104,6 +104,7 @@ Description of tags:
 - `testit.links` - links listed in the autotest card
 - `testit.labels` - labels listed in the autotest card
 - `testit.tags` - tags listed in the autotest card
+- `testit.layer` - test pyramid layer on the autotest card (source `Run`). Recommended values: `E2E`, `UI`, `API`, `Contract`, `Integration`, `Component`, `Unit`; any non-empty string is accepted
 - `testit.nameSpace` - directory in the TMS system (default - file's name of test)
 - `testit.className` - subdirectory in the TMS system (default - class's name of test)
 
@@ -209,9 +210,18 @@ Test With All Params
     [Tags]   testit.externalID:123    testit.title:${{'Different title'}}   testit.displayName:${{'Different name'}}
     ...     testit.description:${{'Different description'}}    testit.workitemsID:${{[123, '456']}}
     ...     testit.links:${{{'url': 'http://google.com', 'type':'Issue'}}}   testit.labels:${{['smoke', 'lol']}}
+    ...     testit.layer:API
     [Setup]  Setup
     Log    Something
     Log    Another
+    [Teardown]  Teardown
+
+Test With Layer
+    [Tags]   testit.layer:API
+    [Setup]  Setup
+    Do Something
+    Do Another Thing
+    Log  I'am a step
     [Teardown]  Teardown
 
 Test With Add Link

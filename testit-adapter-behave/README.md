@@ -118,6 +118,7 @@ Description of tags:
 - `Labels` - labels listed in the autotest card
 - `Tags` - tags listed in the autotest card
 - `Links` - links listed in the autotest card
+- `Layer` - test pyramid layer on the autotest card (source `Run`). Recommended values: `E2E`, `UI`, `API`, `Contract`, `Integration`, `Component`, `Unit`; any non-empty string is accepted
 - `NameSpace` - directory in the TMS system (default - file's name of test)
 - `ClassName` - subdirectory in the TMS system (default - class's name of test)
 
@@ -196,6 +197,7 @@ Feature: Sample
   @Title=Title_in_the_autotest_card
   @Description=Test_with_all_annotations
   @Tags=Tag1,Tag2
+  @Layer=API
   @Links={"url":"https://dumps.example.com/module/repository","title":"Repository","description":"Example_of_repository","type":"Repository"}
   Scenario: Create new project, section and test case
     When I create a project
