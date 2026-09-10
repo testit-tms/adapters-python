@@ -41,6 +41,7 @@ from testit_python_commons.services.retry import (
     retry,
     retry_on_connection_error,
 )
+from testit_python_commons.utils.html_escape_utils import HtmlEscapeUtils
 
 
 class ApiClientWorker:
@@ -469,6 +470,7 @@ class ApiClientWorker:
             test_result,
             self.__config.get_project_id())
 
+        HtmlEscapeUtils.escape_html_in_object(model)
         autotest_response = self.__autotest_api.adapters_auto_tests_post(
             adapters_auto_tests_post_request=model)
 
@@ -496,6 +498,7 @@ class ApiClientWorker:
         model = Converter.prepare_to_update_autotest(test_result, autotest, self.__config.get_project_id())
 
         try:
+            HtmlEscapeUtils.escape_html_in_object(model)
             self.__autotest_api.adapters_auto_tests_put(adapters_auto_tests_put_request=model)
         except Exception as exc:
             if is_retriable_connection_error(exc):
@@ -562,6 +565,7 @@ class ApiClientWorker:
             self.__config.get_configuration_id(),
             self.__status_codes)
 
+        HtmlEscapeUtils.escape_html_in_object(model)
         response = self.__test_run_api.adapters_test_runs_id_test_results_post(
             id=self.__config.get_test_run_id(),
             auto_test_results_for_test_run_model=[model])

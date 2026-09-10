@@ -101,6 +101,32 @@ class TestHtmlEscapeUtils(unittest.TestCase):
         self.assertEqual(result[0].description, "&lt;div&gt;content&lt;/div&gt;")
         self.assertEqual(result[1].description, "&lt;span&gt;more&lt;/span&gt;")
 
+    def test_escape_html_in_object_accepts_list(self):
+        """Bulk send path passes a list — must escape each item, not no-op."""
+        test_list = [
+            SampleData("First", "<script>alert(1)</script>"),
+            SampleData("Second", "<img src=x onerror=alert(1)>"),
+        ]
+        result = HtmlEscapeUtils.escape_html_in_object(test_list)
+
+        self.assertEqual(result[0].description, "&lt;script&gt;alert(1)&lt;/script&gt;")
+        self.assertEqual(result[1].description, "&lt;img src=x onerror=alert(1)&gt;")
+
+    def test_escape_html_in_list_of_strings(self):
+        tags = ["<script>alert(1)</script>", "safe", "<b>x</b>"]
+        result = HtmlEscapeUtils.escape_html_in_object(tags)
+
+        self.assertEqual(result[0], "&lt;script&gt;alert(1)&lt;/script&gt;")
+        self.assertEqual(result[1], "safe")
+        self.assertEqual(result[2], "&lt;b&gt;x&lt;/b&gt;")
+
+    def test_escape_html_in_list_of_dicts(self):
+        labels = [{"name": "<script>alert(1)</script>"}, {"name": "ok"}]
+        result = HtmlEscapeUtils.escape_html_in_object(labels)
+
+        self.assertEqual(result[0]["name"], "&lt;script&gt;alert(1)&lt;/script&gt;")
+        self.assertEqual(result[1]["name"], "ok")
+
     def test_escape_disabled_by_env_var(self):
         """Test that escaping can be disabled via environment variable"""
         os.environ[HtmlEscapeUtils.NO_ESCAPE_HTML_ENV_VAR] = "true"
@@ -130,6 +156,25 @@ class TestHtmlEscapeUtils(unittest.TestCase):
         self.assertEqual(result["description"], "&lt;script&gt;alert('xss')&lt;/script&gt;")
         self.assertEqual(result["tags"][0], "&lt;tag&gt;")
         self.assertEqual(result["tags"][1], "normal_tag")
+
+    def test_escape_openapi_model_parameters(self):
+        """OpenAPI models hide fields from dir(); parameters must still be escaped."""
+        from adapters_api.models import AutoTestResultsForTestRunModel, TestStatusType
+
+        model = AutoTestResultsForTestRunModel(
+            configuration_id="cfg",
+            auto_test_external_id="ext",
+            status_type=TestStatusType("Succeeded"),
+            parameters={"description": '<script>alert("1")</script>'},
+            message='<img src=x onerror=alert(1)>',
+        )
+        HtmlEscapeUtils.escape_html_in_object(model)
+
+        self.assertEqual(
+            model.parameters["description"],
+            '&lt;script&gt;alert("1")&lt;/script&gt;',
+        )
+        self.assertEqual(model.message, "&lt;img src=x onerror=alert(1)&gt;")
 
 
 if __name__ == '__main__':

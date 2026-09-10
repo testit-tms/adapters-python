@@ -80,7 +80,12 @@ class HtmlEscapeUtils:
             return obj
             
         try:
-            HtmlEscapeUtils._process_object_attributes(obj)
+            if isinstance(obj, list):
+                HtmlEscapeUtils._process_list(obj)
+            elif isinstance(obj, dict):
+                HtmlEscapeUtils._process_dict(obj)
+            else:
+                HtmlEscapeUtils._process_object_attributes(obj)
         except Exception as e:
             # Silently ignore reflection errors
             logging.debug(f"Error processing object attributes: {e}")
@@ -90,7 +95,7 @@ class HtmlEscapeUtils:
     @staticmethod
     def escape_html_in_object_list(obj_list: Optional[List[Any]]) -> Optional[List[Any]]:
         """
-        Escapes HTML tags in all string attributes of objects in a list using reflection.
+        Escapes HTML tags in list items: strings in-place, objects via reflection.
         Can be disabled by setting NO_ESCAPE_HTML environment variable to "true".
         
         Args:
@@ -106,47 +111,68 @@ class HtmlEscapeUtils:
         no_escape_html = os.environ.get(HtmlEscapeUtils.NO_ESCAPE_HTML_ENV_VAR, "").lower()
         if no_escape_html == "true":
             return obj_list
-            
-        for obj in obj_list:
-            HtmlEscapeUtils.escape_html_in_object(obj)
-            
+
+        HtmlEscapeUtils._process_list(obj_list)
         return obj_list
     
+    @staticmethod
+    def _process_dict(obj: dict) -> None:
+        for key, value in obj.items():
+            if isinstance(value, str):
+                obj[key] = HtmlEscapeUtils.escape_html_tags(value)
+            elif isinstance(value, list):
+                HtmlEscapeUtils._process_list(value)
+            elif isinstance(value, dict):
+                HtmlEscapeUtils._process_dict(value)
+            elif value is not None and not HtmlEscapeUtils._is_simple_type(type(value)):
+                HtmlEscapeUtils.escape_html_in_object(value)
+
+    @staticmethod
+    def _iter_object_attr_names(obj: Any):
+        """
+        OpenAPI models store fields in attribute_map/_data_store; they are not listed by dir().
+        Prefer those maps, fall back to public dir() attributes for plain objects.
+        """
+        attribute_map = getattr(obj, 'attribute_map', None)
+        if isinstance(attribute_map, dict) and attribute_map:
+            return attribute_map.keys()
+
+        data_store = getattr(obj, '_data_store', None)
+        if isinstance(data_store, dict) and data_store:
+            return data_store.keys()
+
+        return (
+            attr_name for attr_name in dir(obj)
+            if not attr_name.startswith('_') and not callable(getattr(obj, attr_name, None))
+        )
+
+    @staticmethod
+    def _should_skip_attr(attr_name: str) -> bool:
+        return (
+            attr_name.startswith('_')
+            or attr_name.startswith("external_id")
+            or attr_name.startswith("externalId")
+            or attr_name.startswith("auto_test_external_id")
+            or attr_name.startswith("autoTestExternalId")
+        )
+
     @staticmethod
     def _process_object_attributes(obj: Any) -> None:
         """
         Process all attributes of an object for HTML escaping.
         """
-        # Handle dictionary-like objects (common in API models)
-        if hasattr(obj, '__dict__'):
-            for attr_name in dir(obj):
-                # Skip private/protected attributes and methods
-                if attr_name.startswith('_') or callable(getattr(obj, attr_name, None)):
+        for attr_name in HtmlEscapeUtils._iter_object_attr_names(obj):
+            if HtmlEscapeUtils._should_skip_attr(attr_name):
+                continue
+
+            try:
+                value = getattr(obj, attr_name, None)
+                if callable(value):
                     continue
-                if (
-                    attr_name.startswith("external_id")
-                    or attr_name.startswith("externalId")
-                    or attr_name.startswith("auto_test_external_id")
-                    or attr_name.startswith("autoTestExternalId")
-                ):
-                    continue
-                    
-                try:
-                    value = getattr(obj, attr_name)
-                    HtmlEscapeUtils._process_attribute_value(obj, attr_name, value)
-                except Exception as e:
-                    # Silently ignore attribute errors
-                    logging.debug(f"Error processing attribute {attr_name}: {e}")
-                    
-        # Handle dictionary objects
-        elif isinstance(obj, dict):
-            for key, value in obj.items():
-                if isinstance(value, str):
-                    obj[key] = HtmlEscapeUtils.escape_html_tags(value)
-                elif isinstance(value, list):
-                    HtmlEscapeUtils._process_list(value)
-                elif not HtmlEscapeUtils._is_simple_type(type(value)):
-                    HtmlEscapeUtils.escape_html_in_object(value)
+                HtmlEscapeUtils._process_attribute_value(obj, attr_name, value)
+            except Exception as e:
+                # Silently ignore attribute errors
+                logging.debug(f"Error processing attribute {attr_name}: {e}")
     
     @staticmethod
     def _process_attribute_value(obj: Any, attr_name: str, value: Any) -> None:
@@ -162,6 +188,8 @@ class HtmlEscapeUtils:
                 pass
         elif isinstance(value, list):
             HtmlEscapeUtils._process_list(value)
+        elif isinstance(value, dict):
+            HtmlEscapeUtils._process_dict(value)
         elif value is not None and not HtmlEscapeUtils._is_simple_type(type(value)):
             # Process nested objects (but not simple types)
             HtmlEscapeUtils.escape_html_in_object(value)
