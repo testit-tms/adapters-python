@@ -289,7 +289,7 @@ class TestResult:
 
     @adapter_logger
     def set_external_key(self, external_key: str):
-        self.__external_key = external_key
+        self.__external_key = HtmlEscapeUtils.escape_html_tags(external_key)
 
         return self
 
