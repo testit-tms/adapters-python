@@ -156,7 +156,7 @@ class BulkAutotestHelper:
     def __create_tests(self, autotests_for_create: List[AutoTestCreateApiModel]):
         # logging.debug(f'Creating autotests: "{autotests_for_create}')
 
-        autotests_for_create = HtmlEscapeUtils.escape_html_in_object(autotests_for_create)
+        autotests_for_create = HtmlEscapeUtils.escape_html_in_object_list(autotests_for_create)
         self.__autotests_api.adapters_auto_tests_bulk_post(auto_test_create_api_model=autotests_for_create)
 
         logging.debug(f'Autotests were created')
@@ -165,7 +165,7 @@ class BulkAutotestHelper:
     def __update_tests(self, autotests_for_update: List[AutoTestUpdateApiModel]):
         # logging.debug(f'Updating autotests: {autotests_for_update}')
 
-        autotests_for_update = HtmlEscapeUtils.escape_html_in_object(autotests_for_update)
+        autotests_for_update = HtmlEscapeUtils.escape_html_in_object_list(autotests_for_update)
         self.__autotests_api.adapters_auto_tests_bulk_put(auto_test_update_api_model=autotests_for_update)
 
         logging.debug(f'Autotests were updated')
@@ -174,7 +174,7 @@ class BulkAutotestHelper:
     def __load_test_results(self, test_results: List[AutoTestResultsForTestRunModel]):
         # logging.debug(f'Loading test results: {test_results}')
 
-        test_results = HtmlEscapeUtils.escape_html_in_object(test_results)
+        test_results = HtmlEscapeUtils.escape_html_in_object_list(test_results)
         self.__test_runs_api.adapters_test_runs_id_test_results_post(
             id=self.__test_run_id,
             auto_test_results_for_test_run_model=test_results)
