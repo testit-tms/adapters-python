@@ -51,10 +51,13 @@ Unit test: `tests/client/test_converter_update_test_results.py`.
 
 ### 4. Bulk at run end must not double-send
 
-When `importRealtime=false` and a test was already finalized at test finish (e.g. Sync Storage master path stores `externalId → resultId` in `AdapterManager.__test_result_map`):
+When `importRealtime=false` and a test was already finalized at test finish (e.g. Sync Storage master path):
 
-- `write_tests(..., finalized_external_ids=...)` **skips** `sendTestResults` for those external IDs
-- Optionally refreshes autotest metadata only
+- Store `externalId → resultId` in `__test_result_map` (for fixture attach)
+- Store a **per-invocation** key in `__finalized_result_keys` (`externalKey` / pytest node id, else `externalId` + parameters)
+- `write_tests(..., finalized_result_keys=...)` **skips** `sendTestResults` only for that invocation
+
+Do **not** skip by bare `externalId`: parametrize without `{param}` in `@externalId` shares one id; other iterations must still be sent.
 
 Info log:
 

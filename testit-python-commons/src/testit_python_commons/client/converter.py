@@ -43,9 +43,19 @@ from testit_python_commons.models.step_result import StepResult
 from testit_python_commons.models.test_result import TestResult
 from testit_python_commons.models.test_result_with_all_fixture_step_results_model import TestResultWithAllFixtureStepResults
 from testit_python_commons.services.logger import adapter_logger
+from testit_python_commons.utils.html_escape_utils import HtmlEscapeUtils
 
 
 class Converter:
+    @staticmethod
+    def _escape_string_map(values: Optional[dict]) -> Optional[dict]:
+        if not values:
+            return values
+        return {
+            str(key): HtmlEscapeUtils.escape_html_tags(str(value)) if value is not None else value
+            for key, value in values.items()
+        }
+
     @staticmethod
     @adapter_logger
     def test_run_to_test_run_short_model(
@@ -373,8 +383,8 @@ class Converter:
                 test_result.get_teardown_results()),
             traces=test_result.get_traces(),
             attachments=test_result.get_attachments(),
-            parameters=test_result.get_parameters(),
-            properties=test_result.get_properties(),
+            parameters=cls._escape_string_map(test_result.get_parameters()),
+            properties=cls._escape_string_map(test_result.get_properties()),
             links=cls.links_to_links_post_model(
                 test_result.get_result_links()),
             duration=round(test_result.get_duration()),

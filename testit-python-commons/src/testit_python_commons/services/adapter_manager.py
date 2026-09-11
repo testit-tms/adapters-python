@@ -5,6 +5,7 @@ import uuid
 from testit_python_commons.client.api_client import ApiClientWorker
 from testit_python_commons.client.client_configuration import ClientConfiguration
 from testit_python_commons.models.adapter_mode import AdapterMode
+from testit_python_commons.models.status_type import StatusType
 from testit_python_commons.models.test_result import TestResult
 from testit_python_commons.services.adapter_manager_configuration import (
     AdapterManagerConfiguration,
@@ -18,6 +19,7 @@ from testit_python_commons.services.sync_storage.sync_storage_runner import (
 )
 
 SYNC_STORAGE_AVAILABLE = True
+IN_PROGRESS_LITERAL = "InProgress"
 
 
 class AdapterManager:
@@ -33,6 +35,9 @@ class AdapterManager:
         self.__api_client = ApiClientWorker(client_configuration)
         self.__fixture_manager = fixture_manager
         self.__test_result_map = {}
+        # Keys of results already sent at test finish (externalKey or externalId+params).
+        # Must not be bare externalId — parametrize shares one externalId.
+        self.__finalized_result_keys = set()
         self.__test_results = []
         self.__test_run_metadata_applied = False
 
@@ -146,23 +151,32 @@ class AdapterManager:
 
     @adapter_logger
     def write_test(self, test_result: TestResult) -> None:
-        if self.__config.should_import_realtime():
-            self.__write_test_realtime(test_result)
-            return
-
-        # for realtime false
-        # if
-        logging.debug("Is already in progress: " + str(self.__is_already_in_progress()))
-        # Handle Sync Storage integration if available
-        # Check if current worker is master and no test is in progress
-        if self.__is_active_syncstorage_instance() and self.__is_master_and_no_in_progress():
-            logging.debug(f"Outcome: {test_result.get_outcome()}")
-            is_ok = self.on_master_no_already_in_progress(test_result)
-            if is_ok:
+        try:
+            if self.__config.should_import_realtime():
+                self.__write_test_realtime(test_result)
                 return
-            # else continue normal processing
 
-        self.__test_results.append(test_result)
+            # for realtime false
+            # if
+            logging.debug("Is already in progress: " + str(self.__is_already_in_progress()))
+            # Handle Sync Storage integration if available
+            # Check if current worker is master and no test is in progress
+            if self.__is_active_syncstorage_instance() and self.__is_master_and_no_in_progress():
+                logging.debug(f"Outcome: {test_result.get_outcome()}")
+                is_ok = self.on_master_no_already_in_progress(test_result)
+                if is_ok:
+                    return
+                # else continue normal processing
+
+            self.__test_results.append(test_result)
+        except Exception as exc:
+            # Do not abort the pytest/session run if TMS rejects one result (e.g. XSS validation)
+            logging.error(
+                'Failed to write test result for external_id="%s", parameters=%s: %s',
+                test_result.get_external_id(),
+                test_result.get_parameters(),
+                exc,
+            )
 
 
     @adapter_logger
@@ -189,12 +203,31 @@ class AdapterManager:
         self.__sync_storage_runner.set_is_already_in_progress(True)
 
         try:
-            # Final status via sendTestResults (create); never change status via PUT.
+            # Mode 0: finalize in TMS now (TP-bound InProgress / orphan fix).
+            # Modes 1/2: post InProgress to TMS; Work X finalizes from the cut.
+            if self.__config.get_mode() == AdapterMode.USE_FILTER:
+                logging.debug(
+                    "SyncStorage accepted %s; sendTestResults with final status (mode 0)",
+                    test_result.get_external_id(),
+                )
+                self._write_test_realtime_internal(test_result)
+                return True
+
+            final_outcome = test_result.get_outcome()
+            final_status_type = test_result.get_status_type()
             logging.debug(
-                "SyncStorage accepted %s; sendTestResults with final status",
+                "SyncStorage accepted %s; sendTestResults InProgress (Work X will finalize)",
                 test_result.get_external_id(),
             )
-            self._write_test_realtime_internal(test_result)
+            try:
+                test_result.set_outcome(IN_PROGRESS_LITERAL)
+                test_result.set_status_type(StatusType.INPROGRESS)
+                self._write_test_realtime_internal(test_result)
+            finally:
+                if final_outcome is not None:
+                    test_result.set_outcome(final_outcome)
+                if final_status_type is not None:
+                    test_result.set_status_type(final_status_type)
             return True
         except Exception as e:
             logging.warning(
@@ -233,7 +266,9 @@ class AdapterManager:
             logging.warning(test_result)
             return
 
+        # Fixture attach (realtime) still indexes by externalId.
         self.__test_result_map[ext_id] = test_result_id
+        self.__finalized_result_keys.add(test_result.get_finalize_key())
 
     @adapter_logger
     def write_tests(self) -> None:
@@ -265,7 +300,7 @@ class AdapterManager:
         self.__api_client.write_tests(
             self.__test_results,
             fixtures,
-            finalized_external_ids=set(self.__test_result_map.keys()),
+            finalized_result_keys=set(self.__finalized_result_keys),
         )
 
     @adapter_logger

@@ -1,3 +1,4 @@
+import json
 from typing import List
 
 from testit_python_commons.models.link import Link
@@ -295,3 +296,26 @@ class TestResult:
     @adapter_logger
     def get_external_key(self) -> str:
         return self.__external_key
+
+    def get_finalize_key(self) -> str:
+        """
+        Identity of one test invocation for bulk dedupe (parametrize-safe).
+        Prefer externalKey (e.g. pytest node id); else externalId + parameters.
+        """
+        if self.__external_key:
+            return self.__external_key
+        params = self.__parameters or {}
+        return '{0}\n{1}'.format(
+            self.__external_id,
+            json.dumps(params, sort_keys=True, default=str, ensure_ascii=False),
+        )
+
+    @adapter_logger
+    def set_layer(self, layer: str):
+        self.__layer = HtmlEscapeUtils.escape_html_tags(layer) if layer else None
+
+        return self
+
+    @adapter_logger
+    def get_layer(self) -> str:
+        return self.__layer

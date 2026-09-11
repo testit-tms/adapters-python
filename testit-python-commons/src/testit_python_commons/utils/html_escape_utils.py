@@ -15,23 +15,18 @@ class HtmlEscapeUtils:
     
     NO_ESCAPE_HTML_ENV_VAR = "NO_ESCAPE_HTML"
     
-    # Regex pattern to detect HTML tags (requires at least one non-whitespace character after <)
-    # This ensures empty <> brackets are not considered HTML tags
-    _HTML_TAG_PATTERN = re.compile(r'<\S.*?(?:>|/>)')
-    
-    # Regex patterns to escape only non-escaped characters
-    # Using negative lookbehind to avoid double escaping
-    _LESS_THAN_PATTERN = re.compile('<')
-    _GREATER_THAN_PATTERN = re.compile('>')
-    
+    # Align with Java adapters: tag must start with letter, '!' or '/'
+    _HTML_TAG_PATTERN = re.compile(
+        r'''<[a-zA-Z!/][^<>"']*(?:"[^"]*"[^<>"']*|'[^']*'[^<>"']*)*>'''
+    )
+
     @staticmethod
     def escape_html_tags(text: Optional[str]) -> Optional[str]:
         """
         Escapes HTML tags to prevent XSS attacks.
         First checks if the string contains HTML tags using regex pattern.
         Only performs escaping if HTML tags are detected.
-        Escapes all < as \\< and > as \\> only if they are not already escaped.
-        Uses regex with negative lookbehind to avoid double escaping.
+        Escapes < as &lt; and > as &gt; (idempotent for already-escaped text).
         
         Args:
             text: The text to escape
@@ -51,11 +46,7 @@ class HtmlEscapeUtils:
         if not HtmlEscapeUtils._HTML_TAG_PATTERN.search(text):
             return text  # No HTML tags found, return original string
             
-        # Use regex with negative lookbehind to escape only non-escaped characters
-        result = HtmlEscapeUtils._LESS_THAN_PATTERN.sub('&lt;', text)
-        result = HtmlEscapeUtils._GREATER_THAN_PATTERN.sub('&gt;', result)
-        
-        return result
+        return text.replace('<', '&lt;').replace('>', '&gt;')
     
     @staticmethod
     def escape_html_in_object(obj: Any) -> Any:
@@ -190,6 +181,11 @@ class HtmlEscapeUtils:
             HtmlEscapeUtils._process_list(value)
         elif isinstance(value, dict):
             HtmlEscapeUtils._process_dict(value)
+            try:
+                # Write back so OpenAPI models that return dict copies keep escaped values
+                setattr(obj, attr_name, value)
+            except AttributeError:
+                pass
         elif value is not None and not HtmlEscapeUtils._is_simple_type(type(value)):
             # Process nested objects (but not simple types)
             HtmlEscapeUtils.escape_html_in_object(value)

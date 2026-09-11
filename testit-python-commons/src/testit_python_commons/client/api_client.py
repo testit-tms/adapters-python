@@ -266,9 +266,9 @@ class ApiClientWorker:
             self,
             test_results: List[TestResult],
             fixture_containers: dict,
-            finalized_external_ids: set = None) -> None:
+            finalized_result_keys: set = None) -> None:
         logging.debug("call __write_tests")
-        finalized_external_ids = finalized_external_ids or set()
+        finalized_result_keys = finalized_result_keys or set()
         bulk_autotest_helper = BulkAutotestHelper(self.__autotest_api, self.__test_run_api, self.__config)
         create_count = 0
         update_count = 0
@@ -278,8 +278,11 @@ class ApiClientWorker:
         for test_result in test_results:
             test_result = self.__add_fixtures_to_test_result(test_result, fixture_containers)
             external_id = test_result.get_external_id()
+            finalize_key = test_result.get_finalize_key()
 
-            if external_id in finalized_external_ids:
+            # Skip only the same invocation (Java: by UUID). Bare externalId would
+            # drop other parametrize iterations that share one autotest id.
+            if finalize_key in finalized_result_keys:
                 skip_count += 1
                 logging.info(
                     'Bulk import: skip sendTestResults for %s (already finalized at test finish)',

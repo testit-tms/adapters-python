@@ -29,14 +29,17 @@ Root cause: the adapter finalized the test twice — once at **test finish**, ag
 
 When Sync Storage accepts the cut (`on_master_no_already_in_progress` → true):
 
-1. Cut model to Sync Storage (coordination only).
-2. `_write_test_realtime_internal` → autotest update + **`sendTestResults`** with final status and full steps.
-3. Store `externalId → resultId` in `AdapterManager.__test_result_map`.
+1. Cut model to Sync Storage (final status in the cut for Work X).
+2. **Mode 0 only:** `_write_test_realtime_internal` → autotest update + **`sendTestResults`** with **final** status and full steps.
+3. Store `externalId → resultId` in `AdapterManager.__test_result_map` (fixtures).
+4. Store per-invocation finalize key in `__finalized_result_keys` (`externalKey` or `externalId`+parameters).
+
+**Modes 1 / 2 (not this doc’s primary path):** same cut, but TMS gets **`InProgress`** first; **Work X** applies the final status from the cut. Early adapter finalization above is **mode 0** only.
 
 ### End of run — bulk (`write_tests_after_all`)
 
-- If `externalId` is already in `__test_result_map` → **skip** `sendTestResults`; refresh autotest metadata if needed.
-- Otherwise → bulk `sendTestResults` once (Sync Storage off, or test not sent at finish).
+- If finalize key is already in `__finalized_result_keys` → **skip** `sendTestResults`; refresh autotest metadata if needed.
+- Otherwise → bulk `sendTestResults` (including other parametrize iterations that share the same `externalId`).
 
 ---
 
@@ -48,7 +51,7 @@ stopTestCase → SyncStorage cut + sendTestResults (Passed/Failed + full payload
 sessionfinish → bulk skips sendTestResults for tests already in __test_result_map
 ```
 
-Expected: **one** finalized result row per autotest in the run, with steps from the create payload.
+Expected: **one** finalized result row per **test invocation** in the run (parametrize iterations are separate), with steps from the create payload.
 
 ---
 
