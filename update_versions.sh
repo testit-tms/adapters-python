@@ -1,6 +1,6 @@
 #!/bin/bash
 
-NEW_VERSION="5.2.1"
+NEW_VERSION="5.2.2"
 
 echo "Updating all adapters to version: $NEW_VERSION"
 

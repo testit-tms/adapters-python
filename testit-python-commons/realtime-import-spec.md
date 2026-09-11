@@ -115,11 +115,13 @@ The `step_results` field is omitted, so the nested test steps written during rea
 
 When Sync Storage is running and the worker is **master**, the **first** completed test uses `on_master_no_already_in_progress`:
 
-1. Adapter sends **`TestResultCutApiModel`** to Sync Storage (`POST /in_progress_test_result`) — coordination only, no steps.
-2. Adapter calls `_write_test_realtime_internal` with the **final** outcome → **`sendTestResults`** with full step tree (no forced InProgress POST to TMS).
-3. Stores `externalId → resultId` in `__test_result_map`.
+1. Adapter sends **`TestResultCutApiModel`** to Sync Storage (`POST /in_progress_test_result`) with the **final** cut status — coordination for Work X.
+2. TMS export depends on **`adapterMode`**:
+   - **Mode 0 (`USE_FILTER`):** `_write_test_realtime_internal` with the **final** outcome → **`sendTestResults`** (TP-bound / orphan fix). Work X often has nothing left to finalize.
+   - **Modes 1 / 2:** temporarily export **`InProgress`** via `sendTestResults`, then restore the final outcome on the in-memory model. **Work X** finalizes from the cut at `wait-completion`.
+3. Stores `externalId → resultId` in `__test_result_map` and a per-invocation key in `__finalized_result_keys`.
 
-Sync Storage Work X may still finalize the held cut model separately at `wait-completion`; that path is independent of the adapter POST/PUT contract. See Sync Storage docs if nested steps on the **first** test are lost after run completion.
+See Sync Storage docs if nested steps on the **first** test are lost after run completion (Work X path).
 
 ---
 

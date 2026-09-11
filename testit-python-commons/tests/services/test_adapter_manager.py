@@ -158,7 +158,7 @@ class TestAdapterManager:
         mock_api_client_worker.write_tests.assert_called_once_with(
             [test_result_1, test_result_2],
             fixtures,
-            finalized_external_ids=set(),
+            finalized_result_keys=set(),
         )
 
     def test_write_test_realtime_sets_automatic_creation_for_each_test(
@@ -177,8 +177,10 @@ class TestAdapterManager:
 
         test_result_1 = mocker.Mock()
         test_result_1.get_external_id.return_value = "ext-1"
+        test_result_1.get_finalize_key.return_value = "key-1"
         test_result_2 = mocker.Mock()
         test_result_2.get_external_id.return_value = "ext-2"
+        test_result_2.get_finalize_key.return_value = "key-2"
 
         adapter_manager.write_test(test_result_1)
         adapter_manager.write_test(test_result_2)
@@ -188,6 +190,7 @@ class TestAdapterManager:
         assert mock_api_client_worker.write_test.call_count == 2
         assert adapter_manager._AdapterManager__test_result_map["ext-1"] == "tr-1"
         assert adapter_manager._AdapterManager__test_result_map["ext-2"] == "tr-2"
+        assert adapter_manager._AdapterManager__finalized_result_keys == {"key-1", "key-2"}
 
     def test_write_test_without_sync_storage_runner_does_not_crash(
             self,
@@ -202,11 +205,13 @@ class TestAdapterManager:
 
         assert adapter_manager._AdapterManager__test_results == [test_result]
 
-    def test_on_master_keeps_final_outcome_and_writes(
+    def test_on_master_mode0_keeps_final_outcome_and_writes(
             self,
             adapter_manager,
+            mock_adapter_config,
             mock_client_config,
             mocker):
+        mock_adapter_config.get_mode.return_value = AdapterMode.USE_FILTER
         sync_runner = mocker.Mock()
         sync_runner.send_in_progress_test_result.return_value = True
         adapter_manager._AdapterManager__sync_storage_runner = sync_runner
@@ -226,12 +231,65 @@ class TestAdapterManager:
 
         test_result = mocker.Mock()
         test_result.get_outcome.return_value = "Passed"
+        test_result.get_status_type.return_value = "Succeeded"
         test_result.get_external_id.return_value = "ext-1"
         test_result.get_started_on.return_value = None
 
         assert adapter_manager.on_master_no_already_in_progress(test_result) is True
         test_result.set_outcome.assert_not_called()
+        test_result.set_status_type.assert_not_called()
         write_internal.assert_called_once_with(test_result)
+        sync_runner.set_is_already_in_progress.assert_called_with(True)
+
+    def test_on_master_mode2_writes_inprogress_then_restores_outcome(
+            self,
+            adapter_manager,
+            mock_adapter_config,
+            mock_client_config,
+            mocker):
+        from testit_python_commons.models.status_type import StatusType
+        from testit_python_commons.services.adapter_manager import IN_PROGRESS_LITERAL
+
+        mock_adapter_config.get_mode.return_value = AdapterMode.NEW_TEST_RUN
+        sync_runner = mocker.Mock()
+        sync_runner.send_in_progress_test_result.return_value = True
+        adapter_manager._AdapterManager__sync_storage_runner = sync_runner
+        mock_client_config.get_project_id.return_value = "proj-1"
+        mocker.patch(
+            "testit_python_commons.services.adapter_manager.SyncStorageRunner"
+            ".test_result_to_test_result_cut_api_model",
+            return_value=mocker.Mock(
+                status_code="Passed",
+                auto_test_external_id="ext-1",
+            ),
+        )
+
+        outcomes_at_write = []
+
+        def capture_write(tr):
+            outcomes_at_write.append((tr.get_outcome(), tr.get_status_type()))
+
+        write_internal = mocker.patch.object(
+            adapter_manager,
+            "_write_test_realtime_internal",
+            side_effect=capture_write,
+        )
+
+        test_result = mocker.Mock()
+        # Mutable state so get_* reflects set_* during the call
+        state = {"outcome": "Passed", "status_type": "Succeeded"}
+        test_result.get_outcome.side_effect = lambda: state["outcome"]
+        test_result.get_status_type.side_effect = lambda: state["status_type"]
+        test_result.set_outcome.side_effect = lambda v: state.update(outcome=v) or test_result
+        test_result.set_status_type.side_effect = lambda v: state.update(status_type=v) or test_result
+        test_result.get_external_id.return_value = "ext-1"
+        test_result.get_started_on.return_value = None
+
+        assert adapter_manager.on_master_no_already_in_progress(test_result) is True
+        write_internal.assert_called_once_with(test_result)
+        assert outcomes_at_write == [(IN_PROGRESS_LITERAL, StatusType.INPROGRESS)]
+        assert state["outcome"] == "Passed"
+        assert state["status_type"] == "Succeeded"
         sync_runner.set_is_already_in_progress.assert_called_with(True)
 
     def test_create_attachment_with_name(self, adapter_manager, mock_api_client_worker, mocker):
