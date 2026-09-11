@@ -176,6 +176,17 @@ class TestHtmlEscapeUtils(unittest.TestCase):
         )
         self.assertEqual(model.message, "&lt;img src=x onerror=alert(1)&gt;")
 
+    def test_client_s_tag_param_and_legacy_entities(self):
+        """Plain <s>/<script> params escape to entities; already-escaped text stays stable."""
+        self.assertEqual(
+            HtmlEscapeUtils.escape_html_tags('<s>alert("1")</s>'),
+            '&lt;s&gt;alert("1")&lt;/s&gt;',
+        )
+        self.assertEqual(
+            HtmlEscapeUtils.escape_html_tags('&lt;script&gt;alert("1")&lt;/script&gt;'),
+            '&lt;script&gt;alert("1")&lt;/script&gt;',
+        )
+
 
 if __name__ == '__main__':
     unittest.main()

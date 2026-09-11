@@ -1,6 +1,6 @@
 from setuptools import find_packages, setup
 
-VERSION = "5.2.1"
+VERSION = "5.2.2"
 
 setup(
     name='testit-adapter-behave',
