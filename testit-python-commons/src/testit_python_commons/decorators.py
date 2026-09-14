@@ -37,7 +37,7 @@ def inner(function):
     return function
 
 
-@Utils.deprecated('Use "workItemIds" instead.')
+@Utils.deprecated('Use "workItemId" instead.')
 @adapter_logger
 def workItemID(*test_workitems_id: int or str):  # noqa: N802
     def outer(function):
@@ -49,6 +49,19 @@ def workItemID(*test_workitems_id: int or str):  # noqa: N802
     return outer
 
 
+@adapter_logger
+def workItemId(globalId: int or str):  # noqa: N802
+    """
+    specifies a method that links an autotest with a manual test. Receives a single globalId
+    """
+    def outer(function):
+        function.test_workitems_id = [str(globalId)]
+        return inner(function)
+
+    return outer
+
+
+@Utils.deprecated('Use "workItemId" instead.')
 @adapter_logger
 def workItemIds(*test_workitems_id: int or str):  # noqa: N802
     """

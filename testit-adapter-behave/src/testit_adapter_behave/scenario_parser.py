@@ -86,9 +86,12 @@ def parse_scenario(scenario):
     if TagType.CLASSNAME in tags:
         executable_test['classname'] = tags[TagType.CLASSNAME]
 
-    if TagType.WORK_ITEM_IDS in tags:
+    if TagType.WORK_ITEM_IDS in tags and tags[TagType.WORK_ITEM_IDS]:
         # TODO: Fix in python-commons to "workItemIds"
         executable_test['workItemsID'] = tags[TagType.WORK_ITEM_IDS]
+
+    if TagType.WORK_ITEM_ID in tags and tags[TagType.WORK_ITEM_ID]:
+        executable_test['workItemsID'] = [tags[TagType.WORK_ITEM_ID]]
 
     if TagType.LAYER in tags and tags[TagType.LAYER]:
         executable_test['layer'] = tags[TagType.LAYER]

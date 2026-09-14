@@ -4,6 +4,7 @@ class TagType:
     LINKS = 'Links='
     TITLE = 'Title='
     WORK_ITEM_IDS = 'WorkItemIds='
+    WORK_ITEM_ID = 'WorkItemId='
     DESCRIPTION = 'Description='
     LABELS = 'Labels='
     TAGS = 'Tags='
