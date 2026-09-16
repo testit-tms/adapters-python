@@ -12,6 +12,7 @@ from testit_python_commons.decorators import (
     nameSpace,
     title,
     workItemID,
+    workItemId,
     workItemIds
 )
 from testit_python_commons.dynamic_methods import (
@@ -19,6 +20,7 @@ from testit_python_commons.dynamic_methods import (
     addLink,
     addLinks,
     addMessage,
+    addWorkItemId,
     addWorkItemIds,
     addDisplayName,
     addNameSpace,
@@ -43,6 +45,7 @@ __all__ = [
     'nameSpace',
     'className',
     'workItemID',
+    'workItemId',
     'workItemIds',
     'title',
     'description',
@@ -57,6 +60,7 @@ __all__ = [
     'addAttachments',
     'message',
     'addMessage',
+    'addWorkItemId',
     'addWorkItemIds',
     'addDisplayName',
     'addNameSpace',

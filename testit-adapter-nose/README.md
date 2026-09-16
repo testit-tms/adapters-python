@@ -94,7 +94,8 @@ Decorators can be used to specify information about autotest.
 
 Description of decorators:
 
-- `testit.workItemIds` - a method that links autotests with manual tests. Receives the array of manual tests' IDs
+- `testit.workItemId` - a method that links an autotest with a manual test. Receives a single globalId
+- `testit.workItemIds` - deprecated, use `testit.workItemId` instead
 - `testit.displayName` - internal autotest name (used in Test IT)
 - `testit.externalId` - unique internal autotest ID (used in Test IT)
 - `testit.title` - autotest name specified in the autotest card. If not specified, the name from the displayName method is used
@@ -111,7 +112,8 @@ All decorators support the use of parameterization attributes
 
 Description of methods:
 
-- `testit.addWorkItemIds` - a dynamic method that links autotests with manual tests. Receives the array of manual tests' IDs
+- `testit.addWorkItemId` - a dynamic method that links an autotest with a manual test. Receives a single globalId
+- `testit.addWorkItemIds` - deprecated, use `testit.addWorkItemId` instead
 - `testit.addDisplayName` - a dynamic method for adding internal autotest name (used in Test IT)
 - `testit.addExternalId` - a dynamic method for adding unique internal autotest ID (used in Test IT)
 - `testit.addTitle` - a dynamic method for adding autotest name specified in the autotest card. If not specified, the name from the displayName method is used
@@ -189,7 +191,7 @@ import testit
 from nose2.tools import params
 
 @params(1, 2, 3)
-@testit.workItemIds(627)
+@testit.workItemId(627)
 @testit.externalId('param {num}')
 @testit.displayName('param {num}')
 @testit.title('Test with params')

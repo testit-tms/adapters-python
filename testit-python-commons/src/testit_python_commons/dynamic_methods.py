@@ -130,6 +130,7 @@ def __add_attachments_to_test(data, is_text: bool = False, name: str = None):
             logging.warning(f'({data}) is not path!')
 
 
+@Utils.deprecated('Use "addWorkItemId" instead.')
 @adapter_logger
 def addWorkItemIds(*test_work_item_ids: int or str):  # noqa: N802
     """
@@ -140,6 +141,17 @@ def addWorkItemIds(*test_work_item_ids: int or str):  # noqa: N802
 
     for test_work_item_id in test_work_item_ids:
         TmsPluginManager.get_plugin_manager().hook.add_work_item_id(test_work_item_id=str(test_work_item_id))
+
+
+@adapter_logger
+def addWorkItemId(globalId: int or str):  # noqa: N802
+    """
+    a dynamic method that links an autotest with a manual test. Receives a single globalId
+    """
+    if not hasattr(TmsPluginManager.get_plugin_manager().hook, 'add_work_item_id'):
+        return
+
+    TmsPluginManager.get_plugin_manager().hook.add_work_item_id(test_work_item_id=str(globalId))
 
 
 @adapter_logger

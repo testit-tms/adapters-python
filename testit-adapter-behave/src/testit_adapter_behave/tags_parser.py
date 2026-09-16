@@ -1,6 +1,7 @@
 from .models.label import get_label_model
 from .models.tags import TagType
 from .models.url_link import get_url_to_link_model, get_dict_to_link_model
+import logging
 
 
 def parse_test_tags(tags):
@@ -10,6 +11,7 @@ def parse_test_tags(tags):
         TagType.LINKS: [],
         TagType.TITLE: None,
         TagType.WORK_ITEM_IDS: [],
+        TagType.WORK_ITEM_ID: None,
         TagType.DESCRIPTION: None,
         TagType.LABELS: [],
         TagType.TAGS: [],
@@ -32,9 +34,13 @@ def parse_test_tags(tags):
         elif TagType.TITLE in tag:
             parsed_tags[TagType.TITLE] = __parse_space_in_tag(tag[len(TagType.TITLE):])
 
-        elif TagType.WORK_ITEM_IDS in tag:
+        elif tag.startswith(TagType.WORK_ITEM_IDS):
+            logging.warning('WorkItemIds is deprecated. Use WorkItemId with a single globalId instead.')
             parsed_tags[TagType.WORK_ITEM_IDS].extend(
                 __parse_massive(tag[len(TagType.WORK_ITEM_IDS):]))
+
+        elif tag.startswith(TagType.WORK_ITEM_ID):
+            parsed_tags[TagType.WORK_ITEM_ID] = __parse_space_in_tag(tag[len(TagType.WORK_ITEM_ID):])
 
         elif TagType.DESCRIPTION in tag:
             parsed_tags[TagType.DESCRIPTION] = __parse_space_in_tag(tag[len(TagType.DESCRIPTION):])
