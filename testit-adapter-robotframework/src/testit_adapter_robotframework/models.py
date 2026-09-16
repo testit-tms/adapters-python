@@ -116,7 +116,7 @@ class Autotest(Default):
     result_depth = attrib(default=Factory(list))
 
     def add_attributes(self, attrs):
-        self.title = attrs['originalname']
+        self.title = None
         self.autoTestName = attrs['originalname']
         self.externalKey = attrs['originalname']
         self.description = attrs['doc']
