@@ -114,11 +114,54 @@ class ApiClientWorker:
 
         test_run = self.__test_run_api.adapters_test_runs_id_get(id=test_run_id)
         if test_run is not None:
+            # Workaround TMS 5.8: adapters GET returns empty links/attachments.
+            self.__hydrate_test_run_links_and_attachments_from_v2(test_run)
             logging.debug(f"Got testrun: {test_run}")
             return test_run
 
         logging.error(f"Test run by id {test_run_id} not found!")
         raise Exception(f"Test run by id {test_run_id} not found!")
+
+    def __get_test_run_v2_json(self, test_run_id: str) -> dict:
+        """Read full test run via GET /api/v2/testRuns/{id} (links/attachments)."""
+        import json
+        import ssl
+        import urllib.request
+
+        base = (self.__config.get_url() or "").rstrip("/")
+        url = f"{base}/api/v2/testRuns/{test_run_id}"
+        try:
+            request = urllib.request.Request(
+                url,
+                headers={
+                    "Accept": "application/json",
+                    "Authorization": f"PrivateToken {self.__config.get_private_token()}",
+                },
+                method="GET",
+            )
+            context = None
+            if not self.__config.get_cert_validation():
+                context = ssl._create_unverified_context()
+            with urllib.request.urlopen(request, timeout=10, context=context) as response:
+                return json.loads(response.read().decode("utf-8")) or {}
+        except Exception as exc:
+            logging.debug("v2 getTestRun %s failed: %s", test_run_id, exc)
+            return {}
+
+    def __hydrate_test_run_links_and_attachments_from_v2(self, test_run: TestRunApiResult) -> None:
+        payload = self.__get_test_run_v2_json(str(test_run.id))
+        if not payload:
+            return
+        try:
+            test_run.links = Converter.v2_dicts_to_link_api_results(payload.get("links") or [])
+            test_run.attachments = Converter.v2_dicts_to_attachment_stubs(
+                payload.get("attachments") or [])
+        except Exception as exc:
+            logging.debug(
+                "Cannot hydrate test run %s links/attachments from v2: %s",
+                getattr(test_run, "id", None),
+                exc,
+            )
 
     @retry
     def update_test_run(
