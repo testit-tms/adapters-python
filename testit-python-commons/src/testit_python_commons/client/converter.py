@@ -178,6 +178,40 @@ class Converter:
         return AssignAttachmentApiModel(id=attachment.id)
 
     @staticmethod
+    def v2_dicts_to_link_api_results(items: list) -> List[LinkApiResult]:
+        """Map GET /api/v2/testRuns links payloads to LinkApiResult."""
+        result = []
+        for item in items or []:
+            if not isinstance(item, dict):
+                continue
+            url = item.get("url")
+            if not url:
+                continue
+            link_type = item.get("type") or "Related"
+            result.append(LinkApiResult(
+                url=url,
+                type=LinkType(link_type),
+                id=item.get("id"),
+                title=item.get("title"),
+                description=item.get("description"),
+            ))
+        return result
+
+    @staticmethod
+    def v2_dicts_to_attachment_stubs(items: list) -> list:
+        """Map v2 attachments to objects with .id (enough for AssignAttachmentApiModel)."""
+        from types import SimpleNamespace
+
+        result = []
+        for item in items or []:
+            if not isinstance(item, dict):
+                continue
+            attachment_id = item.get("id")
+            if attachment_id:
+                result.append(SimpleNamespace(id=attachment_id))
+        return result
+
+    @staticmethod
     @adapter_logger
     def project_id_and_external_id_to_auto_tests_search_post_request(
             project_id: str,
