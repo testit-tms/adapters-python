@@ -109,7 +109,7 @@ class Converter:
             'links': update_links,
             'tags': merged_tags,
         }
-        # Adapters TestRunApiResult DTO has no description/launch_source; omit if absent.
+        # Adapters TestRunApiResult DTO has no description/launch_source; v2 GET does.
         description = cls._safe_model_attr(test_run, 'description')
         if description is not None:
             kwargs['description'] = description
@@ -208,6 +208,33 @@ class Converter:
             if attachment_id:
                 result.append(SimpleNamespace(id=attachment_id))
         return result
+
+    @staticmethod
+    def v2_dicts_to_tag_names(items: list) -> List[str]:
+        tags = []
+        for item in items or []:
+            if isinstance(item, str) and item:
+                tags.append(item)
+            elif isinstance(item, dict):
+                name = item.get("name")
+                if name:
+                    tags.append(name)
+        return tags
+
+    @staticmethod
+    def v2_test_run_payload_to_model(payload: dict):
+        """Map GET /api/v2/testRuns/{id} top-level fields used by update/merge."""
+        from types import SimpleNamespace
+
+        return SimpleNamespace(
+            id=payload.get("id"),
+            name=payload.get("name"),
+            description=payload.get("description"),
+            launch_source=payload.get("launchSource"),
+            tags=Converter.v2_dicts_to_tag_names(payload.get("tags") or []),
+            links=Converter.v2_dicts_to_link_api_results(payload.get("links") or []),
+            attachments=Converter.v2_dicts_to_attachment_stubs(payload.get("attachments") or []),
+        )
 
     @staticmethod
     @adapter_logger

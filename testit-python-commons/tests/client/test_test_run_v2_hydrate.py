@@ -1,6 +1,4 @@
-from types import SimpleNamespace
-
-from adapters_api.model.link_type import LinkType as ApiLinkType
+from api_client_adapters.model.link_type import LinkType as ApiLinkType
 
 from testit_python_commons.client.api_client import ApiClientWorker
 from testit_python_commons.client.converter import Converter
@@ -34,18 +32,36 @@ def test_v2_dicts_to_attachment_stubs():
     assert stubs[0].id == "att-1"
 
 
-def test_build_update_keeps_v2_links_and_attachments_when_merging(mocker):
-    existing_link = Converter.v2_dicts_to_link_api_results([
-        {"id": "l1", "url": "https://existing", "title": "Existing", "type": "Related"},
-    ])[0]
-    test_run = mocker.Mock()
-    test_run.id = "run-id"
-    test_run.name = "name"
-    test_run.description = None
-    test_run.launch_source = None
-    test_run.tags = ["ui"]
-    test_run.links = [existing_link]
-    test_run.attachments = [SimpleNamespace(id="att-1")]
+def test_v2_test_run_payload_to_model():
+    model = Converter.v2_test_run_payload_to_model({
+        "id": "run-1",
+        "name": "TestRun_1",
+        "description": "213123123",
+        "launchSource": "Test IT",
+        "tags": ["ui", {"name": "smoke"}],
+        "links": [{"id": "l1", "url": "https://existing", "type": "Related"}],
+        "attachments": [{"id": "att-1"}],
+        "testResults": [{"id": "ignore-me"}],
+    })
+    assert model.id == "run-1"
+    assert model.name == "TestRun_1"
+    assert model.description == "213123123"
+    assert model.launch_source == "Test IT"
+    assert model.tags == ["ui", "smoke"]
+    assert model.links[0].url == "https://existing"
+    assert model.attachments[0].id == "att-1"
+
+
+def test_build_update_keeps_v2_metadata_when_merging(mocker):
+    test_run = Converter.v2_test_run_payload_to_model({
+        "id": "run-id",
+        "name": "name",
+        "description": "desc",
+        "launchSource": "Test IT",
+        "tags": ["ui"],
+        "links": [{"id": "l1", "url": "https://existing", "title": "Existing", "type": "Related"}],
+        "attachments": [{"id": "att-1"}],
+    })
 
     new_link = Link().set_url("https://ci.example/job/2").set_link_type(LinkType.RELATED)
     model = Converter.build_update_empty_request(
@@ -57,10 +73,12 @@ def test_build_update_keeps_v2_links_and_attachments_when_merging(mocker):
     assert [link.url for link in model.links] == ["https://existing", "https://ci.example/job/2"]
     assert [a.id for a in model.attachments] == ["att-1"]
     assert model.tags == ["ui", "smoke"]
+    assert model.description == "desc"
+    assert model.launch_source == "Test IT"
 
 
-class TestGetTestRunHydrate:
-    def test_get_test_run_overlays_links_and_attachments_from_v2(self, mocker):
+class TestGetTestRunV2:
+    def test_get_test_run_uses_v2_payload(self, mocker):
         mocker.patch.object(
             ApiClientWorker,
             "_ApiClientWorker__get_status_codes",
@@ -86,12 +104,15 @@ class TestGetTestRunHydrate:
         config.get_proxy.return_value = None
 
         worker = ApiClientWorker(config)
-        adapters_run = mocker.Mock(id="run-1", name="run", tags=["ui"], links=[], attachments=[])
-        worker._ApiClientWorker__test_run_api.adapters_test_runs_id_get.return_value = adapters_run
         mocker.patch.object(
             worker,
             "_ApiClientWorker__get_test_run_v2_json",
             return_value={
+                "id": "run-1",
+                "name": "run",
+                "description": "desc",
+                "launchSource": "Test IT",
+                "tags": ["ui"],
                 "links": [
                     {"id": "l1", "url": "https://link-1", "title": "L1", "type": "Related"},
                 ],
@@ -101,7 +122,10 @@ class TestGetTestRunHydrate:
 
         result = worker.get_test_run("run-1")
 
-        assert result is adapters_run
-        assert len(result.links) == 1
+        worker._ApiClientWorker__test_run_api.adapters_test_runs_id_get.assert_not_called()
+        assert result.id == "run-1"
+        assert result.description == "desc"
+        assert result.launch_source == "Test IT"
         assert result.links[0].url == "https://link-1"
-        assert [a.id for a in result.attachments] == ["att-1"]
+        assert result.attachments[0].id == "att-1"
+        assert result.tags == ["ui"]
