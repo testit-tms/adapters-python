@@ -106,6 +106,7 @@ class Autotest(Default):
     links = attrib(default=Factory(list))
     labels = attrib(default=Factory(list))
     tags = attrib(default=Factory(list))
+    layer = attrib(default=None)
     workItemsID = attrib(default=Factory(list))  # noqa: N815
     message = attrib(default="")
     started_on = attrib(default=None)
@@ -174,6 +175,8 @@ class Autotest(Default):
                     self.namespace = _clean_value(value)
                 elif attr == 'classname':
                     self.classname = _clean_value(value)
+                elif attr == 'layer':
+                    self.layer = _clean_value(value)
                 else:
                     logger.error(f"[TestIt] Unknown attribute: {attr}")
         if not self.externalID:

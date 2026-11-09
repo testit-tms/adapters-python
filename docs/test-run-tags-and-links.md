@@ -23,10 +23,6 @@ Python adapters pass them via config so a CI job URL is visible while the run is
 
 Merge keeps existing UI/API tags and links; adds new ones; skips duplicate tag names and link URLs.
 
-Temporary (TMS 5.8): `get_test_run` uses `GET /api/v2/testRuns/{id}` because adapters GET
-omits `links`, `attachments`, `description`, and `launchSource`. Only top-level fields needed
-for merge/update are mapped; nested `testResults` are ignored.
-
 ## Example
 
 ```ini

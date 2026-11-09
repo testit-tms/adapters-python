@@ -4,6 +4,7 @@ from testit_adapter_pytest.utils import (
     collect_parameters_in_string_attribute,
     get_all_parameters,
     get_parameter,
+    get_skip_message_from_report,
 )
 
 
@@ -53,3 +54,20 @@ def test_top_level_param_not_overwritten_by_dict_expand():
     params = get_all_parameters(item)
 
     assert params['user_type'] == 'from_parametrize'
+
+
+def test_get_skip_message_from_parametrize_skip_report():
+    report = type('Report', (), {
+        'skipped': True,
+        'outcome': 'skipped',
+        'longrepr': (
+            '/path/tests/test_annotations.py',
+            141,
+            'Skipped: bug test',
+        ),
+    })()
+
+    assert get_skip_message_from_report(report) == (
+        "('/path/tests/test_annotations.py', 141, 'Skipped: bug test')"
+    )
+

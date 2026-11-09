@@ -86,3 +86,9 @@ class TestAutotestTagParsing:
 
         assert autotest.autoTestName == "DisplayName"
         assert autotest.title == "CardTitle"
+
+    def test_layer_tag_is_parsed(self):
+        autotest = Autotest(autoTestName="Initial")
+        autotest.add_attributes(self._build_attrs(["testit.layer:API"]))
+
+        assert autotest.layer == "API"

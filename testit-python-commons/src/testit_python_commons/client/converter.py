@@ -36,6 +36,8 @@ from api_client_adapters.models import (
     TestStatusApiType,
     CreateLinkApiModel,
     LabelApiModel,
+    AutoTestCreateApiModelLayer,
+    LayerSource,
 )
 
 from testit_python_commons.models.link import Link
@@ -109,7 +111,7 @@ class Converter:
             'links': update_links,
             'tags': merged_tags,
         }
-        # Adapters TestRunApiResult DTO has no description/launch_source; v2 GET does.
+        # Adapters TestRunApiResult DTO has no description/launch_source; omit if absent.
         description = cls._safe_model_attr(test_run, 'description')
         if description is not None:
             kwargs['description'] = description
@@ -176,67 +178,6 @@ class Converter:
         return AssignAttachmentApiModel(id=attachment.id)
 
     @staticmethod
-    def v2_dicts_to_link_api_results(items: list) -> List[LinkApiResult]:
-        """Map GET /api/v2/testRuns links payloads to LinkApiResult."""
-        result = []
-        for item in items or []:
-            if not isinstance(item, dict):
-                continue
-            url = item.get("url")
-            if not url:
-                continue
-            link_type = item.get("type") or "Related"
-            result.append(LinkApiResult(
-                url=url,
-                type=LinkType(link_type),
-                id=item.get("id"),
-                title=item.get("title"),
-                description=item.get("description"),
-            ))
-        return result
-
-    @staticmethod
-    def v2_dicts_to_attachment_stubs(items: list) -> list:
-        """Map v2 attachments to objects with .id (enough for AssignAttachmentApiModel)."""
-        from types import SimpleNamespace
-
-        result = []
-        for item in items or []:
-            if not isinstance(item, dict):
-                continue
-            attachment_id = item.get("id")
-            if attachment_id:
-                result.append(SimpleNamespace(id=attachment_id))
-        return result
-
-    @staticmethod
-    def v2_dicts_to_tag_names(items: list) -> List[str]:
-        tags = []
-        for item in items or []:
-            if isinstance(item, str) and item:
-                tags.append(item)
-            elif isinstance(item, dict):
-                name = item.get("name")
-                if name:
-                    tags.append(name)
-        return tags
-
-    @staticmethod
-    def v2_test_run_payload_to_model(payload: dict):
-        """Map GET /api/v2/testRuns/{id} top-level fields used by update/merge."""
-        from types import SimpleNamespace
-
-        return SimpleNamespace(
-            id=payload.get("id"),
-            name=payload.get("name"),
-            description=payload.get("description"),
-            launch_source=payload.get("launchSource"),
-            tags=Converter.v2_dicts_to_tag_names(payload.get("tags") or []),
-            links=Converter.v2_dicts_to_link_api_results(payload.get("links") or []),
-            attachments=Converter.v2_dicts_to_attachment_stubs(payload.get("attachments") or []),
-        )
-
-    @staticmethod
     @adapter_logger
     def project_id_and_external_id_to_auto_tests_search_post_request(
             project_id: str,
@@ -298,26 +239,49 @@ class Converter:
         label_models = []
 
         for label in labels:
-            name = None
-            global_id = None
-
             if isinstance(label, str):
                 name = label
             elif isinstance(label, dict):
                 name = label.get('name')
-                global_id = label.get('global_id', label.get('globalId'))
+            else:
+                continue
 
             if not name:
                 continue
 
-            label_models.append(
-                LabelApiModel(
-                    name=str(name),
-                    global_id=int(global_id) if global_id is not None else 0,
-                )
-            )
+            label_models.append(LabelApiModel(name=str(name)))
 
         return label_models or None
+
+    @staticmethod
+    @adapter_logger
+    def layer_to_api_model(layer: Optional[str]) -> Optional[AutoTestCreateApiModelLayer]:
+        if not layer or not str(layer).strip():
+            return None
+
+        return AutoTestCreateApiModelLayer(
+            name=str(layer).strip(),
+            source=LayerSource("Run"),
+        )
+
+    @classmethod
+    @adapter_logger
+    def _autotest_layer_kwargs_for_create(cls, test_result: TestResult) -> dict:
+        layer = cls.layer_to_api_model(test_result.get_layer())
+        if not layer:
+            return {}
+
+        return {'layer': layer}
+
+    @classmethod
+    @adapter_logger
+    def _autotest_layer_kwargs_for_update(cls, test_result: TestResult) -> dict:
+        kwargs = {'reset_layer': False}
+        layer = cls.layer_to_api_model(test_result.get_layer())
+        if layer:
+            kwargs['layer'] = layer
+
+        return kwargs
 
     @classmethod
     @adapter_logger
@@ -343,7 +307,8 @@ class Converter:
             labels=cls.labels_to_label_api_models(test_result.get_labels()),
             tags=test_result.get_tags(),
             should_create_work_item=test_result.get_automatic_creation_test_cases(),
-            external_key=test_result.get_external_key()
+            external_key=test_result.get_external_key(),
+            **cls._autotest_layer_kwargs_for_create(test_result),
         )
 
     @classmethod
@@ -370,7 +335,8 @@ class Converter:
             labels=cls.labels_to_label_api_models(test_result.get_labels()),
             tags=test_result.get_tags(),
             should_create_work_item=test_result.get_automatic_creation_test_cases(),
-            external_key=test_result.get_external_key()
+            external_key=test_result.get_external_key(),
+            **cls._autotest_layer_kwargs_for_create(test_result),
         )
 
     @classmethod
@@ -396,7 +362,8 @@ class Converter:
             links=cls.links_to_links_put_model(test_result.get_links()),
             labels=cls.labels_to_label_api_models(test_result.get_labels()),
             tags=test_result.get_tags(),
-            external_key=test_result.get_external_key()
+            external_key=test_result.get_external_key(),
+            **cls._autotest_layer_kwargs_for_update(test_result),
         )
 
     @classmethod
@@ -422,7 +389,8 @@ class Converter:
             links=cls.links_to_links_put_model(test_result.get_links()),
             labels=cls.labels_to_label_api_models(test_result.get_labels()),
             tags=test_result.get_tags(),
-            external_key=test_result.get_external_key()
+            external_key=test_result.get_external_key(),
+            **cls._autotest_layer_kwargs_for_update(test_result),
         )
 
     @classmethod

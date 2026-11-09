@@ -108,43 +108,17 @@ class ApiClientWorker:
         return Converter.get_id_from_create_test_run_response(response)
 
     @retry
-    def get_test_run(self, test_run_id: str):
-        """Temporary: GET /api/v2/testRuns/{id} — adapters omits links/attachments/description/launchSource."""
+    def get_test_run(self, test_run_id: str) -> TestRunApiResult:
+        """Function gets test run and returns test run."""
         logging.debug(f"Getting test run by id {test_run_id}")
 
-        payload = self.__get_test_run_v2_json(test_run_id)
-        if payload and payload.get("id"):
-            test_run = Converter.v2_test_run_payload_to_model(payload)
+        test_run = self.__test_run_api.adapters_test_runs_id_get(id=test_run_id)
+        if test_run is not None:
             logging.debug(f"Got testrun: {test_run}")
             return test_run
 
         logging.error(f"Test run by id {test_run_id} not found!")
         raise Exception(f"Test run by id {test_run_id} not found!")
-
-    def __get_test_run_v2_json(self, test_run_id: str) -> dict:
-        import json
-        import ssl
-        import urllib.request
-
-        base = (self.__config.get_url() or "").rstrip("/")
-        url = f"{base}/api/v2/testRuns/{test_run_id}"
-        try:
-            request = urllib.request.Request(
-                url,
-                headers={
-                    "Accept": "application/json",
-                    "Authorization": f"PrivateToken {self.__config.get_private_token()}",
-                },
-                method="GET",
-            )
-            context = None
-            if not self.__config.get_cert_validation():
-                context = ssl._create_unverified_context()
-            with urllib.request.urlopen(request, timeout=10, context=context) as response:
-                return json.loads(response.read().decode("utf-8")) or {}
-        except Exception as exc:
-            logging.debug("v2 getTestRun %s failed: %s", test_run_id, exc)
-            return {}
 
     @retry
     def update_test_run(
@@ -620,7 +594,7 @@ class ApiClientWorker:
 
     @adapter_logger
     def update_test_results(self, fixtures_containers: dict, test_result_ids: dict) -> None:
-        # PUT only setup/teardown fixtures — never status or step_results.
+        # PUT only setup/teardown fixtures � never status or step_results.
         # See docs/test-result-export-contract.md
         test_results = Converter.fixtures_containers_to_test_results_with_all_fixture_step_results(
             fixtures_containers, test_result_ids)

@@ -34,6 +34,7 @@ class TestResult:
     __properties: dict = {}
     __automatic_creation_test_cases: bool = False
     __external_key: str = None
+    __layer: str = None
 
     @adapter_logger
     def set_external_id(self, external_id: str):

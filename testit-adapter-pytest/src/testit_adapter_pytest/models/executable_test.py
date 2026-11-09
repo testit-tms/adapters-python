@@ -29,5 +29,6 @@ class ExecutableTest:
     labels = attrib(default=Factory(list))
     tags = attrib(default=Factory(list))
     work_item_ids = attrib(default=Factory(list))
+    layer = attrib(default=None)
     message = attrib(default=None)
     node_id = attrib(default=None)

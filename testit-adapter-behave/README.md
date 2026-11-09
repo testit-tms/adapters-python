@@ -110,7 +110,8 @@ Use tags to specify information about autotest.
 
 Description of tags:
 
-- `WorkItemIds` - a method that links autotests with manual tests. Receives the array of manual tests' IDs
+- `WorkItemId` - a method that links an autotest with a manual test. Receives a single globalId
+- `WorkItemIds` - deprecated, use `WorkItemId` instead
 - `DisplayName` - internal autotest name (used in Test IT)
 - `ExternalId` - unique internal autotest ID (used in Test IT)
 - `Title` - autotest name specified in the autotest card. If not specified, the name from the displayName method is used
@@ -118,6 +119,7 @@ Description of tags:
 - `Labels` - labels listed in the autotest card
 - `Tags` - tags listed in the autotest card
 - `Links` - links listed in the autotest card
+- `Layer` - test pyramid layer on the autotest card (source `Run`). Recommended values: `E2E`, `UI`, `API`, `Contract`, `Integration`, `Component`, `Unit`; any non-empty string is accepted
 - `NameSpace` - directory in the TMS system (default - file's name of test)
 - `ClassName` - subdirectory in the TMS system (default - class's name of test)
 
@@ -125,7 +127,8 @@ If you want to insert a space in the tags, use the "\\_" character combination.
 
 Description of methods:
 
-- `testit.addWorkItemIds` - a dynamic method that links autotests with manual tests. Receives the array of manual tests' IDs
+- `testit.addWorkItemId` - a dynamic method that links an autotest with a manual test. Receives a single globalId
+- `testit.addWorkItemIds` - deprecated, use `testit.addWorkItemId` instead
 - `testit.addDisplayName` - a dynamic method for adding internal autotest name (used in Test IT)
 - `testit.addExternalId` - a dynamic method for adding unique internal autotest ID (used in Test IT)
 - `testit.addTitle` - a dynamic method for adding autotest name specified in the autotest card. If not specified, the name from the displayName method is used
@@ -192,10 +195,11 @@ Feature: Sample
 
   @ExternalId=failed_with_all_annotations
   @DisplayName=Failed_test_with_all_annotations
-  @WorkItemIds=123
+  @WorkItemId=123
   @Title=Title_in_the_autotest_card
   @Description=Test_with_all_annotations
   @Tags=Tag1,Tag2
+  @Layer=API
   @Links={"url":"https://dumps.example.com/module/repository","title":"Repository","description":"Example_of_repository","type":"Repository"}
   Scenario: Create new project, section and test case
     When I create a project

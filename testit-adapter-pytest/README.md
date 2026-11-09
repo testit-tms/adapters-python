@@ -106,7 +106,8 @@ Decorators can be used to specify information about autotest.
 
 Description of decorators:
 
-- `testit.workItemIds` - a method that links autotests with manual tests. Receives the array of manual tests' IDs
+- `testit.workItemId` - a method that links an autotest with a manual test. Receives a single globalId
+- `testit.workItemIds` - deprecated, use `testit.workItemId` instead
 - `testit.displayName` - internal autotest name (used in Test IT)
 - `testit.externalId` - unique internal autotest ID (used in Test IT)
 - `testit.title` - autotest name specified in the autotest card. If not specified, the name from the displayName method is used
@@ -114,6 +115,7 @@ Description of decorators:
 - `testit.labels` - labels listed in the autotest card
 - `testit.tags` - tags listed in the autotest card
 - `testit.links` - links listed in the autotest card
+- `testit.layer` - test pyramid layer on the autotest card (source `Run`). Recommended values: `testit.TestLayers` (`E2E`, `UI`, `API`, `Contract`, `Integration`, `Component`, `Unit`); any non-empty string is accepted. Also supported as `@pytest.mark.layer("API")`
 - `testit.step` - the designation of the step called in the body of the test or other step
 - `testit.nameSpace` - directory in the TMS system (default - file's name of test)
 - `testit.className` - subdirectory in the TMS system (default - class's name of test)
@@ -122,7 +124,8 @@ All decorators support the use of parameterization attributes
 
 Description of methods:
 
-- `testit.addWorkItemIds` - a dynamic method that links autotests with manual tests. Receives the array of manual tests' IDs
+- `testit.addWorkItemId` - a dynamic method that links an autotest with a manual test. Receives a single globalId
+- `testit.addWorkItemIds` - deprecated, use `testit.addWorkItemId` instead
 - `testit.addDisplayName` - a dynamic method for adding internal autotest name (used in Test IT)
 - `testit.addExternalId` - a dynamic method for adding unique internal autotest ID (used in Test IT)
 - `testit.addTitle` - a dynamic method for adding autotest name specified in the autotest card. If not specified, the name from the displayName method is used
@@ -186,6 +189,20 @@ def oneTwoStep():
 @pytest.mark.skipif(True, reason='Because i can')
 def test_skip():
     assert True
+
+
+# Layer via decorator
+@testit.externalId('api_layer_test')
+@testit.layer(testit.TestLayers.API)
+def test_with_layer_decorator():
+    assert True
+
+
+# Layer via pytest mark
+@testit.externalId('ui_layer_test')
+@pytest.mark.layer("UI")
+def test_with_layer_mark():
+    assert True
 ```
 
 #### Parameterized test
@@ -205,7 +222,7 @@ import pytest
 import testit
 
 
-@testit.workItemIds(627)
+@testit.workItemId(627)
 @testit.displayName('Simple autotest 1 - {name}')
 @testit.externalId('Simple_autotest1_{name}')
 @testit.title('Authorization')
