@@ -17,6 +17,7 @@
 from api_client_adapters.api.attachments_api import AttachmentsApi
 from api_client_adapters.api.auto_tests_api import AutoTestsApi
 from api_client_adapters.api.configurations_api import ConfigurationsApi
+from api_client_adapters.api.custom_attributes_api import CustomAttributesApi
 from api_client_adapters.api.parameters_api import ParametersApi
 from api_client_adapters.api.project_attributes_api import ProjectAttributesApi
 from api_client_adapters.api.project_sections_api import ProjectSectionsApi

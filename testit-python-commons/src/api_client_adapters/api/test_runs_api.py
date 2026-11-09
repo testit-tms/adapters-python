@@ -47,7 +47,7 @@ class TestRunsApi(object):
                 'response_type': None,
                 'auth': [
                     'PrivateToken',
-                    'Cookies'
+                    'Identity.Application'
                 ],
                 'endpoint_path': '/adapters/testRuns/{id}/complete',
                 'operation_id': 'adapters_test_runs_id_complete_post',
@@ -99,7 +99,7 @@ class TestRunsApi(object):
                 'response_type': (TestRunApiResult,),
                 'auth': [
                     'PrivateToken',
-                    'Cookies'
+                    'Identity.Application'
                 ],
                 'endpoint_path': '/adapters/testRuns/{id}',
                 'operation_id': 'adapters_test_runs_id_get',
@@ -151,7 +151,7 @@ class TestRunsApi(object):
                 'response_type': (ManualRerunApiResult,),
                 'auth': [
                     'PrivateToken',
-                    'Cookies'
+                    'Identity.Application'
                 ],
                 'endpoint_path': '/adapters/testRuns/{id}/reruns',
                 'operation_id': 'adapters_test_runs_id_reruns_post',
@@ -209,7 +209,7 @@ class TestRunsApi(object):
                 'response_type': None,
                 'auth': [
                     'PrivateToken',
-                    'Cookies'
+                    'Identity.Application'
                 ],
                 'endpoint_path': '/adapters/testRuns/{id}/start',
                 'operation_id': 'adapters_test_runs_id_start_post',
@@ -261,7 +261,7 @@ class TestRunsApi(object):
                 'response_type': None,
                 'auth': [
                     'PrivateToken',
-                    'Cookies'
+                    'Identity.Application'
                 ],
                 'endpoint_path': '/adapters/testRuns/{id}/stop',
                 'operation_id': 'adapters_test_runs_id_stop_post',
@@ -313,7 +313,7 @@ class TestRunsApi(object):
                 'response_type': ([str],),
                 'auth': [
                     'PrivateToken',
-                    'Cookies'
+                    'Identity.Application'
                 ],
                 'endpoint_path': '/adapters/testRuns/{id}/test-results',
                 'operation_id': 'adapters_test_runs_id_test_results_post',
@@ -371,7 +371,7 @@ class TestRunsApi(object):
                 'response_type': (TestRunApiResult,),
                 'auth': [
                     'PrivateToken',
-                    'Cookies'
+                    'Identity.Application'
                 ],
                 'endpoint_path': '/adapters/testRuns',
                 'operation_id': 'adapters_test_runs_post',
@@ -422,7 +422,7 @@ class TestRunsApi(object):
                 'response_type': None,
                 'auth': [
                     'PrivateToken',
-                    'Cookies'
+                    'Identity.Application'
                 ],
                 'endpoint_path': '/adapters/testRuns',
                 'operation_id': 'adapters_test_runs_put',

@@ -43,7 +43,7 @@ class ProjectWorkItemsApi(object):
                 'response_type': ([WorkItemShortApiResult],),
                 'auth': [
                     'PrivateToken',
-                    'Cookies'
+                    'Identity.Application'
                 ],
                 'endpoint_path': '/adapters/projects/{projectId}/work-items/search',
                 'operation_id': 'adapters_projects_project_id_work_items_search_post',

@@ -165,7 +165,7 @@ class AutoTestStepResult(ModelNormal):
             duration (int, none_type): Expected or actual duration of the test run execution in milliseconds.. [optional]  # noqa: E501
             outcome (AvailableTestResultOutcome): [optional]  # noqa: E501
             step_results ([AutoTestStepResult], none_type): Nested step results. The maximum nesting level is 15.. [optional]  # noqa: E501
-            attachments ([AttachmentApiResult], none_type): /// <summary>  Specifies an attachment GUID. Multiple values can be sent.  </summary>. [optional]  # noqa: E501
+            attachments ([AttachmentApiResult], none_type): /// <summary> Specifies an attachment GUID. Multiple values can be sent. </summary>. [optional]  # noqa: E501
             parameters ({str: (str,)}, none_type): \"<b>parameter</b>\": \"<b>value</b>\" pair with arbitrary custom parameters. Multiple parameters can be sent.. [optional]  # noqa: E501
         """
 
@@ -260,7 +260,7 @@ class AutoTestStepResult(ModelNormal):
             duration (int, none_type): Expected or actual duration of the test run execution in milliseconds.. [optional]  # noqa: E501
             outcome (AvailableTestResultOutcome): [optional]  # noqa: E501
             step_results ([AutoTestStepResult], none_type): Nested step results. The maximum nesting level is 15.. [optional]  # noqa: E501
-            attachments ([AttachmentApiResult], none_type): /// <summary>  Specifies an attachment GUID. Multiple values can be sent.  </summary>. [optional]  # noqa: E501
+            attachments ([AttachmentApiResult], none_type): /// <summary> Specifies an attachment GUID. Multiple values can be sent. </summary>. [optional]  # noqa: E501
             parameters ({str: (str,)}, none_type): \"<b>parameter</b>\": \"<b>value</b>\" pair with arbitrary custom parameters. Multiple parameters can be sent.. [optional]  # noqa: E501
         """
 

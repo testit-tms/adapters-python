@@ -88,6 +88,7 @@ class TestResultShortResponse(ModelNormal):
         return {
             'id': (str,),  # noqa: E501
             'name': (str,),  # noqa: E501
+            'autotest_global_id': (int,),  # noqa: E501
             'auto_test_tags': ([str],),  # noqa: E501
             'test_run_id': (str,),  # noqa: E501
             'configuration_id': (str,),  # noqa: E501
@@ -111,6 +112,7 @@ class TestResultShortResponse(ModelNormal):
     attribute_map = {
         'id': 'id',  # noqa: E501
         'name': 'name',  # noqa: E501
+        'autotest_global_id': 'autotestGlobalId',  # noqa: E501
         'auto_test_tags': 'autoTestTags',  # noqa: E501
         'test_run_id': 'testRunId',  # noqa: E501
         'configuration_id': 'configurationId',  # noqa: E501
@@ -133,12 +135,13 @@ class TestResultShortResponse(ModelNormal):
 
     @classmethod
     @convert_js_args_to_python_args
-    def _from_openapi_data(cls, id, name, auto_test_tags, test_run_id, configuration_id, configuration_name, status, result_reasons, links, attachments, rerun_completed_count, *args, **kwargs):  # noqa: E501
+    def _from_openapi_data(cls, id, name, autotest_global_id, auto_test_tags, test_run_id, configuration_id, configuration_name, status, result_reasons, links, attachments, rerun_completed_count, *args, **kwargs):  # noqa: E501
         """TestResultShortResponse - a model defined in OpenAPI
 
         Args:
             id (str): Unique ID of the test result
             name (str): Name of autotest represented by the test result
+            autotest_global_id (int): Global ID of autotest represented by the test result
             auto_test_tags ([str]): Tags of the autotest represented by the test result
             test_run_id (str): Unique ID of test run where the test result is located
             configuration_id (str): Unique ID of configuration which the test result uses
@@ -217,6 +220,7 @@ class TestResultShortResponse(ModelNormal):
 
         self.id = id
         self.name = name
+        self.autotest_global_id = autotest_global_id
         self.auto_test_tags = auto_test_tags
         self.test_run_id = test_run_id
         self.configuration_id = configuration_id
@@ -246,12 +250,13 @@ class TestResultShortResponse(ModelNormal):
     ])
 
     @convert_js_args_to_python_args
-    def __init__(self, id, name, auto_test_tags, test_run_id, configuration_id, configuration_name, status, result_reasons, links, attachments, rerun_completed_count, *args, **kwargs):  # noqa: E501
+    def __init__(self, id, name, autotest_global_id, auto_test_tags, test_run_id, configuration_id, configuration_name, status, result_reasons, links, attachments, rerun_completed_count, *args, **kwargs):  # noqa: E501
         """TestResultShortResponse - a model defined in OpenAPI
 
         Args:
             id (str): Unique ID of the test result
             name (str): Name of autotest represented by the test result
+            autotest_global_id (int): Global ID of autotest represented by the test result
             auto_test_tags ([str]): Tags of the autotest represented by the test result
             test_run_id (str): Unique ID of test run where the test result is located
             configuration_id (str): Unique ID of configuration which the test result uses
@@ -328,6 +333,7 @@ class TestResultShortResponse(ModelNormal):
 
         self.id = id
         self.name = name
+        self.autotest_global_id = autotest_global_id
         self.auto_test_tags = auto_test_tags
         self.test_run_id = test_run_id
         self.configuration_id = configuration_id

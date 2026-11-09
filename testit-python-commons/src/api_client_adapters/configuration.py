@@ -402,13 +402,13 @@ conf = api_client_adapters.Configuration(
                     'PrivateToken',
                 ),
             }
-        if 'Cookies' in self.api_key:
-            auth['Cookies'] = {
+        if 'Identity.Application' in self.api_key:
+            auth['Identity.Application'] = {
                 'type': 'api_key',
                 'in': 'cookie',
-                'key': 'session',
+                'key': 'backoffice',
                 'value': self.get_api_key_with_prefix(
-                    'Cookies',
+                    'Identity.Application',
                 ),
             }
         return auth

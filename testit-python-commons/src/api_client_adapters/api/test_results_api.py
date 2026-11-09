@@ -45,7 +45,7 @@ class TestResultsApi(object):
                 'response_type': (TestResultResponse,),
                 'auth': [
                     'PrivateToken',
-                    'Cookies'
+                    'Identity.Application'
                 ],
                 'endpoint_path': '/adapters/testResults/{id}',
                 'operation_id': 'adapters_test_results_id_get',
@@ -97,7 +97,7 @@ class TestResultsApi(object):
                 'response_type': None,
                 'auth': [
                     'PrivateToken',
-                    'Cookies'
+                    'Identity.Application'
                 ],
                 'endpoint_path': '/adapters/testResults/{id}',
                 'operation_id': 'adapters_test_results_id_put',
@@ -155,7 +155,7 @@ class TestResultsApi(object):
                 'response_type': ([TestResultShortResponse],),
                 'auth': [
                     'PrivateToken',
-                    'Cookies'
+                    'Identity.Application'
                 ],
                 'endpoint_path': '/adapters/testResults/search',
                 'operation_id': 'adapters_test_results_search_post',

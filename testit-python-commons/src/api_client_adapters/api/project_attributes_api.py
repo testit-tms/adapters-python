@@ -23,7 +23,7 @@ from api_client_adapters.model_utils import (  # noqa: F401
 )
 from api_client_adapters.model.adapters_projects_project_id_attributes_put_request import AdaptersProjectsProjectIdAttributesPutRequest
 from api_client_adapters.model.adapters_projects_project_id_attributes_search_post_request import AdaptersProjectsProjectIdAttributesSearchPostRequest
-from api_client_adapters.model.custom_attribute_get_model import CustomAttributeGetModel
+from api_client_adapters.model.custom_attribute_model import CustomAttributeModel
 from api_client_adapters.model.problem_details import ProblemDetails
 from api_client_adapters.model.validation_problem_details import ValidationProblemDetails
 
@@ -44,7 +44,7 @@ class ProjectAttributesApi(object):
                 'response_type': None,
                 'auth': [
                     'PrivateToken',
-                    'Cookies'
+                    'Identity.Application'
                 ],
                 'endpoint_path': '/adapters/projects/{projectId}/attributes',
                 'operation_id': 'adapters_projects_project_id_attributes_put',
@@ -99,10 +99,10 @@ class ProjectAttributesApi(object):
         )
         self.adapters_projects_project_id_attributes_search_post_endpoint = _Endpoint(
             settings={
-                'response_type': ([CustomAttributeGetModel],),
+                'response_type': ([CustomAttributeModel],),
                 'auth': [
                     'PrivateToken',
-                    'Cookies'
+                    'Identity.Application'
                 ],
                 'endpoint_path': '/adapters/projects/{projectId}/attributes/search',
                 'operation_id': 'adapters_projects_project_id_attributes_search_post',
@@ -319,7 +319,7 @@ class ProjectAttributesApi(object):
             async_req (bool): execute request asynchronously
 
         Returns:
-            [CustomAttributeGetModel]
+            [CustomAttributeModel]
                 If the method is called asynchronously, returns the request
                 thread.
         """

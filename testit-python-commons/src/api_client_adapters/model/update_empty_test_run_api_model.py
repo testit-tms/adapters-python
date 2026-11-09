@@ -155,7 +155,7 @@ class UpdateEmptyTestRunApiModel(ModelNormal):
                                 through its discriminator because we passed in
                                 _visited_composed_classes = (Animal,)
             description (str, none_type): Test run description. [optional]  # noqa: E501
-            launch_source (str, none_type): Test run launch source                Once launch source is specified it cannot be updated. [optional]  # noqa: E501
+            launch_source (str, none_type): Test run launch source              Once launch source is specified it cannot be updated. [optional]  # noqa: E501
             attachments ([AssignAttachmentApiModel], none_type): Collection of attachments related to the test run. [optional]  # noqa: E501
             links ([UpdateLinkApiModel], none_type): Collection of links related to the test run. [optional]  # noqa: E501
             tags ([str], none_type): Collection of tags to assign to the test run. [optional]  # noqa: E501
@@ -251,7 +251,7 @@ class UpdateEmptyTestRunApiModel(ModelNormal):
                                 through its discriminator because we passed in
                                 _visited_composed_classes = (Animal,)
             description (str, none_type): Test run description. [optional]  # noqa: E501
-            launch_source (str, none_type): Test run launch source                Once launch source is specified it cannot be updated. [optional]  # noqa: E501
+            launch_source (str, none_type): Test run launch source              Once launch source is specified it cannot be updated. [optional]  # noqa: E501
             attachments ([AssignAttachmentApiModel], none_type): Collection of attachments related to the test run. [optional]  # noqa: E501
             links ([UpdateLinkApiModel], none_type): Collection of links related to the test run. [optional]  # noqa: E501
             tags ([str], none_type): Collection of tags to assign to the test run. [optional]  # noqa: E501

@@ -45,7 +45,7 @@ class WorkItemsApi(object):
                 'response_type': (WorkItemApiResult,),
                 'auth': [
                     'PrivateToken',
-                    'Cookies'
+                    'Identity.Application'
                 ],
                 'endpoint_path': '/adapters/workItems/{id}',
                 'operation_id': 'adapters_work_items_id_get',
@@ -107,7 +107,7 @@ class WorkItemsApi(object):
                 'response_type': (WorkItemApiResult,),
                 'auth': [
                     'PrivateToken',
-                    'Cookies'
+                    'Identity.Application'
                 ],
                 'endpoint_path': '/adapters/workItems',
                 'operation_id': 'adapters_work_items_post',
@@ -158,7 +158,7 @@ class WorkItemsApi(object):
                 'response_type': ([WorkItemShortApiResult],),
                 'auth': [
                     'PrivateToken',
-                    'Cookies'
+                    'Identity.Application'
                 ],
                 'endpoint_path': '/adapters/workItems/search',
                 'operation_id': 'adapters_work_items_search_post',

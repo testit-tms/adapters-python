@@ -79,7 +79,6 @@ class LabelApiModel(ModelNormal):
         """
         return {
             'name': (str,),  # noqa: E501
-            'global_id': (int,),  # noqa: E501
         }
 
     @cached_property
@@ -89,7 +88,6 @@ class LabelApiModel(ModelNormal):
 
     attribute_map = {
         'name': 'name',  # noqa: E501
-        'global_id': 'globalId',  # noqa: E501
     }
 
     read_only_vars = {
@@ -99,12 +97,11 @@ class LabelApiModel(ModelNormal):
 
     @classmethod
     @convert_js_args_to_python_args
-    def _from_openapi_data(cls, name, global_id, *args, **kwargs):  # noqa: E501
+    def _from_openapi_data(cls, name, *args, **kwargs):  # noqa: E501
         """LabelApiModel - a model defined in OpenAPI
 
         Args:
             name (str): Name of the label
-            global_id (int): Global ID of the label
 
         Keyword Args:
             _check_type (bool): if True, values for parameters in openapi_types
@@ -169,7 +166,6 @@ class LabelApiModel(ModelNormal):
         self._visited_composed_classes = _visited_composed_classes + (self.__class__,)
 
         self.name = name
-        self.global_id = global_id
         for var_name, var_value in kwargs.items():
             if var_name not in self.attribute_map and \
                         self._configuration is not None and \
@@ -190,12 +186,11 @@ class LabelApiModel(ModelNormal):
     ])
 
     @convert_js_args_to_python_args
-    def __init__(self, name, global_id, *args, **kwargs):  # noqa: E501
+    def __init__(self, name, *args, **kwargs):  # noqa: E501
         """LabelApiModel - a model defined in OpenAPI
 
         Args:
             name (str): Name of the label
-            global_id (int): Global ID of the label
 
         Keyword Args:
             _check_type (bool): if True, values for parameters in openapi_types
@@ -258,7 +253,6 @@ class LabelApiModel(ModelNormal):
         self._visited_composed_classes = _visited_composed_classes + (self.__class__,)
 
         self.name = name
-        self.global_id = global_id
         for var_name, var_value in kwargs.items():
             if var_name not in self.attribute_map and \
                         self._configuration is not None and \

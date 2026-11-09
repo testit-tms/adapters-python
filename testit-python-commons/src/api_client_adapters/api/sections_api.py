@@ -44,7 +44,7 @@ class SectionsApi(object):
                 'response_type': (SectionWithStepsModel,),
                 'auth': [
                     'PrivateToken',
-                    'Cookies'
+                    'Identity.Application'
                 ],
                 'endpoint_path': '/adapters/sections/{id}',
                 'operation_id': 'adapters_sections_id_get',
@@ -101,7 +101,7 @@ class SectionsApi(object):
                 'response_type': (SectionWithStepsModel,),
                 'auth': [
                     'PrivateToken',
-                    'Cookies'
+                    'Identity.Application'
                 ],
                 'endpoint_path': '/adapters/sections',
                 'operation_id': 'adapters_sections_post',

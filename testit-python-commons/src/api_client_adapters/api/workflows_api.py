@@ -42,7 +42,7 @@ class WorkflowsApi(object):
                 'response_type': (WorkflowApiResult,),
                 'auth': [
                     'PrivateToken',
-                    'Cookies'
+                    'Identity.Application'
                 ],
                 'endpoint_path': '/adapters/workflows/{id}',
                 'operation_id': 'adapters_workflows_id_get',

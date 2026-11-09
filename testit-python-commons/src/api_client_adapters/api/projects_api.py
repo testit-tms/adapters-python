@@ -45,7 +45,7 @@ class ProjectsApi(object):
                 'response_type': None,
                 'auth': [
                     'PrivateToken',
-                    'Cookies'
+                    'Identity.Application'
                 ],
                 'endpoint_path': '/adapters/projects/{id}/attributes/global',
                 'operation_id': 'adapters_projects_id_attributes_global_post',
@@ -107,7 +107,7 @@ class ProjectsApi(object):
                 'response_type': (DetailedProjectApiResult,),
                 'auth': [
                     'PrivateToken',
-                    'Cookies'
+                    'Identity.Application'
                 ],
                 'endpoint_path': '/adapters/projects/{id}',
                 'operation_id': 'adapters_projects_id_get',
@@ -159,7 +159,7 @@ class ProjectsApi(object):
                 'response_type': (ProjectApiResult,),
                 'auth': [
                     'PrivateToken',
-                    'Cookies'
+                    'Identity.Application'
                 ],
                 'endpoint_path': '/adapters/projects',
                 'operation_id': 'adapters_projects_post',
@@ -210,7 +210,7 @@ class ProjectsApi(object):
                 'response_type': ([ProjectApiResult],),
                 'auth': [
                     'PrivateToken',
-                    'Cookies'
+                    'Identity.Application'
                 ],
                 'endpoint_path': '/adapters/projects/search',
                 'operation_id': 'adapters_projects_search_post',

@@ -43,7 +43,7 @@ class AttachmentsApi(object):
                 'response_type': ([AttachmentModel],),
                 'auth': [
                     'PrivateToken',
-                    'Cookies'
+                    'Identity.Application'
                 ],
                 'endpoint_path': '/adapters/attachments/bulk',
                 'operation_id': 'adapters_attachments_bulk_post',
@@ -96,7 +96,7 @@ class AttachmentsApi(object):
                 'response_type': None,
                 'auth': [
                     'PrivateToken',
-                    'Cookies'
+                    'Identity.Application'
                 ],
                 'endpoint_path': '/adapters/attachments/{id}',
                 'operation_id': 'adapters_attachments_id_get',
@@ -193,7 +193,7 @@ class AttachmentsApi(object):
                 'response_type': (AttachmentModel,),
                 'auth': [
                     'PrivateToken',
-                    'Cookies'
+                    'Identity.Application'
                 ],
                 'endpoint_path': '/adapters/attachments',
                 'operation_id': 'adapters_attachments_post',
@@ -412,7 +412,7 @@ class AttachmentsApi(object):
     ):
         """Upload new attachment file  # noqa: E501
 
-        File size is restricted to 1 GB (1 073 741 824 bytes)  # noqa: E501
+        File size is restricted to 50 MB (52 428 800 bytes)  # noqa: E501
         This method makes a synchronous HTTP request by default. To make an
         asynchronous HTTP request, please pass async_req=True
 

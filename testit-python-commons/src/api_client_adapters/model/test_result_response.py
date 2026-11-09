@@ -97,6 +97,7 @@ class TestResultResponse(ModelNormal):
             'id': (str,),  # noqa: E501
             'failure_class_ids': ([str],),  # noqa: E501
             'configuration_id': (str,),  # noqa: E501
+            'test_point_id': (str,),  # noqa: E501
             'test_run_id': (str,),  # noqa: E501
             'step_comments': ([StepCommentApiModel], none_type,),  # noqa: E501
             'outcome': (TestResultOutcome,),  # noqa: E501
@@ -127,6 +128,7 @@ class TestResultResponse(ModelNormal):
         'id': 'id',  # noqa: E501
         'failure_class_ids': 'failureClassIds',  # noqa: E501
         'configuration_id': 'configurationId',  # noqa: E501
+        'test_point_id': 'testPointId',  # noqa: E501
         'test_run_id': 'testRunId',  # noqa: E501
         'step_comments': 'stepComments',  # noqa: E501
         'outcome': 'outcome',  # noqa: E501
@@ -155,13 +157,14 @@ class TestResultResponse(ModelNormal):
 
     @classmethod
     @convert_js_args_to_python_args
-    def _from_openapi_data(cls, id, failure_class_ids, configuration_id, test_run_id, *args, **kwargs):  # noqa: E501
+    def _from_openapi_data(cls, id, failure_class_ids, configuration_id, test_point_id, test_run_id, *args, **kwargs):  # noqa: E501
         """TestResultResponse - a model defined in OpenAPI
 
         Args:
             id (str):
             failure_class_ids ([str]):
             configuration_id (str):
+            test_point_id (str):
             test_run_id (str):
 
         Keyword Args:
@@ -247,6 +250,7 @@ class TestResultResponse(ModelNormal):
         self.id = id
         self.failure_class_ids = failure_class_ids
         self.configuration_id = configuration_id
+        self.test_point_id = test_point_id
         self.test_run_id = test_run_id
         for var_name, var_value in kwargs.items():
             if var_name not in self.attribute_map and \
@@ -268,13 +272,14 @@ class TestResultResponse(ModelNormal):
     ])
 
     @convert_js_args_to_python_args
-    def __init__(self, id, failure_class_ids, configuration_id, test_run_id, *args, **kwargs):  # noqa: E501
+    def __init__(self, id, failure_class_ids, configuration_id, test_point_id, test_run_id, *args, **kwargs):  # noqa: E501
         """TestResultResponse - a model defined in OpenAPI
 
         Args:
             id (str):
             failure_class_ids ([str]):
             configuration_id (str):
+            test_point_id (str):
             test_run_id (str):
 
         Keyword Args:
@@ -358,6 +363,7 @@ class TestResultResponse(ModelNormal):
         self.id = id
         self.failure_class_ids = failure_class_ids
         self.configuration_id = configuration_id
+        self.test_point_id = test_point_id
         self.test_run_id = test_run_id
         for var_name, var_value in kwargs.items():
             if var_name not in self.attribute_map and \

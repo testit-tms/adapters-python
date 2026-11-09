@@ -51,7 +51,7 @@ class AutoTestsApi(object):
                 'response_type': ([AutoTestApiResult],),
                 'auth': [
                     'PrivateToken',
-                    'Cookies'
+                    'Identity.Application'
                 ],
                 'endpoint_path': '/adapters/autoTests/bulk',
                 'operation_id': 'adapters_auto_tests_bulk_post',
@@ -107,7 +107,7 @@ class AutoTestsApi(object):
                 'response_type': None,
                 'auth': [
                     'PrivateToken',
-                    'Cookies'
+                    'Identity.Application'
                 ],
                 'endpoint_path': '/adapters/autoTests/bulk',
                 'operation_id': 'adapters_auto_tests_bulk_put',
@@ -158,7 +158,7 @@ class AutoTestsApi(object):
                 'response_type': ([AutoTestModel],),
                 'auth': [
                     'PrivateToken',
-                    'Cookies'
+                    'Identity.Application'
                 ],
                 'endpoint_path': '/adapters/autoTests',
                 'operation_id': 'adapters_auto_tests_get',
@@ -334,7 +334,7 @@ class AutoTestsApi(object):
                 'response_type': (AutoTestApiResult,),
                 'auth': [
                     'PrivateToken',
-                    'Cookies'
+                    'Identity.Application'
                 ],
                 'endpoint_path': '/adapters/autoTests/{id}',
                 'operation_id': 'adapters_auto_tests_id_get',
@@ -386,7 +386,7 @@ class AutoTestsApi(object):
                 'response_type': None,
                 'auth': [
                     'PrivateToken',
-                    'Cookies'
+                    'Identity.Application'
                 ],
                 'endpoint_path': '/adapters/autoTests/{id}',
                 'operation_id': 'adapters_auto_tests_id_patch',
@@ -444,7 +444,7 @@ class AutoTestsApi(object):
                 'response_type': None,
                 'auth': [
                     'PrivateToken',
-                    'Cookies'
+                    'Identity.Application'
                 ],
                 'endpoint_path': '/adapters/autoTests/{id}/work-items',
                 'operation_id': 'adapters_auto_tests_id_work_items_delete',
@@ -501,7 +501,7 @@ class AutoTestsApi(object):
                 'response_type': ([AutoTestWorkItemIdentifierApiResult],),
                 'auth': [
                     'PrivateToken',
-                    'Cookies'
+                    'Identity.Application'
                 ],
                 'endpoint_path': '/adapters/autoTests/{id}/work-items',
                 'operation_id': 'adapters_auto_tests_id_work_items_get',
@@ -563,7 +563,7 @@ class AutoTestsApi(object):
                 'response_type': None,
                 'auth': [
                     'PrivateToken',
-                    'Cookies'
+                    'Identity.Application'
                 ],
                 'endpoint_path': '/adapters/autoTests/{id}/work-items',
                 'operation_id': 'adapters_auto_tests_id_work_items_post',
@@ -621,7 +621,7 @@ class AutoTestsApi(object):
                 'response_type': (AutoTestApiResult,),
                 'auth': [
                     'PrivateToken',
-                    'Cookies'
+                    'Identity.Application'
                 ],
                 'endpoint_path': '/adapters/autoTests',
                 'operation_id': 'adapters_auto_tests_post',
@@ -672,7 +672,7 @@ class AutoTestsApi(object):
                 'response_type': None,
                 'auth': [
                     'PrivateToken',
-                    'Cookies'
+                    'Identity.Application'
                 ],
                 'endpoint_path': '/adapters/autoTests',
                 'operation_id': 'adapters_auto_tests_put',
@@ -723,7 +723,7 @@ class AutoTestsApi(object):
                 'response_type': ([AutoTestApiResult],),
                 'auth': [
                     'PrivateToken',
-                    'Cookies'
+                    'Identity.Application'
                 ],
                 'endpoint_path': '/adapters/autoTests/search',
                 'operation_id': 'adapters_auto_tests_search_post',

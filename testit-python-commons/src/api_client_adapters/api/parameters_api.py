@@ -44,7 +44,7 @@ class ParametersApi(object):
                 'response_type': (ParameterApiResult,),
                 'auth': [
                     'PrivateToken',
-                    'Cookies'
+                    'Identity.Application'
                 ],
                 'endpoint_path': '/adapters/parameters/{id}',
                 'operation_id': 'adapters_parameters_id_get',
@@ -96,7 +96,7 @@ class ParametersApi(object):
                 'response_type': (ParameterApiResult,),
                 'auth': [
                     'PrivateToken',
-                    'Cookies'
+                    'Identity.Application'
                 ],
                 'endpoint_path': '/adapters/parameters',
                 'operation_id': 'adapters_parameters_post',
@@ -147,7 +147,7 @@ class ParametersApi(object):
                 'response_type': ([ParameterApiResult],),
                 'auth': [
                     'PrivateToken',
-                    'Cookies'
+                    'Identity.Application'
                 ],
                 'endpoint_path': '/adapters/parameters/search',
                 'operation_id': 'adapters_parameters_search_post',

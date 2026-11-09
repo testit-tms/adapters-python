@@ -88,11 +88,14 @@ class TestRunApiResult(ModelNormal):
         return {
             'id': (str,),  # noqa: E501
             'name': (str,),  # noqa: E501
+            'project_id': (str,),  # noqa: E501
             'state_name': (TestRunState,),  # noqa: E501
             'status': (TestRunApiResultStatus,),  # noqa: E501
             'attachments': ([AttachmentApiResult],),  # noqa: E501
             'links': ([LinkApiResult],),  # noqa: E501
             'tags': ([str],),  # noqa: E501
+            'description': (str, none_type,),  # noqa: E501
+            'launch_source': (str, none_type,),  # noqa: E501
         }
 
     @cached_property
@@ -103,11 +106,14 @@ class TestRunApiResult(ModelNormal):
     attribute_map = {
         'id': 'id',  # noqa: E501
         'name': 'name',  # noqa: E501
+        'project_id': 'projectId',  # noqa: E501
         'state_name': 'stateName',  # noqa: E501
         'status': 'status',  # noqa: E501
         'attachments': 'attachments',  # noqa: E501
         'links': 'links',  # noqa: E501
         'tags': 'tags',  # noqa: E501
+        'description': 'description',  # noqa: E501
+        'launch_source': 'launchSource',  # noqa: E501
     }
 
     read_only_vars = {
@@ -117,12 +123,13 @@ class TestRunApiResult(ModelNormal):
 
     @classmethod
     @convert_js_args_to_python_args
-    def _from_openapi_data(cls, id, name, state_name, status, attachments, links, tags, *args, **kwargs):  # noqa: E501
+    def _from_openapi_data(cls, id, name, project_id, state_name, status, attachments, links, tags, *args, **kwargs):  # noqa: E501
         """TestRunApiResult - a model defined in OpenAPI
 
         Args:
             id (str): Test run unique identifier
             name (str): Test run name
+            project_id (str): Project unique identifier              This property is used to link test run with project.
             state_name (TestRunState):
             status (TestRunApiResultStatus):
             attachments ([AttachmentApiResult]): Collection of attachments related to the test run
@@ -160,6 +167,8 @@ class TestRunApiResult(ModelNormal):
                                 Animal class but this time we won't travel
                                 through its discriminator because we passed in
                                 _visited_composed_classes = (Animal,)
+            description (str, none_type): Test run description. [optional]  # noqa: E501
+            launch_source (str, none_type): Test run launch source              Once launch source is specified it cannot be updated.. [optional]  # noqa: E501
         """
 
         _check_type = kwargs.pop('_check_type', True)
@@ -193,6 +202,7 @@ class TestRunApiResult(ModelNormal):
 
         self.id = id
         self.name = name
+        self.project_id = project_id
         self.state_name = state_name
         self.status = status
         self.attachments = attachments
@@ -218,12 +228,13 @@ class TestRunApiResult(ModelNormal):
     ])
 
     @convert_js_args_to_python_args
-    def __init__(self, id, name, state_name, status, attachments, links, tags, *args, **kwargs):  # noqa: E501
+    def __init__(self, id, name, project_id, state_name, status, attachments, links, tags, *args, **kwargs):  # noqa: E501
         """TestRunApiResult - a model defined in OpenAPI
 
         Args:
             id (str): Test run unique identifier
             name (str): Test run name
+            project_id (str): Project unique identifier              This property is used to link test run with project.
             state_name (TestRunState):
             status (TestRunApiResultStatus):
             attachments ([AttachmentApiResult]): Collection of attachments related to the test run
@@ -261,6 +272,8 @@ class TestRunApiResult(ModelNormal):
                                 Animal class but this time we won't travel
                                 through its discriminator because we passed in
                                 _visited_composed_classes = (Animal,)
+            description (str, none_type): Test run description. [optional]  # noqa: E501
+            launch_source (str, none_type): Test run launch source              Once launch source is specified it cannot be updated.. [optional]  # noqa: E501
         """
 
         _check_type = kwargs.pop('_check_type', True)
@@ -292,6 +305,7 @@ class TestRunApiResult(ModelNormal):
 
         self.id = id
         self.name = name
+        self.project_id = project_id
         self.state_name = state_name
         self.status = status
         self.attachments = attachments

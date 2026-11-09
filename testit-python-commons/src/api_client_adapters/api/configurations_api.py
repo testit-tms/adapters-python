@@ -43,7 +43,7 @@ class ConfigurationsApi(object):
                 'response_type': ([ConfigurationModel],),
                 'auth': [
                     'PrivateToken',
-                    'Cookies'
+                    'Identity.Application'
                 ],
                 'endpoint_path': '/adapters/configurations/search',
                 'operation_id': 'adapters_configurations_search_post',

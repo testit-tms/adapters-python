@@ -30,8 +30,8 @@ from api_client_adapters.exceptions import ApiAttributeError
 
 
 def lazy_import():
-    from api_client_adapters.model.int32_range_selector_model import Int32RangeSelectorModel
-    globals()['Int32RangeSelectorModel'] = Int32RangeSelectorModel
+    from api_client_adapters.model.int64_range_selector_model import Int64RangeSelectorModel
+    globals()['Int64RangeSelectorModel'] = Int64RangeSelectorModel
 
 
 class ProjectsFilterModelChecklistsCount(ModelComposed):
@@ -316,7 +316,7 @@ class ProjectsFilterModelChecklistsCount(ModelComposed):
           'anyOf': [
           ],
           'allOf': [
-              Int32RangeSelectorModel,
+              Int64RangeSelectorModel,
           ],
           'oneOf': [
           ],
