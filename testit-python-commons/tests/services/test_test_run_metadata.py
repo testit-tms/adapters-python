@@ -1,5 +1,5 @@
-from api_client_adapters.model.link_api_result import LinkApiResult
-from api_client_adapters.model.link_type import LinkType as ApiLinkType
+from adapters_api.model.link_api_result import LinkApiResult
+from adapters_api.model.link_type import LinkType as ApiLinkType
 
 from testit_python_commons.client.converter import Converter
 from testit_python_commons.models.link import Link
@@ -49,7 +49,7 @@ def test_create_test_run_model_includes_tags_and_links():
 
 
 def test_build_update_empty_request_without_description_attr(mocker):
-    """Adapters TestRunApiResult has no description/launch_source — must not raise."""
+    """Adapters TestRunApiResult has no description/launch_source ï¿½ must not raise."""
     test_run = mocker.Mock(spec=['id', 'name', 'attachments', 'links', 'tags'])
     test_run.id = 'run-id'
     test_run.name = 'name'

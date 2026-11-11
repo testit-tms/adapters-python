@@ -1,6 +1,6 @@
 from unittest.mock import Mock
 
-from api_client_adapters.models import LabelApiModel
+from adapters_api.models import LabelApiModel
 
 from testit_python_commons.client.converter import Converter
 

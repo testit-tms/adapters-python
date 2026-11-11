@@ -93,7 +93,7 @@ jobs:
          pip3 install -r python-examples/${{ matrix.project_name }}/requirements_ci.txt
          pip3 install -e ./testit-python-commons
          pip3 install -e ./${{ matrix.adapter_name }}
-         python3 -c "from api_client_adapters.model.custom_attribute_api_result import CustomAttributeApiResult; assert 'code' in CustomAttributeApiResult.openapi_types"
+         python3 -c "from adapters_api.model.custom_attribute_api_result import CustomAttributeApiResult; assert 'code' in CustomAttributeApiResult.openapi_types"
          
      - name: Test
        run: |
@@ -132,7 +132,7 @@ jobs:
          pip3 install -r python-examples/${{ matrix.project_name }}/requirements_ci.txt
          pip3 install -e ./testit-python-commons
          pip3 install -e ./${{ matrix.adapter_name }}
-         python3 -c "from api_client_adapters.model.custom_attribute_api_result import CustomAttributeApiResult; assert 'code' in CustomAttributeApiResult.openapi_types"
+         python3 -c "from adapters_api.model.custom_attribute_api_result import CustomAttributeApiResult; assert 'code' in CustomAttributeApiResult.openapi_types"
         
    
      - name: Test import realtime false

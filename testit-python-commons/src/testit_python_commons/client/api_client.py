@@ -2,9 +2,9 @@ import logging
 import os
 from datetime import datetime
 
-import api_client_adapters
-from api_client_adapters import ApiClient, Configuration
-from api_client_adapters.apis import (
+import adapters_api
+from adapters_api import ApiClient, Configuration
+from adapters_api.apis import (
     AttachmentsApi,
     AutoTestsApi,
     TestRunsApi,
@@ -13,7 +13,7 @@ from api_client_adapters.apis import (
     ProjectsApi,
     WorkflowsApi,
 )
-from api_client_adapters.models import (
+from adapters_api.models import (
     AdaptersTestResultsSearchPostRequest,
     AutoTestApiResult,
     AutoTestCreateApiModel,
@@ -427,7 +427,7 @@ class ApiClientWorker:
             # logging.debug(f'Got workitem {work_item}')
 
             return work_item.id
-        except api_client_adapters.exceptions.ApiException as exc:
+        except adapters_api.exceptions.ApiException as exc:
             if is_retriable_connection_error(exc):
                 raise
             if is_non_retriable_api_exception(exc):
@@ -526,7 +526,7 @@ class ApiClientWorker:
             self.__autotest_api.adapters_auto_tests_id_work_items_delete(
                 id=autotest_global_id,
                 work_item_id=work_item_id)
-        except api_client_adapters.exceptions.ApiException as exc:
+        except adapters_api.exceptions.ApiException as exc:
             if is_non_retriable_api_exception(exc):
                 logging.warning(
                     'Cannot unlink autotest %s from work item %s: %s',
@@ -547,7 +547,7 @@ class ApiClientWorker:
                 id=autotest_global_id,
                 adapters_auto_tests_id_work_items_post_request=AdaptersAutoTestsIdWorkItemsPostRequest(
                     id=work_item_id))
-        except api_client_adapters.exceptions.ApiException as exc:
+        except adapters_api.exceptions.ApiException as exc:
             if is_non_retriable_api_exception(exc):
                 logging.warning(
                     'Cannot link autotest %s to work item %s: %s',
@@ -594,7 +594,7 @@ class ApiClientWorker:
 
     @adapter_logger
     def update_test_results(self, fixtures_containers: dict, test_result_ids: dict) -> None:
-        # PUT only setup/teardown fixtures — never status or step_results.
+        # PUT only setup/teardown fixtures ï¿½ never status or step_results.
         # See docs/test-result-export-contract.md
         test_results = Converter.fixtures_containers_to_test_results_with_all_fixture_step_results(
             fixtures_containers, test_result_ids)

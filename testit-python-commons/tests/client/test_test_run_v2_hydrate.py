@@ -1,4 +1,4 @@
-from api_client_adapters.model.link_type import LinkType as ApiLinkType
+from adapters_api.model.link_type import LinkType as ApiLinkType
 
 from testit_python_commons.client.api_client import ApiClientWorker
 from testit_python_commons.client.converter import Converter

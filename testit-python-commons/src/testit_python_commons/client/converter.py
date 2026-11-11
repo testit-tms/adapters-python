@@ -1,7 +1,7 @@
 import logging
 from typing import List, Optional
 
-from api_client_adapters.models import (
+from adapters_api.models import (
     AdaptersTestResultsSearchPostRequest,
     AutoTestApiResult,
     AttachmentPutModelAutoTestStepResultsModel,

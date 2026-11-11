@@ -3,7 +3,7 @@
 from testit_adapter_pytest.models.executable_test import ExecutableTest
 from testit_adapter_pytest.utils import convert_executable_test_to_test_result_model
 from testit_python_commons.client.converter import Converter
-from api_client_adapters import ApiClient
+from adapters_api import ApiClient
 
 
 def test_parametrize_script_payload_escaped_in_parameters_and_external_key():
