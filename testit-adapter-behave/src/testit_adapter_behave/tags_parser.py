@@ -35,7 +35,6 @@ def parse_test_tags(tags):
             parsed_tags[TagType.TITLE] = __parse_space_in_tag(tag[len(TagType.TITLE):])
 
         elif tag.startswith(TagType.WORK_ITEM_IDS):
-            logging.warning('WorkItemIds is deprecated. Use WorkItemId with a single globalId instead.')
             parsed_tags[TagType.WORK_ITEM_IDS].extend(
                 __parse_massive(tag[len(TagType.WORK_ITEM_IDS):]))
 

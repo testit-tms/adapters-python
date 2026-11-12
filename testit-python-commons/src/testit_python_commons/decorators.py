@@ -61,7 +61,6 @@ def workItemId(globalId: int or str):  # noqa: N802
     return outer
 
 
-@Utils.deprecated('Use "workItemId" instead.')
 @adapter_logger
 def workItemIds(*test_workitems_id: int or str):  # noqa: N802
     """

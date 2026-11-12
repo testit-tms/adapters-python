@@ -130,7 +130,6 @@ def __add_attachments_to_test(data, is_text: bool = False, name: str = None):
             logging.warning(f'({data}) is not path!')
 
 
-@Utils.deprecated('Use "addWorkItemId" instead.')
 @adapter_logger
 def addWorkItemIds(*test_work_item_ids: int or str):  # noqa: N802
     """

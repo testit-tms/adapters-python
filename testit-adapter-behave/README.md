@@ -111,7 +111,7 @@ Use tags to specify information about autotest.
 Description of tags:
 
 - `WorkItemId` - a method that links an autotest with a manual test. Receives a single globalId
-- `WorkItemIds` - deprecated, use `WorkItemId` instead
+- `WorkItemIds` - links autotests with manual tests. Receives the array of manual tests' IDs
 - `DisplayName` - internal autotest name (used in Test IT)
 - `ExternalId` - unique internal autotest ID (used in Test IT)
 - `Title` - autotest name specified in the autotest card. If not specified, the name from the displayName method is used
@@ -128,7 +128,7 @@ If you want to insert a space in the tags, use the "\\_" character combination.
 Description of methods:
 
 - `testit.addWorkItemId` - a dynamic method that links an autotest with a manual test. Receives a single globalId
-- `testit.addWorkItemIds` - deprecated, use `testit.addWorkItemId` instead
+- `testit.addWorkItemIds` - a dynamic method that links autotests with manual tests. Receives the array of manual tests' IDs
 - `testit.addDisplayName` - a dynamic method for adding internal autotest name (used in Test IT)
 - `testit.addExternalId` - a dynamic method for adding unique internal autotest ID (used in Test IT)
 - `testit.addTitle` - a dynamic method for adding autotest name specified in the autotest card. If not specified, the name from the displayName method is used
