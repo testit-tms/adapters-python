@@ -3,8 +3,28 @@ import re
 from robot.api import SuiteVisitor, logger
 from robot.libraries.BuiltIn import BuiltIn
 
-from .models import Autotest
-from .utils import STEP_STATUSES, STATUS_TYPES, convert_time, convert_executable_test_to_test_result_model, get_hash
+from testit_python_commons.services import TmsPluginManager
+
+from .models import Autotest, Option
+from .utils import STATUS_TYPES, STEP_STATUSES, convert_executable_test_to_test_result_model, convert_time, get_hash
+
+TMS_CLI_PARAMS = (
+    "tmsUrl",
+    "tmsPrivateToken",
+    "tmsProjectId",
+    "tmsConfigurationId",
+    "tmsTestRunId",
+    "tmsProxy",
+    "tmsTestRunName",
+    "tmsTestRunTags",
+    "tmsTestRunLinks",
+    "tmsAdapterMode",
+    "tmsConfigFile",
+    "tmsCertValidation",
+    "tmsAutomaticCreationTestCases",
+    "tmsAutomaticUpdationLinksToTestCases",
+    "tmsImportRealtime",
+)
 
 
 class AutotestAdapter:
@@ -117,3 +137,92 @@ class ExcludeTests(SuiteVisitor):
 
     def visit_test(self, test):
         pass
+
+
+class testit_adapter_robotframework:  # noqa: N801
+    """Module-level listener for ``robot --listener testit_adapter_robotframework``.
+
+    Before, this invocation silently did nothing: Robot Framework imported the
+    package, found neither a class named like the module nor listener methods
+    in the empty ``__init__.py``, and ran the whole suite without a single
+    request to Test IT and without any warning (TMS-38320).
+
+    The adapter is configured at the first ``start_suite`` event from the same
+    sources as ``TMSLibrary`` (robot CLI variables ``-v tms...:...`` override
+    ``TMS_*`` environment variables and ``connection_config.ini`` /
+    ``pyproject.toml``), because robot variables are not accessible in the
+    listener constructor yet. When the ``${testit}`` variable is set,
+    ``TMSLibrary`` is responsible for exporting results and this listener
+    stays idle to avoid duplicating every result.
+    """
+
+    ROBOT_LISTENER_API_VERSION = 2
+
+    def __init__(self):
+        self.adapter_manager = None
+        self.active_adapter = None
+        self._adapter_resolved = False
+
+    def _resolve_adapter(self):
+        built_in = BuiltIn()
+        if built_in.get_variable_value("${testit}", None) is not None:
+            logger.warn("[TestIt] The ${testit} variable is set: TMSLibrary exports results, "
+                        "the testit_adapter_robotframework listener stays idle")
+            return None
+
+        option = Option(**{param: built_in.get_variable_value(f'${{{param}}}', None) for param in TMS_CLI_PARAMS})
+        adapter_manager = TmsPluginManager.get_adapter_manager(option)
+        self._set_test_run_id(adapter_manager, built_in.get_variable_value('${PABOTQUEUEINDEX}', None))
+        self.adapter_manager = adapter_manager
+        return AutotestAdapter(adapter_manager)
+
+    @staticmethod
+    def _set_test_run_id(adapter_manager, pabot_index):
+        if pabot_index is None:
+            adapter_manager.set_test_run_id(adapter_manager.get_test_run_id())
+            return
+
+        try:
+            from pabot import PabotLib
+            pabot = PabotLib()
+            if int(pabot_index) == 0:
+                test_run_id = adapter_manager.get_test_run_id()
+                pabot.set_parallel_value_for_key('test_run_id', test_run_id)
+            else:
+                while True:
+                    test_run_id = pabot.get_parallel_value_for_key('test_run_id')
+                    if test_run_id:
+                        break
+        except RuntimeError:
+            logger.warn("[TestIt] pabot is running without --pabotlib: the test run id cannot be shared "
+                        "between parallel processes, every process will export on its own "
+                        "(a separate test run is created in adapter mode 2)")
+            adapter_manager.set_test_run_id(adapter_manager.get_test_run_id())
+            return
+
+        adapter_manager.set_test_run_id(test_run_id)
+
+    def start_suite(self, name, attributes):
+        if not self._adapter_resolved:
+            self._adapter_resolved = True
+            self.active_adapter = self._resolve_adapter()
+
+    def start_test(self, name, attributes):
+        if self.active_adapter:
+            self.active_adapter.start_test(name, attributes)
+
+    def start_keyword(self, name, attributes):
+        if self.active_adapter:
+            self.active_adapter.start_keyword(name, attributes)
+
+    def end_keyword(self, name, attributes):
+        if self.active_adapter:
+            self.active_adapter.end_keyword(name, attributes)
+
+    def end_test(self, name, attributes):
+        if self.active_adapter:
+            self.active_adapter.end_test(name, attributes)
+
+    def close(self):
+        if self.active_adapter:
+            self.active_adapter.close()
