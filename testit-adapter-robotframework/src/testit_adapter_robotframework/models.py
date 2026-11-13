@@ -205,7 +205,8 @@ class Autotest(Default):
             self.result_depth[-1].step_results.append(StepResult(title, description, parameters=parameters))
             self.result_depth.append(self.result_depth[-1].step_results[-1])
 
-    def add_step_result(self, title, start, complete, duration, outcome, attachments):
+    def add_step_result(self, title, start, complete, duration, outcome, attachments) -> bool:
+        bound = False
         if self.result_depth:
             if self.result_depth[-1].title == title:
                 step = self.result_depth.pop()
@@ -214,9 +215,11 @@ class Autotest(Default):
                 step.duration = duration
                 step.outcome = outcome
                 step.attachments = attachments
+                bound = True
         if self.step_depth:
             if self.step_depth[-1].title == title:
                 self.step_depth.pop()
+        return bound
 
 
 class Option:

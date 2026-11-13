@@ -55,8 +55,13 @@ class AutotestAdapter:
             end = convert_time(attributes['endtime'])
             duration = attributes['elapsedtime']
             outcome = STEP_STATUSES[attributes['status']]
-            self.active_test.add_step_result(title, start, end, duration, outcome, self.active_test.attachments)
-            self.active_test.attachments = []
+            bound = self.active_test.add_step_result(
+                title, start, end, duration, outcome, self.active_test.attachments)
+            # Drop the buffer only when the step result consumed it, otherwise the
+            # attachments (e.g. added deeper than the tracked step depth) are lost
+            # after having already been uploaded to TMS.
+            if bound:
+                self.active_test.attachments = []
 
     def end_test(self, name, attributes):
         if self.active_test:
@@ -74,6 +79,9 @@ class AutotestAdapter:
             self.active_test.duration = attributes['elapsedtime']
             self.adapter_manager.write_test(
                 convert_executable_test_to_test_result_model(self.active_test.order()))
+            # The result is finalized, later keywords (e.g. suite teardown) must not
+            # attach to it — otherwise uploads land in a model that is never re-sent.
+            self.active_test = None
 
     def close(self):
         self.adapter_manager.on_block_completed()
