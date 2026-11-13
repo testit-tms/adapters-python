@@ -132,6 +132,18 @@ Description of methods:
 - `testit.addParameter` - a dynamic method for adding parameter in the autotest result
 - `testit.step` - usage in the "with" construct to designation a step in the body of the test
 
+### Run as a listener
+
+Instead of importing `TMSLibrary` into your suites and passing the `-v testit` option, you can attach the adapter as a Robot Framework listener:
+
+```
+$ robot --listener testit_adapter_robotframework <test directory>
+```
+
+In this mode the adapter is configured from the same sources as usual — robot CLI variables (`-v tmsUrl:...`), environment variables (`TMS_*`) or the configuration file — no changes to the test suites are required. Listener keywords such as `Add Link` or `Add Attachments` are not available; import `TMSLibrary` if you need them.
+
+> Do not combine both ways: when the `-v testit` variable is set, `TMSLibrary` is responsible for exporting results and the listener stays idle.
+
 ### Parallel execution
 
 You can also run your test in parallel with [Pabot](https://pabot.org/).
@@ -140,7 +152,13 @@ You can also run your test in parallel with [Pabot](https://pabot.org/).
 $ pabot --pabotlib -v testit <test directory>
 ```
 
-All other settings are the same as for standard execution.
+or with the listener:
+
+```
+$ pabot --pabotlib --listener testit_adapter_robotframework <test directory>
+```
+
+All other settings are the same as for standard execution. Without `--pabotlib` the test run id cannot be shared between parallel processes: each process will export results on its own (a separate test run is created in adapter mode 2).
 
 ### Examples
 
