@@ -1,3 +1,4 @@
+from robot.api import logger
 from robot.libraries.BuiltIn import BuiltIn
 
 from testit_python_commons.services import TmsPluginManager
@@ -101,6 +102,8 @@ class TMSLibrary:
         Adds several attachments to current test.
 
         """
+        if not self._has_active_test('Add Attachments', *paths):
+            return
         attachments = self.adapter_manager.load_attachments(paths)
         self.ROBOT_LIBRARY_LISTENER[0].active_test.attachments.extend(attachments)
 
@@ -110,8 +113,21 @@ class TMSLibrary:
         Adds attachment to current test
 
         """
+        if not self._has_active_test('Add Attachment', text):
+            return
         attachment = self.adapter_manager.create_attachment(text, filename)
         self.ROBOT_LIBRARY_LISTENER[0].active_test.attachments.extend(attachment)
+
+    def _has_active_test(self, keyword_name, *payload) -> bool:
+        active_test = self.ROBOT_LIBRARY_LISTENER[0].active_test
+        if active_test is not None:
+            return True
+        # Without a running test the files would be uploaded to TMS yet never
+        # linked to any test result, so refuse before uploading.
+        logger.error(
+            f"[TestIt] {keyword_name} was called outside of a test, "
+            f"attachment(s) will not be uploaded: {payload}")
+        return False
 
     @enabled
     def add_message(self, message):
