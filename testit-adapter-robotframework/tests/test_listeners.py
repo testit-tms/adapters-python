@@ -75,7 +75,7 @@ class TestAutotestTagParsing:
         autotest.add_attributes(self._build_attrs(["testit.displayName:DisplayName"]))
 
         assert autotest.autoTestName == "DisplayName"
-        assert autotest.title is None
+        assert autotest.title == "HeaderName"
 
     def test_title_has_priority_over_display_name(self):
         autotest = Autotest(autoTestName="Initial")
