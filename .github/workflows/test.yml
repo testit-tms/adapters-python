@@ -30,7 +30,8 @@ env:
 jobs:
  test:
    name: ${{ matrix.project_name }}
-   runs-on: ubuntu-latest
+   # ubuntu-latest is 26.04; setup-python has no 3.9 builds for it
+   runs-on: ubuntu-24.04
    strategy:
      fail-fast: false
      matrix:
