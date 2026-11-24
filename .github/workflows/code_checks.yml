@@ -1,4 +1,4 @@
-name: Code checks
+﻿name: Code checks
 
 on:
   - pull_request
@@ -9,6 +9,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
+        # ubuntu-latest is 26.04; setup-python has no 3.9 builds for it
         os: [ubuntu-24.04]
         python-version: ['3.9']
         package: [

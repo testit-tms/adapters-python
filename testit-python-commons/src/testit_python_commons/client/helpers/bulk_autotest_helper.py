@@ -25,6 +25,11 @@ from testit_python_commons.utils.html_escape_utils import HtmlEscapeUtils
 from typing import Dict, List
 
 
+def is_already_exists(exc: BaseException) -> bool:
+    """TMS 6.0 may return AlreadyExistsException on conflicting autotest PUT."""
+    return "AlreadyExistsException" in str(exc)
+
+
 class BulkAutotestHelper:
     __max_tests_for_import = 100
 
@@ -93,8 +98,16 @@ class BulkAutotestHelper:
             .get_threads_for_create()
         autotests_for_create = list(thread_for_create.values())
 
+        # Metadata create must not block sendTestResults (TMS 6.0 AlreadyExists / races).
         if autotests_for_create:
-            self.__create_tests(autotests_for_create)
+            try:
+                self.__create_tests(autotests_for_create)
+            except Exception as exc:
+                logging.error(
+                    "Bulk createAutoTest failed (continuing with sendTestResults): %s",
+                    exc,
+                    exc_info=True,
+                )
 
         threads_results_for_created_autotests: List[Dict[str, AutoTestResultsForTestRunModel]] = all_threads_for_create_and_result\
             .get_threads_results_for_created_autotests()
@@ -113,8 +126,16 @@ class BulkAutotestHelper:
 
         autotests_for_update = list(thread_for_update.values())
 
+        # Metadata PUT must not block sendTestResults: TMS 6.0 can return AlreadyExistsException.
         if autotests_for_update:
-            self.__update_tests(autotests_for_update)
+            try:
+                self.__update_tests(autotests_for_update)
+            except Exception as exc:
+                logging.error(
+                    "Bulk updateAutoTest failed (continuing with sendTestResults): %s",
+                    exc,
+                    exc_info=True,
+                )
 
         thread_for_autotest_links_to_wi_for_update: Dict[str, List[str]] = all_threads_for_update_and_result\
             .get_threads_for_autotest_links_to_wi_for_update()

@@ -29,7 +29,10 @@ from adapters_api.models import (
 
 from testit_python_commons.client.client_configuration import ClientConfiguration
 from testit_python_commons.client.converter import Converter
-from testit_python_commons.client.helpers.bulk_autotest_helper import BulkAutotestHelper
+from testit_python_commons.client.helpers.bulk_autotest_helper import (
+    BulkAutotestHelper,
+    is_already_exists,
+)
 from typing import List
 
 from testit_python_commons.models.link import Link
@@ -506,7 +509,17 @@ class ApiClientWorker:
         except Exception as exc:
             if is_retriable_connection_error(exc):
                 raise
-            logging.error(f'Cannot update autotest "{test_result.get_autotest_name()}" status: {exc}')
+            # TMS 6.0: metadata PUT can return AlreadyExists; still send the test result.
+            if is_already_exists(exc):
+                logging.warning(
+                    'updateAutoTest AlreadyExists for "%s", continuing with sendTestResults: %s',
+                    test_result.get_external_id(),
+                    exc,
+                )
+            else:
+                logging.error(
+                    f'Cannot update autotest "{test_result.get_autotest_name()}" status: {exc}'
+                )
 
         logging.debug(f'Autotest "{test_result.get_autotest_name()}" was updated')
 

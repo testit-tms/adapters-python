@@ -1,3 +1,4 @@
+import atexit
 import json
 import logging
 import os
@@ -18,6 +19,7 @@ from api_client_syncstorage.api_client import ApiClient as SyncStorageApiClient
 from api_client_syncstorage.configuration import (
     Configuration as SyncStorageConfiguration,
 )
+from api_client_syncstorage.exceptions import ApiException
 from api_client_syncstorage.model.test_result_cut_api_model import (
     TestResultCutApiModel,
 )
@@ -40,7 +42,7 @@ class SyncStorageRunner:
     across multiple workers.
     """
 
-    SYNC_STORAGE_VERSION = "v0.3.10"
+    SYNC_STORAGE_VERSION = "v0.4.2-tms-5.8"
     SYNC_STORAGE_REPO_URL = (
         "https://github.com/testit-tms/sync-storage-public/releases/download/"
     )
@@ -49,6 +51,8 @@ class SyncStorageRunner:
     SYNC_STORAGE_STARTUP_TIMEOUT = 5  # seconds
     KEEP_ALIVE_INTERVAL_SECONDS = 30
     KEEP_ALIVE_REQUEST_TIMEOUT_SECONDS = 5
+    REGISTER_RETRY_ATTEMPTS = 5
+    REGISTER_RETRY_DELAY_SECONDS = 0.5
 
     def __init__(
         self,
@@ -108,18 +112,18 @@ class SyncStorageRunner:
 
             # Check if Sync Storage is already running
             if self._is_sync_storage_already_running():
+                self._ensure_compatible_existing_instance()
                 logger.info(
                     f"SyncStorage already started {self.port}. Connecting to existing one..."
                 )
                 self.is_running = True
                 self.is_external = True
 
-                try:
-                    self._register_worker_with_retry()
-                except Exception as e:
-                    logger.error(f"Error registering worker: {e}")
-
-                self._start_keep_alive()
+                if not self._register_worker_with_retry():
+                    raise RuntimeError(
+                        f"Port {self.port} has sync-storage for testRunId {self.test_run_id}, "
+                        "but worker registration failed. Check syncstorage.log."
+                    )
                 return True
 
             # Get executable file name for current platform
@@ -162,6 +166,7 @@ class SyncStorageRunner:
             )
 
             self.sync_storage_process = process_builder
+            self._register_shutdown_hook()
 
             # Start output reader in background thread
             self._start_output_reader()
@@ -172,12 +177,8 @@ class SyncStorageRunner:
                 logger.info(f"SyncStorage started successfully on port {self.port}")
                 time.sleep(2)  # Wait a bit more as in Java implementation
 
-                try:
-                    self._register_worker_with_retry()
-                except Exception as e:
-                    logger.error(f"Error registering worker: {e}")
-
-                self._start_keep_alive()
+                if not self._register_worker_with_retry():
+                    logger.warning("Failed to register sync-storage worker after start")
                 return True
             else:
                 raise RuntimeError("Cannot start the SyncStorage until timeout")
@@ -222,6 +223,8 @@ class SyncStorageRunner:
         return f"http://localhost:{self.port}"
 
     def _keep_alive(self) -> None:
+        if not self.worker_pid or not self.test_run_id:
+            return
         try:
             payload = json.dumps({
                 "pid": self.worker_pid,
@@ -237,8 +240,27 @@ class SyncStorageRunner:
                 request,
                 timeout=self.KEEP_ALIVE_REQUEST_TIMEOUT_SECONDS,
             )
-        except Exception:
-            pass
+        except urllib.error.HTTPError as e:
+            # SS returns "Worker not found"; missing route is a generic 404.
+            if e.code == 404:
+                body = ""
+                try:
+                    body = e.read().decode("utf-8", errors="replace")
+                except Exception:
+                    pass
+                if "Worker not found" in body:
+                    logger.warning("keep_alive: worker not found (pid=%s)", self.worker_pid)
+                else:
+                    logger.debug(
+                        "keep_alive endpoint unavailable (HTTP 404, pid=%s)",
+                        self.worker_pid,
+                    )
+            else:
+                logger.debug(
+                    "keep_alive failed: HTTP %s (pid=%s)", e.code, self.worker_pid
+                )
+        except Exception as e:
+            logger.debug("keep_alive failed for pid=%s: %s", self.worker_pid, e)
 
     def _keep_alive_loop(self) -> None:
         while not self._keep_alive_stop_event.is_set():
@@ -247,6 +269,8 @@ class SyncStorageRunner:
                 break
 
     def _start_keep_alive(self) -> None:
+        if not self.worker_pid:
+            return
         if self._keep_alive_thread and self._keep_alive_thread.is_alive():
             return
 
@@ -263,6 +287,7 @@ class SyncStorageRunner:
         self._keep_alive_stop_event.set()
         if self._keep_alive_thread and self._keep_alive_thread.is_alive():
             self._keep_alive_thread.join(timeout=1)
+        self._keep_alive_thread = None
 
     def send_in_progress_test_result(
         self, model: TestResultCutApiModel
@@ -330,9 +355,67 @@ class SyncStorageRunner:
         except Exception:
             return False
 
-    def _register_worker_with_retry(self):
-        """Register worker with retry logic."""
-        self._register_worker()
+    def _ensure_compatible_existing_instance(self) -> None:
+        """
+        Existing process on the port must serve the same testRunId (parallel workers),
+        otherwise a stale orphan blocks the port and new runs never finalize.
+        """
+        running_test_run_id = self._fetch_health_test_run_id()
+        if not running_test_run_id:
+            logger.warning(
+                "Existing sync-storage on port %s does not report testRunId in /health; "
+                "compatibility cannot be verified. Prefer a sync-storage build that exposes "
+                "testRunId. Current testRunId: %s",
+                self.port,
+                self.test_run_id,
+            )
+            return
+        if running_test_run_id != self.test_run_id:
+            raise RuntimeError(
+                f"Port {self.port} is occupied by sync-storage with another testRunId "
+                f"({running_test_run_id}). Stop that process or change SYNC_STORAGE_PORT / "
+                f"syncStoragePort. Current testRunId: {self.test_run_id}"
+            )
+
+    def _fetch_health_test_run_id(self) -> Optional[str]:
+        try:
+            req = urllib.request.Request(f"http://localhost:{self.port}/health")
+            with urllib.request.urlopen(req, timeout=1) as response:
+                if response.getcode() != 200:
+                    return None
+                body = response.read().decode("utf-8", errors="replace")
+                return self.extract_json_string_field(body, "testRunId")
+        except Exception:
+            return None
+
+    @staticmethod
+    def extract_json_string_field(json_text: Optional[str], field: str) -> Optional[str]:
+        if not json_text or not field:
+            return None
+        try:
+            data = json.loads(json_text)
+        except Exception:
+            return None
+        value = data.get(field)
+        return value if isinstance(value, str) and value else None
+
+    def _register_shutdown_hook(self) -> None:
+        process = self.sync_storage_process
+        if process is None:
+            return
+
+        def _shutdown():
+            if process.poll() is None:
+                process.terminate()
+
+        atexit.register(_shutdown)
+
+    def _register_worker_with_retry(self) -> bool:
+        for _ in range(self.REGISTER_RETRY_ATTEMPTS):
+            if self._register_worker():
+                return True
+            time.sleep(self.REGISTER_RETRY_DELAY_SECONDS)
+        return False
 
     def _start_output_reader(self):
         """Start reading output from Sync Storage process in a background thread."""
@@ -558,8 +641,17 @@ class SyncStorageRunner:
             else:
                 logger.info(f"Worker registered successfully, PID: {self.worker_pid}")
 
+            self._start_keep_alive()
             return True
 
+        except ApiException as e:
+            if e.status == 409:
+                raise RuntimeError(
+                    f"Port {self.port} sync-storage rejected register (HTTP 409): "
+                    f"another testRunId is bound. Current testRunId: {self.test_run_id}"
+                ) from e
+            logger.error(f"Error registering worker: {e}", exc_info=True)
+            return False
         except Exception as e:
             logger.error(f"Error registering worker: {e}", exc_info=True)
 
@@ -574,6 +666,8 @@ class SyncStorageRunner:
             logging.info(f"Successfully set worker {self.worker_pid} status to {status}")
         except Exception as e:
             logger.error(f"Error setting worker status: {e}", exc_info=False)
+        if status and status.lower() == "completed":
+            self._stop_keep_alive()
 
 
     @classmethod
