@@ -9,7 +9,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest]
+        # ubuntu-latest is 26.04; setup-python has no 3.9 builds for it
+        os: [ubuntu-24.04]
         python-version: ['3.9']
         package: [
             testit-adapter-behave,

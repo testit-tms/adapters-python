@@ -117,7 +117,9 @@ class Autotest(Default):
     result_depth = attrib(default=Factory(list))
 
     def add_attributes(self, attrs):
-        self.title = None
+        # Default card title = RF test name. displayName must not overwrite it;
+        # only testit.title replaces the card title (validator + pre-TMS-32632).
+        self.title = attrs['originalname']
         self.autoTestName = attrs['originalname']
         self.externalKey = attrs['originalname']
         self.description = attrs['doc']
