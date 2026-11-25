@@ -1,4 +1,3 @@
-import atexit
 import json
 import logging
 import os
@@ -10,7 +9,7 @@ import time
 import urllib.error
 import urllib.request
 from pathlib import Path
-from typing import Optional
+from typing import Optional, TextIO
 
 import urllib3
 from api_client_syncstorage.api.test_results_api import TestResultsApi
@@ -27,6 +26,9 @@ from api_client_syncstorage.model.register_request import RegisterRequest
 from urllib3.exceptions import InsecureRequestWarning
 from api_client_syncstorage.model.set_worker_status_request import SetWorkerStatusRequest
 from testit_python_commons.models.test_result import TestResult
+from testit_python_commons.services.sync_storage.sync_storage_release_resolver import (
+    resolve_latest,
+)
 
 
 # Disable SSL warnings
@@ -42,6 +44,7 @@ class SyncStorageRunner:
     across multiple workers.
     """
 
+    # Floor: newest patch on the same major.minor + numeric channel is resolved at start.
     SYNC_STORAGE_VERSION = "v0.4.2"
     SYNC_STORAGE_REPO_URL = (
         "https://github.com/testit-tms/sync-storage-public/releases/download/"
@@ -53,6 +56,8 @@ class SyncStorageRunner:
     KEEP_ALIVE_REQUEST_TIMEOUT_SECONDS = 5
     REGISTER_RETRY_ATTEMPTS = 5
     REGISTER_RETRY_DELAY_SECONDS = 0.5
+    # Real Go release binaries are multi-MB; HTML/error pages must not be reused.
+    MIN_EXECUTABLE_BYTES = 1_000_000
 
     def __init__(
         self,
@@ -84,6 +89,9 @@ class SyncStorageRunner:
         # Sync Storage process management
         self.sync_storage_process: Optional[subprocess.Popen] = None
         self.sync_storage_executable_path: Optional[str] = None
+        self._sync_storage_log_file: Optional[TextIO] = None
+        self._resolved_sync_storage_version: Optional[str] = None
+        self._resolved_version_lock = threading.Lock()
 
         # API clients
         self.workers_api: Optional[WorkersApi] = None
@@ -154,37 +162,38 @@ class SyncStorageRunner:
 
             logger.info(f"Starting SyncStorage with command: {' '.join(command)}")
 
-            # Start process
-            process_builder = subprocess.Popen(
+            # Detach SS from the adapter process: CI calls wait-completion after tests,
+            # and Work X must outlive the test runner. Do not atexit-kill the child.
+            work_dir = os.path.dirname(prepared_executable_path)
+            log_path = os.path.join(work_dir, "syncstorage.log")
+            self._sync_storage_log_file = open(log_path, "a", encoding="utf-8")
+            self.sync_storage_process = subprocess.Popen(
                 command,
-                cwd=os.path.dirname(prepared_executable_path),
-                stdout=subprocess.PIPE,
+                cwd=work_dir,
+                stdout=self._sync_storage_log_file,
                 stderr=subprocess.STDOUT,
-                text=True,
-                bufsize=1,
-                universal_newlines=True,
+                start_new_session=True,
             )
-
-            self.sync_storage_process = process_builder
-            self._register_shutdown_hook()
-
-            # Start output reader in background thread
-            self._start_output_reader()
+            logger.info("SyncStorage logs: %s", log_path)
 
             # Wait for server startup
             if self._wait_for_server_startup(self.SYNC_STORAGE_STARTUP_TIMEOUT):
-                self.is_running = True
                 logger.info(f"SyncStorage started successfully on port {self.port}")
                 time.sleep(2)  # Wait a bit more as in Java implementation
 
                 if not self._register_worker_with_retry():
-                    logger.warning("Failed to register sync-storage worker after start")
+                    raise RuntimeError(
+                        "SyncStorage process started but worker registration failed"
+                    )
+                self.is_running = True
                 return True
-            else:
-                raise RuntimeError("Cannot start the SyncStorage until timeout")
+            raise RuntimeError("Cannot start the SyncStorage until timeout")
 
         except Exception as e:
             logger.error(f"Error starting Sync Storage: {e}", exc_info=True)
+            self.is_running = False
+            self.is_master = False
+            self._stop_keep_alive()
             return False
 
     def get_worker_pid(self) -> str:
@@ -210,6 +219,17 @@ class SyncStorageRunner:
     def is_running_status(self) -> bool:
         """Check if Sync Storage is running."""
         return self.is_running
+
+    def is_reachable(self) -> bool:
+        """True when /health responds — used to drop SS path if the process died."""
+        return self._is_sync_storage_already_running()
+
+    def mark_stopped(self) -> None:
+        """Disable this runner so the adapter falls back to the normal TMS flow."""
+        self.is_running = False
+        self.is_master = False
+        self.is_already_in_progress = False
+        self._stop_keep_alive()
 
     def is_running_as_process(self) -> bool:
         """Check if Sync Storage is running as a process."""
@@ -399,41 +419,12 @@ class SyncStorageRunner:
         value = data.get(field)
         return value if isinstance(value, str) and value else None
 
-    def _register_shutdown_hook(self) -> None:
-        process = self.sync_storage_process
-        if process is None:
-            return
-
-        def _shutdown():
-            if process.poll() is None:
-                process.terminate()
-
-        atexit.register(_shutdown)
-
     def _register_worker_with_retry(self) -> bool:
         for _ in range(self.REGISTER_RETRY_ATTEMPTS):
             if self._register_worker():
                 return True
             time.sleep(self.REGISTER_RETRY_DELAY_SECONDS)
         return False
-
-    def _start_output_reader(self):
-        """Start reading output from Sync Storage process in a background thread."""
-
-        def read_output():
-            try:
-                if self.sync_storage_process and self.sync_storage_process.stdout:
-                    # Read output with explicit encoding (e.g., 'utf-8' or 'latin-1')
-                    for line in iter(self.sync_storage_process.stdout.readline, ""):
-                        if line:
-                            # Decode the line explicitly to avoid encoding issues
-                            logger.info(f"SyncStorage: {line.rstrip()}")
-                    self.sync_storage_process.stdout.close()
-            except Exception as e:
-                logger.warning(f"Error reading SyncStorage output: {e}")
-
-        output_thread = threading.Thread(target=read_output, daemon=True)
-        output_thread.start()
 
     def _wait_for_server_startup(self, timeout_seconds: int) -> bool:
         """
@@ -467,7 +458,7 @@ class SyncStorageRunner:
             file_name = original_path.name
             target_path = os.path.join(caches_dir, file_name)
 
-            if os.path.exists(target_path):
+            if os.path.exists(target_path) and self._is_valid_executable(target_path):
                 logger.info(f"Using existing file: {target_path}")
 
                 # Make file executable for Unix-based systems
@@ -475,6 +466,16 @@ class SyncStorageRunner:
                     os.chmod(target_path, 0o755)
 
                 return target_path
+
+            if os.path.exists(target_path):
+                logger.warning(
+                    "Cached Sync Storage binary looks invalid (%s bytes); re-downloading",
+                    os.path.getsize(target_path),
+                )
+                try:
+                    os.remove(target_path)
+                except OSError:
+                    pass
 
             logger.info("File not present, downloading from GitHub Releases")
             self._download_executable_from_github(target_path)
@@ -484,12 +485,20 @@ class SyncStorageRunner:
             logger.error(f"Error preparing executable file: {e}")
             raise
 
+    @classmethod
+    def _is_valid_executable(cls, path: str) -> bool:
+        try:
+            return os.path.isfile(path) and os.path.getsize(path) >= cls.MIN_EXECUTABLE_BYTES
+        except OSError:
+            return False
+
     def _download_executable_from_github(self, target_path: str):
         """
         Download Sync Storage executable from GitHub.
 
         :param target_path: Target path to save the executable
         """
+        tmp_path = f"{target_path}.tmp"
         try:
             # Determine download URL
             download_url = self._get_download_url_for_current_platform()
@@ -499,16 +508,23 @@ class SyncStorageRunner:
 
             # Download file
             req = urllib.request.Request(download_url)
-            req.add_header("User-Agent", "TestIT Python Adapter")
+            req.add_header("User-Agent", "testit-python-adapter")
 
             with urllib.request.urlopen(req, timeout=30) as response:
-                with open(target_path, "wb") as f:
+                with open(tmp_path, "wb") as f:
                     while True:
                         chunk = response.read(8192)
                         if not chunk:
                             break
                         f.write(chunk)
 
+            if not self._is_valid_executable(tmp_path):
+                size = os.path.getsize(tmp_path) if os.path.exists(tmp_path) else 0
+                raise RuntimeError(
+                    f"Downloaded Sync Storage binary is too small ({size} bytes): {download_url}"
+                )
+
+            os.replace(tmp_path, target_path)
             logger.info(f"File downloaded successfully: {target_path}")
 
             # Make file executable for Unix-based systems
@@ -516,6 +532,11 @@ class SyncStorageRunner:
                 os.chmod(target_path, 0o755)
 
         except Exception as e:
+            try:
+                if os.path.exists(tmp_path):
+                    os.remove(tmp_path)
+            except OSError:
+                pass
             logger.error(f"Error downloading file: {e}")
             raise
 
@@ -548,14 +569,27 @@ class SyncStorageRunner:
         """Check if OS is Linux."""
         return "linux" in os_name
 
+    def resolved_version(self) -> str:
+        """Newest release on the floor's major.minor line and channel."""
+        cached = self._resolved_sync_storage_version
+        if cached is not None:
+            return cached
+        with self._resolved_version_lock:
+            if self._resolved_sync_storage_version is None:
+                self._resolved_sync_storage_version = resolve_latest(
+                    self.SYNC_STORAGE_VERSION
+                )
+            return self._resolved_sync_storage_version
+
     def _get_download_url_for_current_platform(self) -> str:
         """
         Get download URL for current platform.
 
         :return: Download URL
         """
+        version = self.resolved_version()
         file_name = self._get_file_name_by_arch_and_os()
-        return f"{self.SYNC_STORAGE_REPO_URL}{self.SYNC_STORAGE_VERSION}/{file_name}"
+        return f"{self.SYNC_STORAGE_REPO_URL}{version}/{file_name}"
 
     def _make_file_name(self, os_arch: str, os_part: str) -> str:
         """
@@ -573,8 +607,8 @@ class SyncStorageRunner:
         else:
             raise RuntimeError(f"Unsupported architecture: {os_arch}")
 
-        # Form file name
-        file_name = f"syncstorage-{self.SYNC_STORAGE_VERSION}-{os_part}_{arch_part}"
+        # Form file name from resolved tag (cache name includes version → auto-download)
+        file_name = f"syncstorage-{self.resolved_version()}-{os_part}_{arch_part}"
         if os_part == "windows":
             file_name += ".exe"
         return file_name

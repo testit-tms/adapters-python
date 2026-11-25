@@ -97,17 +97,28 @@ jobs:
          python3 -c "from adapters_api.model.custom_attribute_api_result import CustomAttributeApiResult; assert 'code' in CustomAttributeApiResult.openapi_types"
          
      - name: Test
+       env:
+         # Avoid anonymous GitHub API 403/rate-limit in resolve_sync_storage_version.sh
+         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
        run: |
-         chmod +x ./scripts/get_sync_storage_version.sh
-         chmod +x ./scripts/get_sync_storage.sh
+         chmod +x ./scripts/get_sync_storage_version.sh ./scripts/get_sync_storage.sh ./scripts/resolve_sync_storage_version.sh
 
-         export SYNC_STORAGE_VERSION=$(./scripts/get_sync_storage_version.sh)
+         export SYNC_STORAGE_VERSION="$(bash ./scripts/get_sync_storage_version.sh)"
+         if [ -z "${SYNC_STORAGE_VERSION}" ]; then
+           echo "ERROR: empty Sync Storage version after resolve" >&2
+           exit 1
+         fi
+         echo "Resolved Sync Storage version: ${SYNC_STORAGE_VERSION}"
          cd python-examples/${{ matrix.project_name }}
          
-         # start sync storage before all other processes
-         ../../scripts/get_sync_storage.sh $SYNC_STORAGE_VERSION
+         # start sync storage before all other processes (fail the step if download breaks)
+         bash ../../scripts/get_sync_storage.sh "$SYNC_STORAGE_VERSION"
          nohup .caches/syncstorage-linux-amd64 --testRunId ${{ env.TMS_TEST_RUN_ID }} --port 49152 \
          --baseURL ${{ env.TMS_URL }} --privateToken ${{ env.TMS_PRIVATE_TOKEN }}  > service.log 2>&1 &  
+         for i in 1 2 3 4 5 6 7 8 9 10; do
+           curl -sf http://127.0.0.1:49152/health && break
+           sleep 1
+         done
          curl -v http://127.0.0.1:49152/health || true
          
          eval "${{ matrix.test_command }}" || true #ignore error code
@@ -161,17 +172,27 @@ jobs:
 
 
      - name: Test Adapter Mode 2
+       env:
+         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
        run: |
-
          export TMS_ADAPTER_MODE=2
 
          cd python-examples/${{ matrix.project_name }}
-        
+
+         # Mode 2 creates a new test run; free the port so the adapter can spawn SS for it.
+         pkill -f 'syncstorage' || true
+         fuser -k 49152/tcp 2>/dev/null || true
+         sleep 1
+
          eval "${{ matrix.test_command }}" || true #ignore error code
 
-         # sleep 10
+         # Adapter leaves SS alive (no atexit kill) so wait-completion / Work X can finish.
          curl -v http://127.0.0.1:49152/wait-completion --max-time 100 || true
-         # cat service.log
+         if [ -f build/.caches/syncstorage.log ]; then
+           cat build/.caches/syncstorage.log || true
+         elif [ -f .caches/syncstorage.log ]; then
+           cat .caches/syncstorage.log || true
+         fi
 
      - name: Validate Again
        run: |
