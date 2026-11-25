@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 import urllib.request
 from typing import List, Optional
 
@@ -72,13 +73,15 @@ def select_latest(
 
 
 def fetch_release_tags() -> List[str]:
-    request = urllib.request.Request(
-        RELEASES_API_URL,
-        headers={
-            "Accept": "application/vnd.github+json",
-            "User-Agent": "testit-python-adapter",
-        },
-    )
+    headers = {
+        "Accept": "application/vnd.github+json",
+        "User-Agent": "testit-python-adapter",
+    }
+    # Prefer GITHUB_TOKEN in CI to avoid anonymous API 403 rate limits.
+    token = os.environ.get("GITHUB_TOKEN") or os.environ.get("GH_TOKEN")
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+    request = urllib.request.Request(RELEASES_API_URL, headers=headers)
     with urllib.request.urlopen(request, timeout=_REQUEST_TIMEOUT_SECONDS) as response:
         if response.getcode() != 200:
             raise IOError(f"GitHub releases API HTTP {response.getcode()}")
