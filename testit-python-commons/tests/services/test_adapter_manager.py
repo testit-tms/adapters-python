@@ -365,6 +365,71 @@ class TestAdapterManager:
         start_sync_storage.assert_called_once_with(test_run_id, mock_client_config)
         assert adapter_manager._AdapterManager__sync_storage_runner is sync_storage_runner
 
+    def test_cut_failure_disables_ss_and_writes_final_realtime(
+            self,
+            adapter_manager,
+            mock_adapter_config,
+            mock_client_config,
+            mocker):
+        mock_adapter_config.should_import_realtime.return_value = True
+        mock_adapter_config.get_mode.return_value = AdapterMode.NEW_TEST_RUN
+        sync_runner = mocker.Mock()
+        sync_runner.is_running_status.return_value = True
+        sync_runner.is_reachable.return_value = True
+        sync_runner.is_master_worker.return_value = True
+        sync_runner.is_already_in_progress_flag.return_value = False
+        sync_runner.send_in_progress_test_result.return_value = False
+        adapter_manager._AdapterManager__sync_storage_runner = sync_runner
+        mock_client_config.get_project_id.return_value = "proj-1"
+        mocker.patch(
+            "testit_python_commons.services.adapter_manager.SyncStorageRunner"
+            ".test_result_to_test_result_cut_api_model",
+            return_value=mocker.Mock(
+                status_code="Passed",
+                auto_test_external_id="ext-1",
+            ),
+        )
+        write_internal = mocker.patch.object(
+            adapter_manager,
+            "_write_test_realtime_internal",
+        )
+
+        test_result = mocker.Mock()
+        test_result.get_outcome.return_value = "Passed"
+        test_result.get_status_type.return_value = "Succeeded"
+        test_result.get_external_id.return_value = "ext-1"
+        test_result.get_finalize_key.return_value = "key-1"
+        test_result.get_started_on.return_value = None
+
+        adapter_manager.write_test(test_result)
+
+        write_internal.assert_called_once_with(test_result)
+        assert adapter_manager._AdapterManager__sync_storage_runner is None
+        sync_runner.mark_stopped.assert_called_once()
+
+    def test_unreachable_ss_is_disabled_before_write(
+            self,
+            adapter_manager,
+            mock_adapter_config,
+            mocker):
+        mock_adapter_config.should_import_realtime.return_value = True
+        sync_runner = mocker.Mock()
+        sync_runner.is_running_status.return_value = True
+        sync_runner.is_reachable.return_value = False
+        adapter_manager._AdapterManager__sync_storage_runner = sync_runner
+        write_internal = mocker.patch.object(
+            adapter_manager,
+            "_write_test_realtime_internal",
+        )
+        test_result = mocker.Mock()
+        test_result.get_external_id.return_value = "ext-1"
+        test_result.get_finalize_key.return_value = "key-1"
+
+        adapter_manager.write_test(test_result)
+
+        write_internal.assert_called_once_with(test_result)
+        assert adapter_manager._AdapterManager__sync_storage_runner is None
+
     def test_init_does_not_start_sync_storage_in_legacy_workflow(
             self,
             mocker,
