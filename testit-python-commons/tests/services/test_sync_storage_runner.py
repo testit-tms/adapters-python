@@ -129,5 +129,16 @@ class TestSyncStorageHealthReuse:
 
 
 class TestSyncStorageVersion:
-    def test_pin_is_at_least_0_4_2(self):
-        assert SyncStorageRunner.SYNC_STORAGE_VERSION.startswith("v0.4.2")
+    def test_floor_is_numeric_0_4_channel(self):
+        assert SyncStorageRunner.SYNC_STORAGE_VERSION.startswith("v0.4.")
+        assert "-tms-" not in SyncStorageRunner.SYNC_STORAGE_VERSION
+
+    def test_resolved_version_is_cached(self, mocker):
+        runner = SyncStorageRunner(test_run_id="run-id", port="49152")
+        resolve = mocker.patch(
+            "testit_python_commons.services.sync_storage.sync_storage_runner.resolve_latest",
+            return_value="v0.4.9",
+        )
+        assert runner.resolved_version() == "v0.4.9"
+        assert runner.resolved_version() == "v0.4.9"
+        resolve.assert_called_once_with(SyncStorageRunner.SYNC_STORAGE_VERSION)

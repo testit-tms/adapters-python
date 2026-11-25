@@ -27,6 +27,9 @@ from api_client_syncstorage.model.register_request import RegisterRequest
 from urllib3.exceptions import InsecureRequestWarning
 from api_client_syncstorage.model.set_worker_status_request import SetWorkerStatusRequest
 from testit_python_commons.models.test_result import TestResult
+from testit_python_commons.services.sync_storage.sync_storage_release_resolver import (
+    resolve_latest,
+)
 
 
 # Disable SSL warnings
@@ -42,6 +45,7 @@ class SyncStorageRunner:
     across multiple workers.
     """
 
+    # Floor: newest patch on the same major.minor + numeric channel is resolved at start.
     SYNC_STORAGE_VERSION = "v0.4.2"
     SYNC_STORAGE_REPO_URL = (
         "https://github.com/testit-tms/sync-storage-public/releases/download/"
@@ -84,6 +88,8 @@ class SyncStorageRunner:
         # Sync Storage process management
         self.sync_storage_process: Optional[subprocess.Popen] = None
         self.sync_storage_executable_path: Optional[str] = None
+        self._resolved_sync_storage_version: Optional[str] = None
+        self._resolved_version_lock = threading.Lock()
 
         # API clients
         self.workers_api: Optional[WorkersApi] = None
@@ -548,14 +554,27 @@ class SyncStorageRunner:
         """Check if OS is Linux."""
         return "linux" in os_name
 
+    def resolved_version(self) -> str:
+        """Newest release on the floor's major.minor line and channel."""
+        cached = self._resolved_sync_storage_version
+        if cached is not None:
+            return cached
+        with self._resolved_version_lock:
+            if self._resolved_sync_storage_version is None:
+                self._resolved_sync_storage_version = resolve_latest(
+                    self.SYNC_STORAGE_VERSION
+                )
+            return self._resolved_sync_storage_version
+
     def _get_download_url_for_current_platform(self) -> str:
         """
         Get download URL for current platform.
 
         :return: Download URL
         """
+        version = self.resolved_version()
         file_name = self._get_file_name_by_arch_and_os()
-        return f"{self.SYNC_STORAGE_REPO_URL}{self.SYNC_STORAGE_VERSION}/{file_name}"
+        return f"{self.SYNC_STORAGE_REPO_URL}{version}/{file_name}"
 
     def _make_file_name(self, os_arch: str, os_part: str) -> str:
         """
@@ -573,8 +592,8 @@ class SyncStorageRunner:
         else:
             raise RuntimeError(f"Unsupported architecture: {os_arch}")
 
-        # Form file name
-        file_name = f"syncstorage-{self.SYNC_STORAGE_VERSION}-{os_part}_{arch_part}"
+        # Form file name from resolved tag (cache name includes version → auto-download)
+        file_name = f"syncstorage-{self.resolved_version()}-{os_part}_{arch_part}"
         if os_part == "windows":
             file_name += ".exe"
         return file_name
