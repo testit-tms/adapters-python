@@ -1,4 +1,3 @@
-import atexit
 import json
 import logging
 import os
@@ -10,7 +9,7 @@ import time
 import urllib.error
 import urllib.request
 from pathlib import Path
-from typing import Optional
+from typing import Optional, TextIO
 
 import urllib3
 from api_client_syncstorage.api.test_results_api import TestResultsApi
@@ -90,6 +89,7 @@ class SyncStorageRunner:
         # Sync Storage process management
         self.sync_storage_process: Optional[subprocess.Popen] = None
         self.sync_storage_executable_path: Optional[str] = None
+        self._sync_storage_log_file: Optional[TextIO] = None
         self._resolved_sync_storage_version: Optional[str] = None
         self._resolved_version_lock = threading.Lock()
 
@@ -162,22 +162,19 @@ class SyncStorageRunner:
 
             logger.info(f"Starting SyncStorage with command: {' '.join(command)}")
 
-            # Start process
-            process_builder = subprocess.Popen(
+            # Detach SS from the adapter process: CI calls wait-completion after tests,
+            # and Work X must outlive the test runner. Do not atexit-kill the child.
+            work_dir = os.path.dirname(prepared_executable_path)
+            log_path = os.path.join(work_dir, "syncstorage.log")
+            self._sync_storage_log_file = open(log_path, "a", encoding="utf-8")
+            self.sync_storage_process = subprocess.Popen(
                 command,
-                cwd=os.path.dirname(prepared_executable_path),
-                stdout=subprocess.PIPE,
+                cwd=work_dir,
+                stdout=self._sync_storage_log_file,
                 stderr=subprocess.STDOUT,
-                text=True,
-                bufsize=1,
-                universal_newlines=True,
+                start_new_session=True,
             )
-
-            self.sync_storage_process = process_builder
-            self._register_shutdown_hook()
-
-            # Start output reader in background thread
-            self._start_output_reader()
+            logger.info("SyncStorage logs: %s", log_path)
 
             # Wait for server startup
             if self._wait_for_server_startup(self.SYNC_STORAGE_STARTUP_TIMEOUT):
@@ -422,41 +419,12 @@ class SyncStorageRunner:
         value = data.get(field)
         return value if isinstance(value, str) and value else None
 
-    def _register_shutdown_hook(self) -> None:
-        process = self.sync_storage_process
-        if process is None:
-            return
-
-        def _shutdown():
-            if process.poll() is None:
-                process.terminate()
-
-        atexit.register(_shutdown)
-
     def _register_worker_with_retry(self) -> bool:
         for _ in range(self.REGISTER_RETRY_ATTEMPTS):
             if self._register_worker():
                 return True
             time.sleep(self.REGISTER_RETRY_DELAY_SECONDS)
         return False
-
-    def _start_output_reader(self):
-        """Start reading output from Sync Storage process in a background thread."""
-
-        def read_output():
-            try:
-                if self.sync_storage_process and self.sync_storage_process.stdout:
-                    # Read output with explicit encoding (e.g., 'utf-8' or 'latin-1')
-                    for line in iter(self.sync_storage_process.stdout.readline, ""):
-                        if line:
-                            # Decode the line explicitly to avoid encoding issues
-                            logger.info(f"SyncStorage: {line.rstrip()}")
-                    self.sync_storage_process.stdout.close()
-            except Exception as e:
-                logger.warning(f"Error reading SyncStorage output: {e}")
-
-        output_thread = threading.Thread(target=read_output, daemon=True)
-        output_thread.start()
 
     def _wait_for_server_startup(self, timeout_seconds: int) -> bool:
         """

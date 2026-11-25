@@ -172,17 +172,27 @@ jobs:
 
 
      - name: Test Adapter Mode 2
+       env:
+         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
        run: |
-
          export TMS_ADAPTER_MODE=2
 
          cd python-examples/${{ matrix.project_name }}
-        
+
+         # Mode 2 creates a new test run; free the port so the adapter can spawn SS for it.
+         pkill -f 'syncstorage' || true
+         fuser -k 49152/tcp 2>/dev/null || true
+         sleep 1
+
          eval "${{ matrix.test_command }}" || true #ignore error code
 
-         # sleep 10
+         # Adapter leaves SS alive (no atexit kill) so wait-completion / Work X can finish.
          curl -v http://127.0.0.1:49152/wait-completion --max-time 100 || true
-         # cat service.log
+         if [ -f build/.caches/syncstorage.log ]; then
+           cat build/.caches/syncstorage.log || true
+         elif [ -f .caches/syncstorage.log ]; then
+           cat .caches/syncstorage.log || true
+         fi
 
      - name: Validate Again
        run: |
