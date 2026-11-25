@@ -34,10 +34,24 @@ class TmsPlugin(Plugin):
         self.__listener.stop_launch()
 
     def startTest(self, event):
+        if self.__is_synthetic_loader_test(event.test):
+            event.test._testit_skip = True
+            return
         self.__listener.start_test(event.test)
 
     def stopTest(self, event):
+        if getattr(event.test, '_testit_skip', False):
+            return
         self.__listener.stop_test()
 
     def testOutcome(self, event):
+        if getattr(event.test, '_testit_skip', False):
+            return
         self.__listener.set_outcome(event)
+
+    @staticmethod
+    def __is_synthetic_loader_test(test) -> bool:
+        # nose2.loader._makeFailedTest creates a ghost testFailure that must not go to TMS.
+        module = getattr(type(test), '__module__', '') or ''
+        name = getattr(test, '_testMethodName', None) or getattr(test, 'id', lambda: '')()
+        return module.startswith('nose2.loader') or name == 'testFailure'
