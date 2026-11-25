@@ -97,10 +97,17 @@ jobs:
          python3 -c "from adapters_api.model.custom_attribute_api_result import CustomAttributeApiResult; assert 'code' in CustomAttributeApiResult.openapi_types"
          
      - name: Test
+       env:
+         # Avoid anonymous GitHub API 403/rate-limit in resolve_sync_storage_version.sh
+         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
        run: |
          chmod +x ./scripts/get_sync_storage_version.sh ./scripts/get_sync_storage.sh ./scripts/resolve_sync_storage_version.sh
 
          export SYNC_STORAGE_VERSION="$(bash ./scripts/get_sync_storage_version.sh)"
+         if [ -z "${SYNC_STORAGE_VERSION}" ]; then
+           echo "ERROR: empty Sync Storage version after resolve" >&2
+           exit 1
+         fi
          echo "Resolved Sync Storage version: ${SYNC_STORAGE_VERSION}"
          cd python-examples/${{ matrix.project_name }}
          
