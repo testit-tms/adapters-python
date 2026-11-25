@@ -197,6 +197,10 @@ class AdapterManager:
         )
 
         if not success:
+            # Cut rejected / SS down → do not hold InProgress; caller uses final status.
+            self.__deactivate_sync_storage(
+                "cut rejected; falling back to normal sendTestResults flow"
+            )
             return False
 
         # Set the in-progress flag in the runner
@@ -233,8 +237,9 @@ class AdapterManager:
             logging.warning(
                 f"Error in Sync Storage handling, falling back to normal processing: {e}"
             )
-            # Reset in-progress flag and continue with normal processing
-            self.__sync_storage_runner.set_is_already_in_progress(False)
+            self.__deactivate_sync_storage(
+                "TMS write failed after cut; falling back to normal flow"
+            )
         return False
 
     @adapter_logger
@@ -343,13 +348,30 @@ class AdapterManager:
         return self.__config.should_import_realtime()
 
     def __is_active_syncstorage_instance(self):
-        return (self.__sync_storage_runner
-                and self.__sync_storage_runner.is_running_status()
-                )
+        runner = self.__sync_storage_runner
+        if not runner or not runner.is_running_status():
+            return False
+        # If the process died mid-run, drop SS so remaining tests get final status.
+        if not runner.is_reachable():
+            self.__deactivate_sync_storage(
+                "unreachable (/health); continuing without Sync Storage"
+            )
+            return False
+        return True
+
+    def __deactivate_sync_storage(self, reason: str) -> None:
+        logging.warning("Disabling Sync Storage: %s", reason)
+        runner = self.__sync_storage_runner
+        if runner is not None:
+            try:
+                runner.mark_stopped()
+            except Exception:
+                pass
+        self.__sync_storage_runner = None
 
     def __is_master_and_no_in_progress(self) -> bool:
         return (
-            self.__sync_storage_runner is not None
+            self.__is_active_syncstorage_instance()
             and self.__sync_storage_runner.is_master_worker()
             and not self.__sync_storage_runner.is_already_in_progress_flag()
         )
