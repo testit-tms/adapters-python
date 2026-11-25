@@ -67,6 +67,8 @@ jobs:
        uses: actions/checkout@v6
        with:
          repository: testit-tms/api-validator-dotnet
+         # pin: CreatedDate is DateTime in ApiClient 5.5.5 (ShouldNotBeNull breaks on main)
+         ref: 002b9d9bbcdff090e324817056587c1dca960013
          token: ${{ env.GITHUB_PAT }}
          path: api-validator-dotnet
      - name: Checkout python-examples
