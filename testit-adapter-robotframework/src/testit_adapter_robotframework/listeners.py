@@ -1,4 +1,5 @@
 import re
+import time
 
 from robot.api import SuiteVisitor, logger
 from robot.libraries.BuiltIn import BuiltIn
@@ -25,6 +26,50 @@ TMS_CLI_PARAMS = (
     "tmsAutomaticUpdationLinksToTestCases",
     "tmsImportRealtime",
 )
+
+# Avoid infinite hang if worker 0 dies before publishing the shared id.
+_PABOT_TEST_RUN_ID_WAIT_SECONDS = 120
+_PABOT_TEST_RUN_ID_POLL_INTERVAL = 0.5
+
+
+def set_test_run_id_for_launch(adapter_manager, pabot_index, soft_fallback: bool = False) -> None:
+    """Resolve/create test run id; share it across pabot workers via PabotLib."""
+    if pabot_index is None:
+        adapter_manager.set_test_run_id(adapter_manager.get_test_run_id())
+        return
+
+    try:
+        from pabot import PabotLib
+
+        pabot = PabotLib()
+        if int(pabot_index) == 0:
+            test_run_id = adapter_manager.get_test_run_id()
+            pabot.set_parallel_value_for_key("test_run_id", test_run_id)
+        else:
+            deadline = time.monotonic() + _PABOT_TEST_RUN_ID_WAIT_SECONDS
+            test_run_id = None
+            while time.monotonic() < deadline:
+                test_run_id = pabot.get_parallel_value_for_key("test_run_id")
+                if test_run_id:
+                    break
+                time.sleep(_PABOT_TEST_RUN_ID_POLL_INTERVAL)
+            if not test_run_id:
+                raise TimeoutError(
+                    f"PabotLib did not share test_run_id within "
+                    f"{_PABOT_TEST_RUN_ID_WAIT_SECONDS}s"
+                )
+        adapter_manager.set_test_run_id(test_run_id)
+    except (RuntimeError, ImportError, TimeoutError) as exc:
+        if soft_fallback:
+            logger.warn(
+                "[TestIt] cannot share test run id via PabotLib "
+                f"({type(exc).__name__}: {exc}): every process exports on its own "
+                "(a separate test run is created in adapter mode 2). "
+                "Start pabot with --pabotlib for a single shared test run."
+            )
+            adapter_manager.set_test_run_id(adapter_manager.get_test_run_id())
+            return
+        raise SystemExit from exc
 
 
 class AutotestAdapter:
@@ -154,6 +199,10 @@ class testit_adapter_robotframework:  # noqa: N801
     listener constructor yet. When the ``${testit}`` variable is set,
     ``TMSLibrary`` is responsible for exporting results and this listener
     stays idle to avoid duplicating every result.
+
+    Mode 0 suite filtering (``TestRunAdapter``, listener API v3) is not available
+    on this path — use ``-v testit`` + ``Library TMSLibrary`` for mode 0, or run
+    the listener with adapter mode 1/2 (env ``TMS_ADAPTER_MODE`` / ``-v tmsAdapterMode``).
     """
 
     ROBOT_LISTENER_API_VERSION = 2
@@ -166,41 +215,24 @@ class testit_adapter_robotframework:  # noqa: N801
     def _resolve_adapter(self):
         built_in = BuiltIn()
         if built_in.get_variable_value("${testit}", None) is not None:
-            logger.warn("[TestIt] The ${testit} variable is set: TMSLibrary exports results, "
-                        "the testit_adapter_robotframework listener stays idle")
+            logger.warn(
+                "[TestIt] The ${testit} variable is set: this listener stays idle. "
+                "Export is expected from Library TMSLibrary — if the library is not "
+                "imported, no results are sent to Test IT. Prefer either "
+                "`-v testit` + Library TMSLibrary, or `--listener testit_adapter_robotframework` "
+                "without `-v testit`."
+            )
             return None
 
         option = Option(**{param: built_in.get_variable_value(f'${{{param}}}', None) for param in TMS_CLI_PARAMS})
         adapter_manager = TmsPluginManager.get_adapter_manager(option)
-        self._set_test_run_id(adapter_manager, built_in.get_variable_value('${PABOTQUEUEINDEX}', None))
+        set_test_run_id_for_launch(
+            adapter_manager,
+            built_in.get_variable_value("${PABOTQUEUEINDEX}", None),
+            soft_fallback=True,
+        )
         self.adapter_manager = adapter_manager
         return AutotestAdapter(adapter_manager)
-
-    @staticmethod
-    def _set_test_run_id(adapter_manager, pabot_index):
-        if pabot_index is None:
-            adapter_manager.set_test_run_id(adapter_manager.get_test_run_id())
-            return
-
-        try:
-            from pabot import PabotLib
-            pabot = PabotLib()
-            if int(pabot_index) == 0:
-                test_run_id = adapter_manager.get_test_run_id()
-                pabot.set_parallel_value_for_key('test_run_id', test_run_id)
-            else:
-                while True:
-                    test_run_id = pabot.get_parallel_value_for_key('test_run_id')
-                    if test_run_id:
-                        break
-        except RuntimeError:
-            logger.warn("[TestIt] pabot is running without --pabotlib: the test run id cannot be shared "
-                        "between parallel processes, every process will export on its own "
-                        "(a separate test run is created in adapter mode 2)")
-            adapter_manager.set_test_run_id(adapter_manager.get_test_run_id())
-            return
-
-        adapter_manager.set_test_run_id(test_run_id)
 
     def start_suite(self, name, attributes):
         if not self._adapter_resolved:

@@ -134,15 +134,26 @@ Description of methods:
 
 ### Run as a listener
 
-Instead of importing `TMSLibrary` into your suites and passing the `-v testit` option, you can attach the adapter as a Robot Framework listener:
+Instead of importing `TMSLibrary` into your suites and passing the `-v testit` option, you can attach the adapter as a Robot Framework listener (typical for CI / jar runners that only pass env vars):
 
 ```
 $ robot --listener testit_adapter_robotframework <test directory>
 ```
 
-In this mode the adapter is configured from the same sources as usual — robot CLI variables (`-v tmsUrl:...`), environment variables (`TMS_*`) or the configuration file — no changes to the test suites are required. Listener keywords such as `Add Link` or `Add Attachments` are not available; import `TMSLibrary` if you need them.
+Configuration comes from the same sources as usual — robot CLI variables (`-v tmsUrl:...`), environment variables (`TMS_*`) or the configuration file — no suite changes are required.
 
-> Do not combine both ways: when the `-v testit` variable is set, `TMSLibrary` is responsible for exporting results and the listener stays idle.
+Minimal env for creating a new test run from the listener:
+
+```
+TMS_URL / TMS_PRIVATE_TOKEN / TMS_PROJECT_ID / TMS_CONFIGURATION_ID
+TMS_ADAPTER_MODE=2
+```
+
+For adapter mode `0` or `1` set `TMS_TEST_RUN_ID` as well. **Mode 0 suite filtering is not available on the listener path** — use `-v testit` + `Library TMSLibrary` when you need filtering by an existing test run.
+
+Listener keywords such as `Add Link` or `Add Attachments` are not available; import `TMSLibrary` if you need them.
+
+> Do not combine both ways: when `-v testit` is set, this listener stays idle and expects `Library TMSLibrary` to export. If the library is not imported, nothing is sent to Test IT.
 
 ### Parallel execution
 
@@ -158,7 +169,7 @@ or with the listener:
 $ pabot --pabotlib --listener testit_adapter_robotframework <test directory>
 ```
 
-All other settings are the same as for standard execution. Without `--pabotlib` the test run id cannot be shared between parallel processes: each process will export results on its own (a separate test run is created in adapter mode 2).
+Always pass `--pabotlib` so workers share one test run id. Without it (or if PabotLib is unreachable), the listener falls back to a per-process export with a warning (separate test runs in adapter mode 2); `TMSLibrary` still aborts with `SystemExit` in that case.
 
 ### Examples
 
