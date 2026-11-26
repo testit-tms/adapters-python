@@ -1,6 +1,6 @@
 from setuptools import find_packages, setup
 
-VERSION = "5.2.6"
+VERSION = "5.2.7"
 
 setup(
     name='testit-adapter-robotframework',
