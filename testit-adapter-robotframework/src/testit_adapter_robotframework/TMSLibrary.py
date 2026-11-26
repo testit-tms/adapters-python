@@ -2,7 +2,12 @@ from robot.libraries.BuiltIn import BuiltIn
 
 from testit_python_commons.services import TmsPluginManager
 
-from .listeners import AutotestAdapter, TestRunAdapter
+from .listeners import (
+    AutotestAdapter,
+    TMS_CLI_PARAMS,
+    TestRunAdapter,
+    set_test_run_id_for_launch,
+)
 from .models import Option
 
 
@@ -40,31 +45,17 @@ class TMSLibrary:
         built_in = BuiltIn()
         self.enabled = built_in.get_variable_value("${testit}", None) is not None
         if self.enabled:
-            cli_params = ["tmsUrl", "tmsPrivateToken", "tmsProjectId", "tmsConfigurationId", "tmsTestRunId",
-                          "tmsProxy", "tmsTestRunName", "tmsTestRunTags", "tmsTestRunLinks", "tmsAdapterMode",
-                          "tmsConfigFile", "tmsCertValidation",
-                          "tmsAutomaticCreationTestCases", "tmsAutomaticUpdationLinksToTestCases", "tmsImportRealtime"]
-            option = Option(**{param: built_in.get_variable_value(f'${{{param}}}', None) for param in cli_params})
+            option = Option(**{param: built_in.get_variable_value(f'${{{param}}}', None) for param in TMS_CLI_PARAMS})
             self.adapter_manager = TmsPluginManager.get_adapter_manager(option)
-            pabot_index = built_in.get_variable_value('${PABOTQUEUEINDEX}', None)
-            if pabot_index is not None:
-                try:
-                    from pabot import PabotLib
-                    pabot = PabotLib()
-                    if int(pabot_index) == 0:
-                        test_run_id = self.adapter_manager.get_test_run_id()
-                        pabot.set_parallel_value_for_key('test_run_id', test_run_id)
-                    else:
-                        while True:
-                            test_run_id = pabot.get_parallel_value_for_key('test_run_id')
-                            if test_run_id:
-                                break
-                    self.adapter_manager.set_test_run_id(test_run_id)
-                except RuntimeError:
-                    raise SystemExit
-            else:
-                self.adapter_manager.set_test_run_id(self.adapter_manager.get_test_run_id())
-            self.ROBOT_LIBRARY_LISTENER = [AutotestAdapter(self.adapter_manager), TestRunAdapter(self.adapter_manager)]
+            set_test_run_id_for_launch(
+                self.adapter_manager,
+                built_in.get_variable_value("${PABOTQUEUEINDEX}", None),
+                soft_fallback=False,
+            )
+            self.ROBOT_LIBRARY_LISTENER = [
+                AutotestAdapter(self.adapter_manager),
+                TestRunAdapter(self.adapter_manager),
+            ]
 
     @enabled
     def add_link(self, url, type='Defect', title=None, description=None):  # noqa: A002,VNE003
