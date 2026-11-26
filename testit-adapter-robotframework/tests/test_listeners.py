@@ -33,6 +33,7 @@ except ImportError:
     sys.modules["testit_python_commons.services"] = commons_services_module
 
 from testit_adapter_robotframework.listeners import (
+    set_test_run_id_for_launch,
     testit_adapter_robotframework as module_listener,  # noqa: N812
 )
 from testit_adapter_robotframework.models import Autotest
@@ -214,7 +215,7 @@ class TestModuleListener:
         adapter_manager = mocker.Mock()
         adapter_manager.get_test_run_id.return_value = "run-id"
 
-        module_listener._set_test_run_id(adapter_manager, None)
+        set_test_run_id_for_launch(adapter_manager, None)
 
         adapter_manager.set_test_run_id.assert_called_once_with("run-id")
 
@@ -230,10 +231,12 @@ class TestModuleListener:
         adapter_manager.get_test_run_id.return_value = "created-run-id"
         self._install_fake_pabot(mocker, pabot_lib)
 
-        module_listener._set_test_run_id(adapter_manager, "0")
+        set_test_run_id_for_launch(adapter_manager, "0", soft_fallback=True)
 
         pabot_lib.assert_called_once()
-        pabot_lib.return_value.set_parallel_value_for_key.assert_called_once_with("test_run_id", "created-run-id")
+        pabot_lib.return_value.set_parallel_value_for_key.assert_called_once_with(
+            "test_run_id", "created-run-id"
+        )
         adapter_manager.set_test_run_id.assert_called_once_with("created-run-id")
 
     def test_pabot_other_process_uses_shared_test_run_id(self, mocker: MockerFixture):
@@ -242,7 +245,7 @@ class TestModuleListener:
         adapter_manager = mocker.Mock()
         self._install_fake_pabot(mocker, pabot_lib)
 
-        module_listener._set_test_run_id(adapter_manager, "1")
+        set_test_run_id_for_launch(adapter_manager, "1", soft_fallback=True)
 
         pabot_lib.return_value.get_parallel_value_for_key.assert_called_once_with("test_run_id")
         adapter_manager.set_test_run_id.assert_called_once_with("shared-run-id")
@@ -255,7 +258,49 @@ class TestModuleListener:
         self._install_fake_pabot(mocker, pabot_lib)
         logger = mocker.patch("testit_adapter_robotframework.listeners.logger")
 
-        module_listener._set_test_run_id(adapter_manager, "2")
+        set_test_run_id_for_launch(adapter_manager, "2", soft_fallback=True)
 
         assert logger.warn.call_count == 1
         adapter_manager.set_test_run_id.assert_called_once_with("own-run-id")
+
+    def test_pabot_wait_timeout_falls_back_when_soft(self, mocker: MockerFixture):
+        pabot_lib = MagicMock()
+        pabot_lib.return_value.get_parallel_value_for_key.return_value = None
+        adapter_manager = mocker.Mock()
+        adapter_manager.get_test_run_id.return_value = "timeout-own-run"
+        self._install_fake_pabot(mocker, pabot_lib)
+        mocker.patch(
+            "testit_adapter_robotframework.listeners._PABOT_TEST_RUN_ID_WAIT_SECONDS",
+            0.05,
+        )
+        mocker.patch(
+            "testit_adapter_robotframework.listeners._PABOT_TEST_RUN_ID_POLL_INTERVAL",
+            0.01,
+        )
+        logger = mocker.patch("testit_adapter_robotframework.listeners.logger")
+
+        set_test_run_id_for_launch(adapter_manager, "1", soft_fallback=True)
+
+        assert logger.warn.call_count == 1
+        adapter_manager.set_test_run_id.assert_called_once_with("timeout-own-run")
+
+    def test_pabot_wait_timeout_exits_when_hard(self, mocker: MockerFixture):
+        pabot_lib = MagicMock()
+        pabot_lib.return_value.get_parallel_value_for_key.return_value = None
+        adapter_manager = mocker.Mock()
+        self._install_fake_pabot(mocker, pabot_lib)
+        mocker.patch(
+            "testit_adapter_robotframework.listeners._PABOT_TEST_RUN_ID_WAIT_SECONDS",
+            0.05,
+        )
+        mocker.patch(
+            "testit_adapter_robotframework.listeners._PABOT_TEST_RUN_ID_POLL_INTERVAL",
+            0.01,
+        )
+
+        try:
+            set_test_run_id_for_launch(adapter_manager, "1", soft_fallback=False)
+            assert False, "expected SystemExit"
+        except SystemExit:
+            pass
+        adapter_manager.set_test_run_id.assert_not_called()
