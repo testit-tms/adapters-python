@@ -97,6 +97,13 @@ jobs:
          token: ${{ env.GITHUB_PAT }}
          ref: feat/TMS-38946   # temporary; drop after merge to main
          path: api-validator-dotnet
+     - name: Checkout testit-cli
+       uses: actions/checkout@v6
+       with:
+         repository: testit-tms/testit-cli
+         token: ${{ env.GITHUB_PAT }}
+         ref: fix/autotests-filter-project-scope   # temporary; drop after merge/PyPI
+         path: testit-cli
      - name: Checkout python-examples
        uses: actions/checkout@v6
        with:
@@ -112,7 +119,7 @@ jobs:
          python-version: ${{ env.PYTHON_VERSION }}
      - name: Create TestRun
        run: |
-         pip3 install testit-cli
+         pip3 install ./testit-cli
          testit testrun create --token ${{ env.TMS_PRIVATE_TOKEN }} --output ${{ env.TEMP_FILE }}
          echo "TMS_TEST_RUN_ID=$(<${{ env.TEMP_FILE }})" >> $GITHUB_ENV
          pip3 uninstall -y -r <(pip freeze)
@@ -161,7 +168,7 @@ jobs:
 
      - name: Create TestRun
        run: |
-         pip3 install testit-cli
+         pip3 install ./testit-cli
          testit testrun create --token ${{ env.TMS_PRIVATE_TOKEN }} --output ${{ env.TEMP_FILE }}
          echo "TMS_TEST_RUN_ID=$(<${{ env.TEMP_FILE }})" >> $GITHUB_ENV
          pip3 uninstall -y -r <(pip freeze)
@@ -231,14 +238,14 @@ jobs:
      - name: Create filled TestRun Mode 0
        if: matrix.supports_mode0
        run: |
-         pip3 install testit-cli
+         pip3 install ./testit-cli
          mkdir -p tmp
          testit testrun create launch \
            --url "${{ env.TMS_URL }}" \
            --token "${{ env.TMS_PRIVATE_TOKEN }}" \
            --project-id "${{ env.TMS_PROJECT_ID }}" \
            --configuration-id "${{ env.TMS_CONFIGURATION_ID }}" \
-           --autotest-external-ids-file "${{ env.SUBSET_IDS_FILE }}" \
+           --autotest-external-ids-file "${GITHUB_WORKSPACE}/${{ env.SUBSET_IDS_FILE }}" \
            --testrun-name "${{ matrix.project_name }} Mode0" \
            --output "${{ env.TEMP_FILE }}"
          echo "TMS_TEST_RUN_ID=$(<${{ env.TEMP_FILE }})" >> $GITHUB_ENV
@@ -269,20 +276,20 @@ jobs:
      - name: Validate Mode 0
        if: matrix.supports_mode0
        run: |
-         export TMS_EXPECTED_EXTERNAL_IDS_FILE="${{ env.SUBSET_IDS_FILE }}"
+         export TMS_EXPECTED_EXTERNAL_IDS_FILE="${GITHUB_WORKSPACE}/${{ env.SUBSET_IDS_FILE }}"
          dotnet test --configuration Debug --no-build --logger:"console;verbosity=detailed" api-validator-dotnet
 
      # --- autotests_filter + mode 1: framework runs only subset ---
      - name: Create filled TestRun Filter
        run: |
-         pip3 install testit-cli
+         pip3 install ./testit-cli
          mkdir -p tmp
          testit testrun create launch \
            --url "${{ env.TMS_URL }}" \
            --token "${{ env.TMS_PRIVATE_TOKEN }}" \
            --project-id "${{ env.TMS_PROJECT_ID }}" \
            --configuration-id "${{ env.TMS_CONFIGURATION_ID }}" \
-           --autotest-external-ids-file "${{ env.SUBSET_IDS_FILE }}" \
+           --autotest-external-ids-file "${GITHUB_WORKSPACE}/${{ env.SUBSET_IDS_FILE }}" \
            --testrun-name "${{ matrix.project_name }} Filter" \
            --output "${{ env.TEMP_FILE }}"
          echo "TMS_TEST_RUN_ID=$(<${{ env.TEMP_FILE }})" >> $GITHUB_ENV
@@ -319,7 +326,7 @@ jobs:
              eval "behave ${FILTER_ARGS} -f testit_adapter_behave.formatter:AdapterFormatter" || true
              ;;
            nose)
-             eval "nose2 --testit ${FILTER_ARGS}" || true
+             eval "nose2 ${FILTER_ARGS} --testit" || true
              ;;
            robotframework)
              eval "robot ${FILTER_ARGS} -v testit tests" || true
@@ -336,5 +343,5 @@ jobs:
 
      - name: Validate Filter
        run: |
-         export TMS_EXPECTED_EXTERNAL_IDS_FILE="${{ env.SUBSET_IDS_FILE }}"
+         export TMS_EXPECTED_EXTERNAL_IDS_FILE="${GITHUB_WORKSPACE}/${{ env.SUBSET_IDS_FILE }}"
          dotnet test --configuration Debug --no-build --logger:"console;verbosity=detailed" api-validator-dotnet
