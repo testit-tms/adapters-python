@@ -2,7 +2,6 @@ import json
 from io import BytesIO
 from unittest.mock import MagicMock, patch
 
-import pytest
 import urllib.error
 
 from testit_python_commons.services.sync_storage.sync_storage_runner import SyncStorageRunner
@@ -108,24 +107,61 @@ class TestSyncStorageHealthReuse:
             '{"status":"ok"}', "testRunId"
         ) is None
 
-    def test_ensure_compatible_raises_on_mismatch(self):
-        runner = SyncStorageRunner(test_run_id="run-new", port="49152")
-        with patch.object(runner, "_fetch_health_test_run_id", return_value="run-old"):
-            with pytest.raises(RuntimeError, match="another testRunId"):
-                runner._ensure_compatible_existing_instance()
+    def test_resolve_port_action(self):
+        assert (
+            SyncStorageRunner.resolve_port_action(False, None, "run-b")
+            == "START_NEW"
+        )
+        assert (
+            SyncStorageRunner.resolve_port_action(True, "run-a", "run-a")
+            == "ATTACH"
+        )
+        assert (
+            SyncStorageRunner.resolve_port_action(True, "run-a", "run-b")
+            == "TRY_NEXT"
+        )
+        assert (
+            SyncStorageRunner.resolve_port_action(True, None, "run-b")
+            == "ATTACH"
+        )
 
-    def test_ensure_compatible_allows_same_test_run(self):
-        runner = SyncStorageRunner(test_run_id="run-id", port="49152")
-        with patch.object(runner, "_fetch_health_test_run_id", return_value="run-id"):
-            runner._ensure_compatible_existing_instance()
+    def test_parse_port_defaults(self):
+        assert SyncStorageRunner.parse_port(None, 49152) == 49152
+        assert SyncStorageRunner.parse_port("null", 49152) == 49152
+        assert SyncStorageRunner.parse_port("50000", 49152) == 50000
 
-    def test_start_rejects_incompatible_existing_instance(self):
+    def test_start_bumps_port_on_foreign_testrun(self):
         runner = SyncStorageRunner(test_run_id="run-new", port="49152")
-        with patch.object(runner, "_is_sync_storage_already_running", return_value=True):
+
+        def health_ok():
+            return runner.port == "49152"
+
+        def fetch_id():
+            return "run-old" if runner.port == "49152" else None
+
+        with patch.object(
+            runner, "_is_sync_storage_already_running", side_effect=health_ok
+        ):
             with patch.object(
-                runner, "_fetch_health_test_run_id", return_value="run-old"
+                runner, "_fetch_health_test_run_id", side_effect=fetch_id
             ):
-                assert runner.start() is False
+                with patch.object(
+                    runner, "_try_start_owned_process", return_value=True
+                ) as start_mock:
+                    assert runner.start() is True
+                    assert runner.port == "49153"
+                    start_mock.assert_called_once()
+
+    def test_start_fails_when_all_ports_busy_with_foreign(self):
+        runner = SyncStorageRunner(test_run_id="run-new", port="49152")
+        with patch.object(runner, "resolve_port_max_bump", return_value=2):
+            with patch.object(
+                runner, "_is_sync_storage_already_running", return_value=True
+            ):
+                with patch.object(
+                    runner, "_fetch_health_test_run_id", return_value="run-old"
+                ):
+                    assert runner.start() is False
 
 
 class TestSyncStorageVersion:
