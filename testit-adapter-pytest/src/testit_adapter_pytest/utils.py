@@ -2,7 +2,7 @@ import hashlib
 import logging
 import re
 import traceback
-from typing import List
+from typing import List, NamedTuple, Optional
 
 import pytest
 
@@ -14,8 +14,48 @@ from testit_python_commons.models.link_type import LinkType
 from testit_python_commons.models.test_result import TestResult
 from testit_python_commons.models.test_result_with_all_fixture_step_results_model import TestResultWithAllFixtureStepResults
 from testit_python_commons.models.outcome_type import OutcomeType
+from testit_python_commons.models.status_type import StatusType
 
 from testit_adapter_pytest.models.executable_test import ExecutableTest
+
+
+OUTCOME_XFAILED = 'xfailed'
+OUTCOME_XPASSED = 'xpassed'
+
+STATUS_TYPE = {
+    'passed': StatusType.SUCCEEDED,
+    'failed': StatusType.FAILED,
+    OUTCOME_XFAILED: StatusType.SUCCEEDED,
+    OUTCOME_XPASSED: StatusType.FAILED,
+    'skipped': StatusType.INCOMPLETE,
+}
+STEP_STATUS = {
+    'passed': OutcomeType.PASSED,
+    'failed': OutcomeType.FAILED,
+    'skipped': OutcomeType.SKIPPED,
+}
+
+
+class XfailResolution(NamedTuple):
+    outcome: str
+    status_type: str
+
+
+def resolve_xfail_outcome(report) -> Optional[XfailResolution]:
+    """Map pytest xfail/xpass report flags to adapter outcome and status_type."""
+    if not hasattr(report, 'wasxfail'):
+        return None
+
+    if report.passed or report.failed:
+        return XfailResolution(
+            OUTCOME_XPASSED,
+            STATUS_TYPE.get(OUTCOME_XPASSED),
+        )
+
+    return XfailResolution(
+        OUTCOME_XFAILED,
+        STATUS_TYPE.get(OUTCOME_XFAILED),
+    )
 
 
 __ARRAY_TYPES = (frozenset, list, set, tuple,)
@@ -51,7 +91,7 @@ def __set_outcome_and_message_from_markers(executable_test: ExecutableTest, mark
         if marker.name in ('skip', 'skipif'):
             executable_test.outcome = 'Skipped'
         if marker.name == 'xfail':
-            executable_test.outcome = 'Xfailed'
+            executable_test.outcome = OUTCOME_XFAILED
         if marker.name in ('skip', 'skipif', 'xfail'):
             if len(marker.args) == 1 and isinstance(marker.args[0], str):
                 executable_test.message = marker.args[0]
