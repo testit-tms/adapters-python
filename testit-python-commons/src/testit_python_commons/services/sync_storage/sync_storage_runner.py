@@ -45,7 +45,7 @@ class SyncStorageRunner:
     """
 
     # Floor: newest patch on the same major.minor + numeric channel is resolved at start.
-    SYNC_STORAGE_VERSION = "v0.4.2"
+    SYNC_STORAGE_VERSION = "v0.4.3"
     SYNC_STORAGE_REPO_URL = (
         "https://github.com/testit-tms/sync-storage-public/releases/download/"
     )
