@@ -317,19 +317,19 @@ jobs:
            sleep 1
          done
 
-         FILTER_ARGS="$(tr '\n' ' ' < ../../${{ env.FILTER_FILE }})"
+         FILTER_FILE_PATH="../../${{ env.FILTER_FILE }}"
          case "${{ matrix.filter_framework }}" in
            pytest)
-             eval "pytest ${FILTER_ARGS} --testit" || true
+             pytest "$(cat "$FILTER_FILE_PATH")" --testit || true
              ;;
            behave)
-             eval "behave ${FILTER_ARGS} -f testit_adapter_behave.formatter:AdapterFormatter" || true
+             behave "$(cat "$FILTER_FILE_PATH")" -f testit_adapter_behave.formatter:AdapterFormatter || true
              ;;
            nose)
-             eval "nose2 ${FILTER_ARGS} --testit" || true
+             nose2 $(cat "$FILTER_FILE_PATH") --testit || true
              ;;
            robotframework)
-             eval "robot ${FILTER_ARGS} -v testit tests" || true
+             robot $(cat "$FILTER_FILE_PATH") -v testit tests || true
              ;;
            *)
              echo "Unknown filter_framework: ${{ matrix.filter_framework }}" >&2
