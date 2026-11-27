@@ -1,10 +1,75 @@
 import re
+import time
 
 from robot.api import SuiteVisitor, logger
 from robot.libraries.BuiltIn import BuiltIn
 
-from .models import Autotest
-from .utils import STEP_STATUSES, STATUS_TYPES, convert_time, convert_executable_test_to_test_result_model, get_hash
+from testit_python_commons.services import TmsPluginManager
+
+from .models import Autotest, Option
+from .utils import STATUS_TYPES, STEP_STATUSES, convert_executable_test_to_test_result_model, convert_time, get_hash
+
+TMS_CLI_PARAMS = (
+    "tmsUrl",
+    "tmsPrivateToken",
+    "tmsProjectId",
+    "tmsConfigurationId",
+    "tmsTestRunId",
+    "tmsProxy",
+    "tmsTestRunName",
+    "tmsTestRunTags",
+    "tmsTestRunLinks",
+    "tmsAdapterMode",
+    "tmsConfigFile",
+    "tmsCertValidation",
+    "tmsAutomaticCreationTestCases",
+    "tmsAutomaticUpdationLinksToTestCases",
+    "tmsImportRealtime",
+)
+
+# Avoid infinite hang if worker 0 dies before publishing the shared id.
+_PABOT_TEST_RUN_ID_WAIT_SECONDS = 120
+_PABOT_TEST_RUN_ID_POLL_INTERVAL = 0.5
+
+
+def set_test_run_id_for_launch(adapter_manager, pabot_index, soft_fallback: bool = False) -> None:
+    """Resolve/create test run id; share it across pabot workers via PabotLib."""
+    if pabot_index is None:
+        adapter_manager.set_test_run_id(adapter_manager.get_test_run_id())
+        return
+
+    try:
+        from pabot import PabotLib
+
+        pabot = PabotLib()
+        if int(pabot_index) == 0:
+            test_run_id = adapter_manager.get_test_run_id()
+            pabot.set_parallel_value_for_key("test_run_id", test_run_id)
+        else:
+            deadline = time.monotonic() + _PABOT_TEST_RUN_ID_WAIT_SECONDS
+            test_run_id = None
+            while time.monotonic() < deadline:
+                test_run_id = pabot.get_parallel_value_for_key("test_run_id")
+                if test_run_id:
+                    break
+                time.sleep(_PABOT_TEST_RUN_ID_POLL_INTERVAL)
+            if not test_run_id:
+                raise TimeoutError(
+                    f"PabotLib did not share test_run_id within "
+                    f"{_PABOT_TEST_RUN_ID_WAIT_SECONDS}s"
+                )
+        adapter_manager.set_test_run_id(test_run_id)
+    except (RuntimeError, ImportError, TimeoutError) as exc:
+        if soft_fallback:
+            logger.warn(
+                "[TestIt] cannot share test run id via PabotLib "
+                f"({type(exc).__name__}: {exc}): every process exports on its own "
+                "(a separate test run is created in adapter mode 2). "
+                "Start pabot with --pabotlib for a single shared test run."
+            )
+            adapter_manager.set_test_run_id(adapter_manager.get_test_run_id())
+            return
+        raise SystemExit from exc
 
 
 class AutotestAdapter:
@@ -55,8 +120,13 @@ class AutotestAdapter:
             end = convert_time(attributes['endtime'])
             duration = attributes['elapsedtime']
             outcome = STEP_STATUSES[attributes['status']]
-            self.active_test.add_step_result(title, start, end, duration, outcome, self.active_test.attachments)
-            self.active_test.attachments = []
+            bound = self.active_test.add_step_result(
+                title, start, end, duration, outcome, self.active_test.attachments)
+            # Drop the buffer only when the step result consumed it, otherwise the
+            # attachments (e.g. added deeper than the tracked step depth) are lost
+            # after having already been uploaded to TMS.
+            if bound:
+                self.active_test.attachments = []
 
     def end_test(self, name, attributes):
         if self.active_test:
@@ -74,6 +144,9 @@ class AutotestAdapter:
             self.active_test.duration = attributes['elapsedtime']
             self.adapter_manager.write_test(
                 convert_executable_test_to_test_result_model(self.active_test.order()))
+            # The result is finalized, later keywords (e.g. suite teardown) must not
+            # attach to it — otherwise uploads land in a model that is never re-sent.
+            self.active_test = None
 
     def close(self):
         self.adapter_manager.on_block_completed()
@@ -117,3 +190,79 @@ class ExcludeTests(SuiteVisitor):
 
     def visit_test(self, test):
         pass
+
+
+class testit_adapter_robotframework:  # noqa: N801
+    """Module-level listener for ``robot --listener testit_adapter_robotframework``.
+
+    Before, this invocation silently did nothing: Robot Framework imported the
+    package, found neither a class named like the module nor listener methods
+    in the empty ``__init__.py``, and ran the whole suite without a single
+    request to Test IT and without any warning (TMS-38320).
+
+    The adapter is configured at the first ``start_suite`` event from the same
+    sources as ``TMSLibrary`` (robot CLI variables ``-v tms...:...`` override
+    ``TMS_*`` environment variables and ``connection_config.ini`` /
+    ``pyproject.toml``), because robot variables are not accessible in the
+    listener constructor yet. When the ``${testit}`` variable is set,
+    ``TMSLibrary`` is responsible for exporting results and this listener
+    stays idle to avoid duplicating every result.
+
+    Mode 0 suite filtering (``TestRunAdapter``, listener API v3) is not available
+    on this path — use ``-v testit`` + ``Library TMSLibrary`` for mode 0, or run
+    the listener with adapter mode 1/2 (env ``TMS_ADAPTER_MODE`` / ``-v tmsAdapterMode``).
+    """
+
+    ROBOT_LISTENER_API_VERSION = 2
+
+    def __init__(self):
+        self.adapter_manager = None
+        self.active_adapter = None
+        self._adapter_resolved = False
+
+    def _resolve_adapter(self):
+        built_in = BuiltIn()
+        if built_in.get_variable_value("${testit}", None) is not None:
+            logger.warn(
+                "[TestIt] The ${testit} variable is set: this listener stays idle. "
+                "Export is expected from Library TMSLibrary — if the library is not "
+                "imported, no results are sent to Test IT. Prefer either "
+                "`-v testit` + Library TMSLibrary, or `--listener testit_adapter_robotframework` "
+                "without `-v testit`."
+            )
+            return None
+
+        option = Option(**{param: built_in.get_variable_value(f'${{{param}}}', None) for param in TMS_CLI_PARAMS})
+        adapter_manager = TmsPluginManager.get_adapter_manager(option)
+        set_test_run_id_for_launch(
+            adapter_manager,
+            built_in.get_variable_value("${PABOTQUEUEINDEX}", None),
+            soft_fallback=True,
+        )
+        self.adapter_manager = adapter_manager
+        return AutotestAdapter(adapter_manager)
+
+    def start_suite(self, name, attributes):
+        if not self._adapter_resolved:
+            self._adapter_resolved = True
+            self.active_adapter = self._resolve_adapter()
+
+    def start_test(self, name, attributes):
+        if self.active_adapter:
+            self.active_adapter.start_test(name, attributes)
+
+    def start_keyword(self, name, attributes):
+        if self.active_adapter:
+            self.active_adapter.start_keyword(name, attributes)
+
+    def end_keyword(self, name, attributes):
+        if self.active_adapter:
+            self.active_adapter.end_keyword(name, attributes)
+
+    def end_test(self, name, attributes):
+        if self.active_adapter:
+            self.active_adapter.end_test(name, attributes)
+
+    def close(self):
+        if self.active_adapter:
+            self.active_adapter.close()

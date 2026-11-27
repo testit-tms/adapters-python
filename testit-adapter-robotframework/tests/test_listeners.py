@@ -1,17 +1,43 @@
 import re
 import sys
 import types
-from pytest_mock import MockerFixture
 from unittest.mock import MagicMock
+
+from pytest_mock import MockerFixture
 
 if "robot.api" not in sys.modules:
     robot_module = types.ModuleType("robot")
     robot_api_module = types.ModuleType("robot.api")
     robot_api_module.logger = MagicMock()
+    robot_api_module.SuiteVisitor = MagicMock()
     robot_module.api = robot_api_module
     sys.modules["robot"] = robot_module
     sys.modules["robot.api"] = robot_api_module
 
+if "robot.libraries" not in sys.modules:
+    robot_libraries_module = types.ModuleType("robot.libraries")
+    robot_builtin_module = types.ModuleType("robot.libraries.BuiltIn")
+    robot_builtin_module.BuiltIn = MagicMock()
+    robot_libraries_module.BuiltIn = robot_builtin_module
+    sys.modules["robot.libraries"] = robot_libraries_module
+    sys.modules["robot.libraries.BuiltIn"] = robot_builtin_module
+
+try:
+    import testit_python_commons.services  # noqa: F401
+except ImportError:
+    commons_module = types.ModuleType("testit_python_commons")
+    commons_services_module = types.ModuleType("testit_python_commons.services")
+    commons_services_module.TmsPluginManager = MagicMock()
+    commons_module.services = commons_services_module
+    sys.modules["testit_python_commons"] = commons_module
+    sys.modules["testit_python_commons.services"] = commons_services_module
+
+from testit_adapter_robotframework.TMSLibrary import TMSLibrary
+from testit_adapter_robotframework.listeners import (
+    AutotestAdapter,
+    set_test_run_id_for_launch,
+    testit_adapter_robotframework as module_listener,  # noqa: N812
+)
 from testit_adapter_robotframework.models import Autotest
 
 
@@ -92,3 +118,360 @@ class TestAutotestTagParsing:
         autotest.add_attributes(self._build_attrs(["testit.layer:API"]))
 
         assert autotest.layer == "API"
+
+
+class TestModuleListener:
+    @staticmethod
+    def _make_listener_with_adapter(mocker: MockerFixture, variables=None):
+        variables = variables or {}
+
+        def get_variable_value(name, default=None):
+            return variables.get(name, default)
+
+        built_in = mocker.Mock()
+        built_in.get_variable_value.side_effect = get_variable_value
+        mocker.patch("testit_adapter_robotframework.listeners.BuiltIn", return_value=built_in)
+
+        adapter_manager = mocker.Mock()
+        adapter_manager.get_test_run_id.return_value = "11111111-2222-3333-4444-555555555555"
+        mocker.patch(
+            "testit_adapter_robotframework.listeners.TmsPluginManager.get_adapter_manager",
+            return_value=adapter_manager,
+        )
+        autotest_adapter = mocker.Mock()
+        mocker.patch(
+            "testit_adapter_robotframework.listeners.AutotestAdapter",
+            return_value=autotest_adapter,
+        )
+
+        listener = module_listener()
+        return listener, adapter_manager, autotest_adapter
+
+    def test_start_suite_resolves_adapter_and_test_run_id(self, mocker: MockerFixture):
+        listener, adapter_manager, autotest_adapter = self._make_listener_with_adapter(mocker)
+
+        listener.start_suite("Suite", {"id": "s1"})
+
+        assert listener.active_adapter is autotest_adapter
+        adapter_manager.set_test_run_id.assert_called_once_with("11111111-2222-3333-4444-555555555555")
+
+    def test_start_suite_passes_cli_variables_to_option(self, mocker: MockerFixture):
+        variables = {"${tmsUrl}": "https://tms.example.com"}
+        listener, _, _ = self._make_listener_with_adapter(mocker, variables)
+
+        listener.start_suite("Suite", {})
+
+        from testit_adapter_robotframework.listeners import Option, TmsPluginManager
+        option = TmsPluginManager.get_adapter_manager.call_args[0][0]
+        assert isinstance(option, Option)
+        assert option.set_url == "https://tms.example.com"
+        assert not hasattr(option, "set_private_token")
+        assert not hasattr(option, "set_project_id")
+
+    def test_nested_start_suite_resolves_adapter_only_once(self, mocker: MockerFixture):
+        listener, adapter_manager, _ = self._make_listener_with_adapter(mocker)
+
+        listener.start_suite("Root", {})
+        listener.start_suite("Child", {})
+
+        adapter_manager.get_test_run_id.assert_called_once()
+
+    def test_start_suite_stays_idle_when_testit_variable_is_set(self, mocker: MockerFixture):
+        variables = {"${testit}": "True"}
+        listener, adapter_manager, _ = self._make_listener_with_adapter(mocker, variables)
+        logger = mocker.patch("testit_adapter_robotframework.listeners.logger")
+
+        listener.start_suite("Suite", {})
+        listener.close()
+
+        assert listener.active_adapter is None
+        adapter_manager.set_test_run_id.assert_not_called()
+        assert logger.warn.call_count == 1
+
+    def test_events_are_delegated_to_active_adapter(self, mocker: MockerFixture):
+        listener, _, autotest_adapter = self._make_listener_with_adapter(mocker)
+        listener.start_suite("Suite", {})
+
+        listener.start_test("Test", {"longname": "Suite.Test"})
+        listener.start_keyword("Log", {"type": "KEYWORD"})
+        listener.end_keyword("Log", {"type": "KEYWORD"})
+        listener.end_test("Test", {"status": "PASS"})
+        listener.close()
+
+        autotest_adapter.start_test.assert_called_once_with("Test", {"longname": "Suite.Test"})
+        autotest_adapter.start_keyword.assert_called_once_with("Log", {"type": "KEYWORD"})
+        autotest_adapter.end_keyword.assert_called_once_with("Log", {"type": "KEYWORD"})
+        autotest_adapter.end_test.assert_called_once_with("Test", {"status": "PASS"})
+        autotest_adapter.close.assert_called_once()
+
+    def test_events_without_resolved_adapter_do_nothing(self):
+        listener = module_listener()
+
+        listener.start_test("Test", {})
+        listener.start_keyword("Log", {})
+        listener.end_keyword("Log", {})
+        listener.end_test("Test", {})
+        listener.close()
+
+    def test_set_test_run_id_without_pabot_uses_own_run(self, mocker: MockerFixture):
+        adapter_manager = mocker.Mock()
+        adapter_manager.get_test_run_id.return_value = "run-id"
+
+        set_test_run_id_for_launch(adapter_manager, None)
+
+        adapter_manager.set_test_run_id.assert_called_once_with("run-id")
+
+    @staticmethod
+    def _install_fake_pabot(mocker: MockerFixture, pabot_lib):
+        pabot_module = types.ModuleType("pabot")
+        pabot_module.PabotLib = pabot_lib
+        mocker.patch.dict(sys.modules, {"pabot": pabot_module})
+
+    def test_pabot_first_process_shares_created_test_run_id(self, mocker: MockerFixture):
+        pabot_lib = MagicMock()
+        adapter_manager = mocker.Mock()
+        adapter_manager.get_test_run_id.return_value = "created-run-id"
+        self._install_fake_pabot(mocker, pabot_lib)
+
+        set_test_run_id_for_launch(adapter_manager, "0", soft_fallback=True)
+
+        pabot_lib.assert_called_once()
+        pabot_lib.return_value.set_parallel_value_for_key.assert_called_once_with(
+            "test_run_id", "created-run-id"
+        )
+        adapter_manager.set_test_run_id.assert_called_once_with("created-run-id")
+
+    def test_pabot_other_process_uses_shared_test_run_id(self, mocker: MockerFixture):
+        pabot_lib = MagicMock()
+        pabot_lib.return_value.get_parallel_value_for_key.return_value = "shared-run-id"
+        adapter_manager = mocker.Mock()
+        self._install_fake_pabot(mocker, pabot_lib)
+
+        set_test_run_id_for_launch(adapter_manager, "1", soft_fallback=True)
+
+        pabot_lib.return_value.get_parallel_value_for_key.assert_called_once_with("test_run_id")
+        adapter_manager.set_test_run_id.assert_called_once_with("shared-run-id")
+        adapter_manager.get_test_run_id.assert_not_called()
+
+    def test_pabot_without_pabotlib_falls_back_to_own_test_run(self, mocker: MockerFixture):
+        pabot_lib = MagicMock(side_effect=RuntimeError("connection refused"))
+        adapter_manager = mocker.Mock()
+        adapter_manager.get_test_run_id.return_value = "own-run-id"
+        self._install_fake_pabot(mocker, pabot_lib)
+        logger = mocker.patch("testit_adapter_robotframework.listeners.logger")
+
+        set_test_run_id_for_launch(adapter_manager, "2", soft_fallback=True)
+
+        assert logger.warn.call_count == 1
+        adapter_manager.set_test_run_id.assert_called_once_with("own-run-id")
+
+    def test_pabot_wait_timeout_falls_back_when_soft(self, mocker: MockerFixture):
+        pabot_lib = MagicMock()
+        pabot_lib.return_value.get_parallel_value_for_key.return_value = None
+        adapter_manager = mocker.Mock()
+        adapter_manager.get_test_run_id.return_value = "timeout-own-run"
+        self._install_fake_pabot(mocker, pabot_lib)
+        mocker.patch(
+            "testit_adapter_robotframework.listeners._PABOT_TEST_RUN_ID_WAIT_SECONDS",
+            0.05,
+        )
+        mocker.patch(
+            "testit_adapter_robotframework.listeners._PABOT_TEST_RUN_ID_POLL_INTERVAL",
+            0.01,
+        )
+        logger = mocker.patch("testit_adapter_robotframework.listeners.logger")
+
+        set_test_run_id_for_launch(adapter_manager, "1", soft_fallback=True)
+
+        assert logger.warn.call_count == 1
+        adapter_manager.set_test_run_id.assert_called_once_with("timeout-own-run")
+
+    def test_pabot_wait_timeout_exits_when_hard(self, mocker: MockerFixture):
+        pabot_lib = MagicMock()
+        pabot_lib.return_value.get_parallel_value_for_key.return_value = None
+        adapter_manager = mocker.Mock()
+        self._install_fake_pabot(mocker, pabot_lib)
+        mocker.patch(
+            "testit_adapter_robotframework.listeners._PABOT_TEST_RUN_ID_WAIT_SECONDS",
+            0.05,
+        )
+        mocker.patch(
+            "testit_adapter_robotframework.listeners._PABOT_TEST_RUN_ID_POLL_INTERVAL",
+            0.01,
+        )
+
+        try:
+            set_test_run_id_for_launch(adapter_manager, "1", soft_fallback=False)
+            assert False, "expected SystemExit"
+        except SystemExit:
+            pass
+        adapter_manager.set_test_run_id.assert_not_called()
+
+
+class Attachment(MagicMock):
+    """Stand-in for adapters_api AttachmentPutModel with a readable id."""
+
+
+def _make_attachment(attachment_id: str) -> Attachment:
+    attachment = Attachment()
+    attachment.id = attachment_id
+    return attachment
+
+
+def _start_test_attrs(name: str = "Test One"):
+    return {
+        "originalname": name,
+        "doc": "",
+        "template": None,
+        "longname": "Suite." + name,
+        "tags": [],
+    }
+
+
+def _keyword_attrs(kwname: str, args=None, status: str = "PASS"):
+    return {
+        "type": "KEYWORD",
+        "assign": [],
+        "kwname": kwname,
+        "args": args or [],
+        "doc": "",
+        "starttime": "20260616 14:55:08.000",
+        "endtime": "20260616 14:55:08.100",
+        "elapsedtime": 100,
+        "status": status,
+    }
+
+
+def _end_test_attrs(status: str = "PASS"):
+    return {
+        "status": status,
+        "starttime": "20260616 14:55:08.000",
+        "endtime": "20260616 14:55:09.000",
+        "elapsedtime": 1000,
+        "message": "",
+    }
+
+
+def _collect_step_attachments(step_results):
+    collected = []
+    for step_result in step_results:
+        collected += getattr(step_result, "attachments", None) or []
+        collected += _collect_step_attachments(step_result.step_results)
+    return collected
+
+
+class TestAutotestAdapterAttachments:
+    @staticmethod
+    def _make_adapter(mocker: MockerFixture):
+        mocker.patch("testit_adapter_robotframework.listeners.BuiltIn")
+        manager = mocker.Mock()
+        return AutotestAdapter(manager), manager
+
+    def test_add_step_result_reports_whether_attachments_were_bound(self):
+        autotest = Autotest(autoTestName="T")
+        autotest.add_step("KEYWORD", "kw1", "", None)
+
+        bound = autotest.add_step_result("kw1", None, None, 1, "Passed", [_make_attachment("a1")])
+        missed = autotest.add_step_result("unknown", None, None, 1, "Passed", [_make_attachment("a2")])
+
+        assert bound is True
+        assert missed is False
+
+    def test_end_keyword_clears_attachments_when_bound(self, mocker: MockerFixture):
+        adapter, _ = self._make_adapter(mocker)
+        adapter.start_test("Test One", _start_test_attrs())
+        adapter.start_keyword("kw1", _keyword_attrs("kw1"))
+        adapter.active_test.attachments = [_make_attachment("a1")]
+        adapter.end_keyword("kw1", _keyword_attrs("kw1"))
+
+        assert adapter.active_test.attachments == []
+        assert _collect_step_attachments(adapter.active_test.stepResults) != []
+
+    def test_end_keyword_keeps_attachments_when_step_not_tracked(self, mocker: MockerFixture):
+        adapter, _ = self._make_adapter(mocker)
+        adapter.start_test("Test One", _start_test_attrs())
+        # Steps deeper than the tracked depth (14) get no step result entry.
+        for depth in range(1, 16):
+            adapter.start_keyword(f"kw{depth}", _keyword_attrs(f"kw{depth}"))
+        attachment = _make_attachment("deep-attachment")
+        adapter.active_test.attachments = [attachment]
+
+        adapter.end_keyword("kw15", _keyword_attrs("kw15"))
+
+        assert adapter.active_test.attachments == [attachment]
+
+    def test_attachments_beyond_tracked_depth_reach_enclosing_step(self, mocker: MockerFixture):
+        adapter, _ = self._make_adapter(mocker)
+        adapter.start_test("Test One", _start_test_attrs())
+        for depth in range(1, 16):
+            adapter.start_keyword(f"kw{depth}", _keyword_attrs(f"kw{depth}"))
+        attachment = _make_attachment("deep-attachment")
+        adapter.active_test.attachments = [attachment]
+
+        for depth in range(15, 0, -1):
+            adapter.end_keyword(f"kw{depth}", _keyword_attrs(f"kw{depth}"))
+
+        assert _collect_step_attachments(adapter.active_test.stepResults) == [attachment]
+        assert adapter.active_test.attachments == []
+
+    def test_end_test_resets_active_test(self, mocker: MockerFixture):
+        adapter, manager = self._make_adapter(mocker)
+        adapter.start_test("Test One", _start_test_attrs())
+        adapter.start_keyword("kw1", _keyword_attrs("kw1"))
+        adapter.end_keyword("kw1", _keyword_attrs("kw1"))
+
+        adapter.end_test("Test One", _end_test_attrs())
+
+        assert adapter.active_test is None
+        assert manager.write_test.called
+
+    def test_end_test_sends_leftover_attachments_on_test_level(self, mocker: MockerFixture):
+        adapter, manager = self._make_adapter(mocker)
+        adapter.start_test("Test One", _start_test_attrs())
+        attachment = _make_attachment("leftover")
+        # Attachment never bound to any step result (no keyword was running).
+        adapter.active_test.attachments = [attachment]
+
+        adapter.end_test("Test One", _end_test_attrs())
+
+        sent_result = manager.write_test.call_args[0][0]
+        # asdict() deep-copies attachments, so compare by id rather than identity
+        assert [item.id for item in sent_result.get_attachments()] == ["leftover"]
+
+
+class TestTMSLibraryAttachmentGuard:
+    @staticmethod
+    def _make_library(active_test):
+        library = TMSLibrary.__new__(TMSLibrary)
+        library.enabled = True
+        library.adapter_manager = MagicMock()
+        listener = MagicMock()
+        listener.active_test = active_test
+        library.ROBOT_LIBRARY_LISTENER = [listener]
+        return library
+
+    def test_add_attachments_without_active_test_skips_upload(self):
+        library = self._make_library(None)
+
+        library.add_attachments("screenshot.png")
+
+        assert library.adapter_manager.load_attachments.called is False
+
+    def test_add_attachment_without_active_test_skips_upload(self):
+        library = self._make_library(None)
+
+        library.add_attachment("some text")
+
+        assert library.adapter_manager.create_attachment.called is False
+
+    def test_add_attachments_with_active_test_uploads(self):
+        active_test = MagicMock()
+        active_test.attachments = []
+        attachment = _make_attachment("a1")
+        library = self._make_library(active_test)
+        library.adapter_manager.load_attachments.return_value = [attachment]
+
+        library.add_attachments("screenshot.png")
+
+        assert library.adapter_manager.load_attachments.called is True
+        assert active_test.attachments == [attachment]
