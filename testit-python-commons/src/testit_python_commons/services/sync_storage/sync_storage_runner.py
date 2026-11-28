@@ -802,14 +802,40 @@ class SyncStorageRunner:
             self._stop_keep_alive()
 
 
+    _CUT_STATUS_CODES = frozenset({"Passed", "Failed", "Skipped", "Blocked", "InProgress"})
+
+    @classmethod
+    def _normalize_cut_status_code(cls, outcome: Optional[str], status_type: Optional[str]) -> Optional[str]:
+        """SS/Work X need TMS outcomes. Prefer status_type (xfail→Succeeded→Passed per TMS-26367)."""
+        from_type = {
+            "Failed": "Failed",
+            "Succeeded": "Passed",
+            "Incomplete": "Skipped",
+            "InProgress": "InProgress",
+            "Pending": "InProgress",
+        }
+        if status_type in from_type:
+            return from_type[status_type]
+        if outcome:
+            titled = str(outcome).strip().title()
+            # Fallback when status_type missing: TMS-26367 xfail/xpass contract
+            aliases = {"Xfailed": "Passed", "Xpass": "Failed", "Xpassed": "Failed"}
+            titled = aliases.get(titled, titled)
+            if titled in cls._CUT_STATUS_CODES:
+                return titled
+        return outcome
+
     @classmethod
     def test_result_to_test_result_cut_api_model(
             cls,
             test_result: TestResult, project_id: str) -> TestResultCutApiModel:
+        status_type = test_result.get_status_type()
         return TestResultCutApiModel(
             project_id=project_id,
             auto_test_external_id=test_result.get_external_id(),
-            status_type=test_result.get_status_type(),
-            status_code=test_result.get_outcome(),
+            status_type=status_type,
+            status_code=cls._normalize_cut_status_code(
+                test_result.get_outcome(), status_type
+            ),
             started_on=test_result.get_started_on(),
         )
