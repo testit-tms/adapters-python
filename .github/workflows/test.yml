@@ -45,7 +45,8 @@ jobs:
            configuration_id: NOSE_CONFIGURATION_ID
            project_id: NOSE_PROJECT_ID
            project_name: nose
-           test_command: 'nose2 --testit'
+           # -s tests keeps __module__ as test_* (golden), not tests.test_*
+           test_command: 'nose2 --testit -s tests'
          - adapter_name: testit-adapter-pytest
            configuration_id: PYTEST_CONFIGURATION_ID
            project_id: PYTEST_PROJECT_ID

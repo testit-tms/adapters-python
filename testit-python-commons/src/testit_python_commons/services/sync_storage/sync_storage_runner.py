@@ -56,6 +56,7 @@ class SyncStorageRunner:
     KEEP_ALIVE_REQUEST_TIMEOUT_SECONDS = 5
     REGISTER_RETRY_ATTEMPTS = 5
     REGISTER_RETRY_DELAY_SECONDS = 0.5
+    DEFAULT_PORT_MAX_BUMP = 10
     # Real Go release binaries are multi-MB; HTML/error pages must not be reused.
     MIN_EXECUTABLE_BYTES = 1_000_000
 
@@ -75,7 +76,8 @@ class SyncStorageRunner:
         :param private_token: Authentication token for Test IT API
         """
         self.test_run_id = test_run_id
-        self.port = port
+        self.preferred_port = self.parse_port(port, 49152)
+        self.port = str(self.preferred_port)
         self.base_url = base_url
         self.private_token = private_token
 
@@ -104,11 +106,44 @@ class SyncStorageRunner:
             f"Initialized SyncStorageRunner with test_run_id={test_run_id}, port={self.port}"
         )
 
+    @staticmethod
+    def parse_port(value: Optional[str], default_port: int) -> int:
+        if value is None or value == "" or value == "null":
+            return default_port
+        try:
+            return int(str(value).strip())
+        except (TypeError, ValueError):
+            return default_port
+
+    @staticmethod
+    def resolve_port_max_bump() -> int:
+        raw = os.environ.get("SYNC_STORAGE_PORT_MAX_BUMP") or os.environ.get(
+            "TMS_SYNC_STORAGE_PORT_MAX_BUMP"
+        )
+        if not raw:
+            return SyncStorageRunner.DEFAULT_PORT_MAX_BUMP
+        try:
+            return max(0, int(str(raw).strip()))
+        except (TypeError, ValueError):
+            return SyncStorageRunner.DEFAULT_PORT_MAX_BUMP
+
+    @staticmethod
+    def resolve_port_action(
+        health_ok: bool, running_test_run_id: Optional[str], my_test_run_id: str
+    ) -> str:
+        """Return START_NEW | ATTACH | TRY_NEXT."""
+        if not health_ok:
+            return "START_NEW"
+        if not running_test_run_id:
+            return "ATTACH"
+        if running_test_run_id == my_test_run_id:
+            return "ATTACH"
+        return "TRY_NEXT"
+
     def start(self) -> bool:
         """
-        Start the Sync Storage service and register the worker.
-
-        :return: True if successfully started and registered, False otherwise
+        Start Sync Storage or attach to an existing instance.
+        Foreign testRunId / bind-register race → try port+1 .. +maxBump.
         """
         logger.info("Starting Sync Storage service!")
         try:
@@ -116,85 +151,168 @@ class SyncStorageRunner:
                 logger.info("SyncStorage already running")
                 return True
 
-            logger.info("SyncStorage is not running")
+            max_bump = self.resolve_port_max_bump()
+            prepared_executable_path = None
 
-            # Check if Sync Storage is already running
-            if self._is_sync_storage_already_running():
-                self._ensure_compatible_existing_instance()
-                logger.info(
-                    f"SyncStorage already started {self.port}. Connecting to existing one..."
+            for offset in range(max_bump + 1):
+                candidate = self.preferred_port + offset
+                self.port = str(candidate)
+                self.workers_api = None
+                self.test_results_api = None
+
+                health_ok = self._is_sync_storage_already_running()
+                running_id = (
+                    self._fetch_health_test_run_id() if health_ok else None
                 )
-                self.is_running = True
-                self.is_external = True
+                action = self.resolve_port_action(
+                    health_ok, running_id, self.test_run_id
+                )
 
-                if not self._register_worker_with_retry():
-                    raise RuntimeError(
-                        f"Port {self.port} has sync-storage for testRunId {self.test_run_id}, "
-                        "but worker registration failed. Check syncstorage.log."
+                if action == "TRY_NEXT":
+                    logger.info(
+                        "Port %s busy with testRunId=%s; trying %s",
+                        candidate,
+                        running_id,
+                        candidate + 1,
                     )
-                return True
+                    continue
 
-            # Get executable file name for current platform
-            executable_filename = self._get_file_name_by_arch_and_os()
-
-            # Prepare command to start Sync Storage
-            command = [executable_filename]
-
-            if self.test_run_id:
-                command.extend(["--testRunId", self.test_run_id])
-
-            if self.port:
-                command.extend(["--port", self.port])
-
-            if self.base_url:
-                command.extend(["--baseURL", self.base_url])
-
-            if self.private_token:
-                command.extend(["--privateToken", self.private_token])
-
-            # Prepare executable file (download if needed)
-            prepared_executable_path = self._prepare_executable_file(
-                executable_filename
-            )
-
-            # Update command with prepared path
-            command[0] = prepared_executable_path
-
-            logger.info(f"Starting SyncStorage with command: {' '.join(command)}")
-
-            # Detach SS from the adapter process: CI calls wait-completion after tests,
-            # and Work X must outlive the test runner. Do not atexit-kill the child.
-            work_dir = os.path.dirname(prepared_executable_path)
-            log_path = os.path.join(work_dir, "syncstorage.log")
-            self._sync_storage_log_file = open(log_path, "a", encoding="utf-8")
-            self.sync_storage_process = subprocess.Popen(
-                command,
-                cwd=work_dir,
-                stdout=self._sync_storage_log_file,
-                stderr=subprocess.STDOUT,
-                start_new_session=True,
-            )
-            logger.info("SyncStorage logs: %s", log_path)
-
-            # Wait for server startup
-            if self._wait_for_server_startup(self.SYNC_STORAGE_STARTUP_TIMEOUT):
-                logger.info(f"SyncStorage started successfully on port {self.port}")
-                time.sleep(2)  # Wait a bit more as in Java implementation
-
-                if not self._register_worker_with_retry():
-                    raise RuntimeError(
-                        "SyncStorage process started but worker registration failed"
+                if candidate != self.preferred_port:
+                    logger.info(
+                        "syncStoragePort effective=%s (preferred=%s)",
+                        self.port,
+                        self.preferred_port,
                     )
-                self.is_running = True
-                return True
-            raise RuntimeError("Cannot start the SyncStorage until timeout")
+
+                if action == "ATTACH":
+                    if not running_id:
+                        logger.warning(
+                            "Existing sync-storage on port %s does not report testRunId "
+                            "in /health; compatibility cannot be verified. Prefer a "
+                            "sync-storage build that exposes testRunId. Current testRunId: %s",
+                            self.port,
+                            self.test_run_id,
+                        )
+                    logger.info(
+                        "SyncStorage already started on port %s. Connecting...",
+                        self.port,
+                    )
+                    self.is_running = True
+                    self.is_external = True
+                    if self._register_worker_with_retry():
+                        return True
+                    self.is_running = False
+                    self.is_external = False
+                    logger.info(
+                        "Attach/register failed on port %s (race or incompatible); trying next",
+                        candidate,
+                    )
+                    continue
+
+                if prepared_executable_path is None:
+                    prepared_executable_path = self._prepare_executable_file(
+                        self._get_file_name_by_arch_and_os()
+                    )
+
+                if self._try_start_owned_process(prepared_executable_path):
+                    return True
+                self._cleanup_failed_spawn()
+                logger.info(
+                    "Could not claim port %s for testRunId=%s; trying next",
+                    candidate,
+                    self.test_run_id,
+                )
+
+            logger.error(
+                "No free sync-storage port in %s..%s for testRunId %s. "
+                "Stop occupying processes or raise SYNC_STORAGE_PORT_MAX_BUMP.",
+                self.preferred_port,
+                self.preferred_port + max_bump,
+                self.test_run_id,
+            )
+            return False
 
         except Exception as e:
             logger.error(f"Error starting Sync Storage: {e}", exc_info=True)
-            self.is_running = False
-            self.is_master = False
-            self._stop_keep_alive()
+            self._cleanup_failed_spawn()
             return False
+
+    def _build_start_command(self, prepared_executable_path: str) -> list:
+        command = [prepared_executable_path]
+        if self.test_run_id:
+            command.extend(["--testRunId", self.test_run_id])
+        if self.port:
+            command.extend(["--port", self.port])
+        if self.base_url:
+            command.extend(["--baseURL", self.base_url])
+        if self.private_token:
+            command.extend(["--privateToken", self.private_token])
+        return command
+
+    def _try_start_owned_process(self, prepared_executable_path: str) -> bool:
+        command = self._build_start_command(prepared_executable_path)
+        logger.info("Starting SyncStorage with command: %s", " ".join(command))
+
+        # Detach SS from the adapter process: CI calls wait-completion after tests,
+        # and Work X must outlive the test runner. Do not atexit-kill (or atexit-block)
+        # the child — that regressed pipes/xdist (see fb30546).
+        work_dir = os.path.dirname(prepared_executable_path)
+        log_path = os.path.join(work_dir, "syncstorage.log")
+        self._sync_storage_log_file = open(log_path, "a", encoding="utf-8")
+        self.sync_storage_process = subprocess.Popen(
+            command,
+            cwd=work_dir,
+            stdout=self._sync_storage_log_file,
+            stderr=subprocess.STDOUT,
+            start_new_session=True,
+        )
+        logger.info("SyncStorage logs: %s", log_path)
+
+        if not self._wait_for_server_startup(self.SYNC_STORAGE_STARTUP_TIMEOUT):
+            logger.warning("SyncStorage did not become healthy on port %s", self.port)
+            return False
+
+        running_id = self._fetch_health_test_run_id()
+        if running_id and running_id != self.test_run_id:
+            logger.info(
+                "Port %s became sync-storage for other testRunId=%s after start race",
+                self.port,
+                running_id,
+            )
+            return False
+
+        time.sleep(2)
+        if not self._register_worker_with_retry():
+            logger.warning("Failed to register sync-storage worker on port %s", self.port)
+            return False
+
+        self.is_running = True
+        self.is_external = False
+        logger.info("SyncStorage started successfully on port %s", self.port)
+        return True
+
+    def _cleanup_failed_spawn(self) -> None:
+        self._stop_keep_alive()
+        self.is_master = False
+        self.is_running = False
+        if self.sync_storage_process is not None:
+            if self.sync_storage_process.poll() is None:
+                try:
+                    self.sync_storage_process.terminate()
+                    self.sync_storage_process.wait(timeout=3)
+                except Exception:
+                    try:
+                        self.sync_storage_process.kill()
+                    except Exception:
+                        pass
+            self.sync_storage_process = None
+        if self._sync_storage_log_file is not None:
+            try:
+                self._sync_storage_log_file.close()
+            except Exception:
+                pass
+            self._sync_storage_log_file = None
+        self.is_external = False
 
     def get_worker_pid(self) -> str:
         """Get the worker PID."""
@@ -374,28 +492,6 @@ class SyncStorageRunner:
                 return response.getcode() == 200
         except Exception:
             return False
-
-    def _ensure_compatible_existing_instance(self) -> None:
-        """
-        Existing process on the port must serve the same testRunId (parallel workers),
-        otherwise a stale orphan blocks the port and new runs never finalize.
-        """
-        running_test_run_id = self._fetch_health_test_run_id()
-        if not running_test_run_id:
-            logger.warning(
-                "Existing sync-storage on port %s does not report testRunId in /health; "
-                "compatibility cannot be verified. Prefer a sync-storage build that exposes "
-                "testRunId. Current testRunId: %s",
-                self.port,
-                self.test_run_id,
-            )
-            return
-        if running_test_run_id != self.test_run_id:
-            raise RuntimeError(
-                f"Port {self.port} is occupied by sync-storage with another testRunId "
-                f"({running_test_run_id}). Stop that process or change SYNC_STORAGE_PORT / "
-                f"syncStoragePort. Current testRunId: {self.test_run_id}"
-            )
 
     def _fetch_health_test_run_id(self) -> Optional[str]:
         try:
@@ -680,15 +776,17 @@ class SyncStorageRunner:
 
         except ApiException as e:
             if e.status == 409:
-                raise RuntimeError(
-                    f"Port {self.port} sync-storage rejected register (HTTP 409): "
-                    f"another testRunId is bound. Current testRunId: {self.test_run_id}"
-                ) from e
+                logger.info(
+                    "Port %s sync-storage rejected register (HTTP 409); "
+                    "another testRunId may be bound. Current testRunId: %s",
+                    self.port,
+                    self.test_run_id,
+                )
+                return False
             logger.error(f"Error registering worker: {e}", exc_info=True)
             return False
         except Exception as e:
             logger.error(f"Error registering worker: {e}", exc_info=True)
-
             return False
 
     def set_worker_status(self, status: str):
@@ -704,14 +802,40 @@ class SyncStorageRunner:
             self._stop_keep_alive()
 
 
+    _CUT_STATUS_CODES = frozenset({"Passed", "Failed", "Skipped", "Blocked", "InProgress"})
+
+    @classmethod
+    def _normalize_cut_status_code(cls, outcome: Optional[str], status_type: Optional[str]) -> Optional[str]:
+        """SS/Work X need TMS outcomes. Prefer status_type (xfail→Succeeded→Passed per TMS-26367)."""
+        from_type = {
+            "Failed": "Failed",
+            "Succeeded": "Passed",
+            "Incomplete": "Skipped",
+            "InProgress": "InProgress",
+            "Pending": "InProgress",
+        }
+        if status_type in from_type:
+            return from_type[status_type]
+        if outcome:
+            titled = str(outcome).strip().title()
+            # Fallback when status_type missing: TMS-26367 xfail/xpass contract
+            aliases = {"Xfailed": "Passed", "Xpass": "Failed", "Xpassed": "Failed"}
+            titled = aliases.get(titled, titled)
+            if titled in cls._CUT_STATUS_CODES:
+                return titled
+        return outcome
+
     @classmethod
     def test_result_to_test_result_cut_api_model(
             cls,
             test_result: TestResult, project_id: str) -> TestResultCutApiModel:
+        status_type = test_result.get_status_type()
         return TestResultCutApiModel(
             project_id=project_id,
             auto_test_external_id=test_result.get_external_id(),
-            status_type=test_result.get_status_type(),
-            status_code=test_result.get_outcome(),
+            status_type=status_type,
+            status_code=cls._normalize_cut_status_code(
+                test_result.get_outcome(), status_type
+            ),
             started_on=test_result.get_started_on(),
         )

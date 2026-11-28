@@ -8,6 +8,10 @@ Supplementary docs for behaviour that is not covered in adapter READMEs.
 | [mode0-duplicate-results-bulk-after-realtime.md](./mode0-duplicate-results-bulk-after-realtime.md) | Mode 0 duplicate Passed (TP + orphan): no second bulk send |
 | [mode0-orphan-testpoint-inprogress.md](./mode0-orphan-testpoint-inprogress.md) | Mode 0 + InProgress slots: create path, Sync Storage |
 | [test-run-tags-and-links.md](./test-run-tags-and-links.md) | Test run tags & links on create / early merge |
+| [sync-storage-adapter-compat.md](./sync-storage-adapter-compat.md) | Sync-storage keep-alive / health.testRunId / orphans |
+| [sync-storage-port-bump-and-wait-completion.md](./sync-storage-port-bump-and-wait-completion.md) | **Port+1** / start race; Python: **no atexit** kill/wait (CI) |
+| [sync-storage-verification-checklist.md](./sync-storage-verification-checklist.md) | QA checklist for sync-storage on adapters |
+| [branch-ss-port-bump-wait-completion-checklist.md](./branch-ss-port-bump-wait-completion-checklist.md) | Суть ветки + сводный чеклист (SS + Nose namespace) для других репо |
 
 Commons (real-time import, nested steps):
 
