@@ -115,14 +115,15 @@
 
 **Python Nose эталон этой ветки:** `nose2 --testit -s tests`.
 
-### Pytest xfail → TMS Outcome
+### Pytest xfail → TMS Outcome (TMS-26367)
 
 | # | Проверка | Pass? | Notes |
 |---|----------|-------|-------|
-| X1 | `@pytest.mark.xfail` + реальный fail → в TMS Outcome **Failed** (не Passed) | | |
-| X2 | SS cut `status_code` ∈ {Passed, Failed, Skipped, Blocked, InProgress} — нет сырого `xfailed` | | |
+| X1 | `@pytest.mark.xfail` + ожидаемый fail (XFAIL) → Outcome **Passed** (`status_type=Succeeded`) | | |
+| X2 | XPASS (прошёл вопреки xfail) → Outcome **Failed** | | |
+| X3 | SS cut `status_code` ∈ {Passed, Failed, Skipped, Blocked, InProgress} — нет сырого `xfailed`/`xpassed` | | |
 
-**Python эталон этой ветки:** listener пишет `OutcomeType.FAILED`; cut нормализует aliases (`xfailed`→`Failed`).
+**Контракт:** см. `testit-adapter-pytest/docs/xfail-xpass.md`. Cut нормализует по `status_type` (Succeeded→Passed).
 
 ---
 
