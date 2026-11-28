@@ -164,6 +164,43 @@ class TestSyncStorageHealthReuse:
                     assert runner.start() is False
 
 
+class TestSyncStorageCutStatusCode:
+    def test_normalize_prefers_status_type_for_xfail_contract(self):
+        # TMS-26367: xfailed → Succeeded → Passed; xpassed → Failed
+        assert (
+            SyncStorageRunner._normalize_cut_status_code("xfailed", "Succeeded")
+            == "Passed"
+        )
+        assert (
+            SyncStorageRunner._normalize_cut_status_code("xpassed", "Failed")
+            == "Failed"
+        )
+
+    def test_normalize_pytest_lowercase_via_status_type(self):
+        assert (
+            SyncStorageRunner._normalize_cut_status_code("passed", "Succeeded")
+            == "Passed"
+        )
+        assert (
+            SyncStorageRunner._normalize_cut_status_code("failed", "Failed")
+            == "Failed"
+        )
+        assert (
+            SyncStorageRunner._normalize_cut_status_code("skipped", "Incomplete")
+            == "Skipped"
+        )
+
+    def test_normalize_alias_when_status_type_missing(self):
+        assert (
+            SyncStorageRunner._normalize_cut_status_code("xfailed", None)
+            == "Passed"
+        )
+        assert (
+            SyncStorageRunner._normalize_cut_status_code("bogus", "Failed")
+            == "Failed"
+        )
+
+
 class TestSyncStorageVersion:
     def test_floor_is_numeric_0_4_channel(self):
         assert SyncStorageRunner.SYNC_STORAGE_VERSION.startswith("v0.4.")
